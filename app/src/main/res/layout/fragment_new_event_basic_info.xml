@@ -1,0 +1,67 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="com.example.finalyearproject.hollyboothroyd.sync.Activities.Fragments.NewEvent.NewEventBasicInfoFragment">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:layout_marginTop="@dimen/fragment_top_margin">
+
+        <TextView
+            android:id="@+id/new_event_basic_info_title_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:text="@string/New_Event_Main_Title"
+            android:textAppearance="@style/TextAppearance.AppCompat.Headline" />
+
+        <EditText
+            android:id="@+id/new_event_title_text"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="@dimen/entry_side_margin"
+            android:layout_marginStart="@dimen/entry_side_margin"
+            android:layout_marginTop="@dimen/entry_top_margin"
+            android:ems="10"
+            android:hint="@string/New_Event_Title"
+            android:inputType="textPersonName"
+            app:layout_constraintEnd_toEndOf="parent" />
+
+        <EditText
+            android:id="@+id/new_event_topic_text"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="@dimen/entry_side_margin"
+            android:layout_marginStart="@dimen/entry_side_margin"
+            android:layout_marginTop="@dimen/entry_top_margin"
+            android:ems="10"
+            android:hint="@string/New_Event_Topic"
+            android:inputType="textPersonName"/>
+
+        <EditText
+            android:id="@+id/new_event_industry_text"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="@dimen/entry_side_margin"
+            android:layout_marginStart="@dimen/entry_side_margin"
+            android:layout_marginTop="@dimen/entry_top_margin"
+            android:ems="10"
+            android:hint="@string/New_Event_Industry"
+            android:inputType="textEmailAddress" />
+
+    </LinearLayout>
+
+    <Button
+        android:id="@+id/event_basic_info_next_button"
+        android:layout_width="@dimen/button_width"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:layout_margin="@dimen/button_margin"
+        android:text="@string/Next_Button" />
+
+</RelativeLayout>

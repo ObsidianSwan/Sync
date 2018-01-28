@@ -1,0 +1,34 @@
+<resources>
+    <dimen name="fab_margin">16dp</dimen>
+    <dimen name="button_width">200dp</dimen>
+    <dimen name="Person_Popup_Image">250</dimen>
+    <dimen name="Dismiss_Button_Small">20dp</dimen>
+    <!-- Default screen margins, per the Android Design guidelines. -->
+    <dimen name="activity_horizontal_margin">16dp</dimen>
+    <dimen name="activity_vertical_margin">16dp</dimen>
+    <dimen name="nav_header_vertical_spacing">25dp</dimen>
+    <dimen name="nav_header_horizontal_spacing">5dp</dimen>
+    <dimen name="nav_header_top">50dp</dimen>
+    <dimen name="nav_header_photo">15dp</dimen>
+    <dimen name="nav_header_height">176dp</dimen>
+    <dimen name="basic_text_dimen">16dp</dimen>
+    <dimen name="text_margin">16dp</dimen>
+    <dimen name="connection_list_margin">8dp</dimen>
+    <dimen name="nav_header_image_top_margin">45dp</dimen>
+    <dimen name="connections_top_margin">60dp</dimen>
+    <dimen name="action_bar_bottom">75dp</dimen>
+    <dimen name="number_picker_dim">50dp</dimen>
+    <dimen name="spinner_width">200dp</dimen>
+    <dimen name="spinner_height">30dp</dimen>
+    <dimen name="event_square">50dp</dimen>
+    <dimen name="event_image_dim">200dp</dimen>
+    <dimen name="next_button_width">200dp</dimen>
+    <dimen name="new_event_description_margin_top">25dp</dimen>
+    <dimen name="header_top_margin">25dp</dimen>
+    <dimen name="entry_top_margin">20dp</dimen>
+    <dimen name="entry_side_margin">15dp</dimen>
+    <dimen name="fragment_top_margin">70dp</dimen>
+    <dimen name="button_margin">15dp</dimen>
+    <dimen name="activity_margin">15dp</dimen>
+    <dimen name="new_account_profile_img_dimen">300dp</dimen>
+</resources>

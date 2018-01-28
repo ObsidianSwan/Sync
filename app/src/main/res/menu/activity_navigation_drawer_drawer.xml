@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:showIn="navigation_view">
+
+    <group android:checkableBehavior="single">
+        <item
+            android:id="@+id/nav_menu_map"
+            android:icon="@drawable/nav_menu_map"
+            android:title="@string/Map_Title" />
+        <item
+            android:id="@+id/nav_view_connections"
+            android:icon="@drawable/nav_view_connections"
+            android:title="@string/View_Connections" />
+        <item
+            android:id="@+id/nav_sync_up"
+            android:icon="@drawable/nav_sync_up"
+            android:title="@string/Sync_Up" />
+        <item
+            android:id="@+id/nav_view_events"
+            android:icon="@drawable/nav_view_events"
+            android:title="@string/View_Events" />
+        <item
+            android:id="@+id/nav_create_event"
+            android:icon="@drawable/nav_create_event"
+            android:title="@string/Create_Event" />
+        <item
+            android:id="@+id/nav_edit_profile"
+            android:icon="@drawable/nav_edit_profile"
+            android:title="@string/Edit_Profile" />
+    </group>
+
+
+        <item android:title="Communicate">
+            <menu>
+                <item
+                    android:id="@+id/nav_settings"
+                    android:icon="@drawable/nav_settings"
+                    android:title="@string/Settings_Menu" />
+                <item
+                    android:id="@+id/nav_logout"
+                    android:icon="@drawable/nav_logout"
+                    android:title="@string/Log_Out" />
+            </menu>
+        </item>
+</menu>

@@ -1,0 +1,60 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    tools:context="com.example.finalyearproject.hollyboothroyd.sync.Activities.Fragments.NewEvent.NewEventDescriptionFragment">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:layout_marginTop="@dimen/nav_header_image_top_margin">
+
+        <TextView
+            android:id="@+id/new_event_description_title_text"
+            android:layout_gravity="center"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="8dp"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="16dp"
+            android:text="@string/New_Event_Main_Title"
+            android:textAppearance="@style/TextAppearance.AppCompat.Headline"/>
+
+        <ImageButton
+            android:id="@+id/new_event_image_button"
+            android:layout_gravity="center"
+            android:layout_width="@dimen/event_image_dim"
+            android:layout_height="@dimen/event_image_dim"
+            android:layout_marginEnd="8dp"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="40dp"
+            android:background="@android:color/transparent"
+            android:scaleType="centerCrop"
+            app:srcCompat="@drawable/add_photo" />
+
+        <EditText
+            android:id="@+id/new_event_description_text"
+            android:layout_width="300dp"
+            android:layout_height="150dp"
+            android:layout_marginTop="@dimen/new_event_description_margin_top"
+            android:layout_gravity="center"
+            android:ems="10"
+            android:hint="@string/new_event_description"
+            android:inputType="textMultiLine" />
+    </LinearLayout>
+
+    <Button
+        android:id="@+id/event_description_done_button"
+        android:layout_width="@dimen/next_button_width"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginBottom="8dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
+        android:text="@string/Done_Button"/>
+
+</RelativeLayout>

@@ -1,0 +1,116 @@
+<resources>
+    <string name="app_name">Sync</string>
+    <string name="AppName">Sync</string>
+    <string name="title_activity_login">Sign in</string>
+
+    <!-- Strings related to login -->
+    <string name="prompt_email">Email</string>
+    <string name="prompt_password">Password</string>
+    <string name="action_sign_in">Login</string>
+    <string name="action_sign_in_short">Sign in</string>
+    <string name="error_invalid_email">This email address is invalid</string>
+    <string name="error_invalid_password">This password is too short</string>
+    <string name="error_invalid_verify_password">Passwords do not match</string>
+    <string name="error_incorrect_password">This password is incorrect</string>
+    <string name="error_field_required">This field is required</string>
+    <string name="Connect_With_LinkedIn">Connect with LinkedIn</string>
+    <string name="New_Account">New Account</string>
+    <string name="Login_Existing_Account">Already have an account?</string>
+    <string name="New_Account_Basic_Info_Title">New Account</string>
+    <string name="First_Name">First Name</string>
+    <string name="Last_Name">Last Name</string>
+    <string name="Email">Email</string>
+    <string name="Verify_Password">Re-Enter Password</string>
+    <string name="Next_Button">Next</string>
+    <string name="New_Account_Job_Info_Title">Tell us about you</string>
+    <string name="Company_Text_Hint">Company</string>
+    <string name="Position_Text_Hint">Position</string>
+    <string name="Industry_Text_Hint">Industry</string>
+    <string name="Done_Button">Done</string>
+    <string name="Upload_Photo">Upload your photo</string>
+    <string name="Register_New_Account_Progress_Dialog">Creating account&#8230;</string>
+    <string name="Register_New_Account_Success">Account created</string>
+    <string name="Register_New_Account_Failure">Account creation failed</string>
+
+    <string name="title_activity_login_form">Log in</string>
+    <string name="title_activity_new_account_basic_info">New Account</string>
+    <string name="title_activity_new_account_job_info">Tell us about you</string>
+    <string name="title_activity_new_account_photo">One last step</string>
+    <string name="title_activity_maps">Map</string>
+    <string name="Login">Login</string>
+    <string name="InfoWindowName">Name:</string>
+    <string name="InfoWindowInfo">More info&#8230;</string>
+    <string name="Connect_Button">Connect</string>
+    <string name="title_activity_navigation_drawer">NavigationDrawerActivity</string>
+
+    <string name="navigation_drawer_open">Open navigation drawer</string>
+    <string name="navigation_drawer_close">Close navigation drawer</string>
+
+    <string name="action_settings">Settings</string>
+    <string name="Map_Title">Map</string>
+    <string name="Edit_Profile">Edit Profile</string>
+    <string name="Sync_Up">SyncUp</string>
+    <string name="Create_Event">Create Event</string>
+    <string name="View_Events">View Events</string>
+    <string name="View_Connections">View Connections</string>
+    <string name="Settings_Menu">Settings</string>
+    <string name="Log_Out">Logout</string>
+    <string name="connections_text">connections</string>
+    <string name="connection_text">connection</string>
+
+    <string name="connections_action_bar_title">Connections</string>
+
+    <string name="logout_confirmation_text">Are you sure you want to logout?</string>
+    <string name="logout_action_bar_title">Logout</string>
+
+    <string name="settings_map_header">Map personalization</string>
+    <string name="settings_event_pin_color_text">Event pin color</string>
+    <string name="settings_user_pin_color_text">Person pin color</string>
+    <string name="settings_loc_refresh_text">Location refresh rate</string>
+    <string name="settings_time_refresh_text">Time (minutes)</string>
+    <string name="settings_dis_refresh_text">Distance (meters)</string>
+    <string name="settings_zoom_text">Default zoom level</string>
+    <string name="settings_action_bar_title">Settings</string>
+    <string-array name="pin_color_array">
+        <item>Azure</item>
+        <item>Blue</item>
+        <item>Cyan</item>
+        <item>Green</item>
+        <item>Magenta</item>
+        <item>Orange</item>
+        <item>Red</item>
+        <item>Rose</item>
+        <item>Violet</item>
+        <item>Yellow</item>
+    </string-array>
+
+    // Toast messages
+    <string name="could_not_find_location">Could not find your location.\\nMake sure location features are turned on</string>
+    <string name="connection_successful">Connection made!</string>
+    <string name="connection_unsuccessful">Connection request unsuccessful</string>
+    <string name="generic_sign_up_failed">Signed up failed</string>
+    <string name="sign_up_successful">Sign up successful!</string>
+    <string name="popup_connected_text">You\'re connected!</string>
+
+    <string name="New_Event_Main_Title">New Event</string>
+    <string name="New_Event_Title">Title</string>
+    <string name="New_Event_Topic">Topic</string>
+    <string name="New_Event_Industry">Industry</string>
+    <string name="new_event_date_text">Date:</string>
+    <string name="new_event_time_text">Time:</string>
+    <string name="new_event_date_hint">dd-mm-yyyy</string>
+    <string name="new_event_time_hint">hh:mm</string>
+    <string name="new_event_location_text">Location:</string>
+    <string name="new_event_location_street_hint">Street Address</string>
+    <string name="new_event_location_city">City</string>
+    <string name="new_event_location_zipcode">Zip Code</string>
+    <string name="new_event_location_country">Country</string>
+    <string name="new_event_location_state">State/County</string>
+    <string name="error_invalid_date">Date format is invalid. Required format: DD-MM-YYYY</string>
+    <string name="error_invalid_time">Time format is invalid. Required format: HH:MM</string>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="new_event_description">Tell us about your event</string>
+
+</resources>

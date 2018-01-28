@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+    
+    <android.support.v7.widget.CardView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <ImageView
+                android:id="@+id/userPhoto"
+                android:src="@drawable/default_person"
+                android:layout_width="100dp"
+                android:layout_height="100dp"
+                android:layout_margin="10dp"/>
+
+            <TextView
+                android:id="@+id/userName"
+                android:textStyle="bold"
+                android:textSize="16sp"
+                android:text="@string/InfoWindowName"
+                android:layout_toEndOf="@id/userPhoto"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+
+            <TextView
+                android:id="@+id/details"
+                android:layout_toEndOf="@id/userPhoto"
+                android:layout_below="@id/userName"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+
+            <Button
+                android:id="@+id/more_info"
+                android:layout_toEndOf="@id/userPhoto"
+                android:layout_below="@id/details"
+                android:paddingTop="20dp"
+                android:text="@string/InfoWindowInfo"
+                android:background="@android:color/transparent"
+                android:textColor="@color/colorAccent"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+
+        </RelativeLayout>
+    </android.support.v7.widget.CardView>
+</LinearLayout>
