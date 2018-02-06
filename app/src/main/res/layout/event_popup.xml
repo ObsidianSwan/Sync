@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <Button
+            android:id="@+id/dismiss_popup_button"
+            android:layout_width="@dimen/dismiss_button_small"
+            android:layout_height="@dimen/dismiss_button_small"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentTop="true"
+            android:layout_margin="@dimen/popup_margin"
+            android:background="@android:drawable/ic_menu_close_clear_cancel" />
+
+        <LinearLayout
+            android:id="@+id/person_popup"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_horizontal"
+            android:orientation="vertical"
+            android:layout_below="@+id/dismiss_popup_button"
+            android:layout_marginBottom="@dimen/popup_content_bottom_margin"
+            android:layout_marginStart="@dimen/activity_margin"
+            android:layout_marginEnd="@dimen/activity_margin">
+
+            <ImageView
+                android:id="@+id/popup_image"
+                android:layout_width="@dimen/popup_img_dimen"
+                android:layout_height="@dimen/popup_img_dimen"
+                android:layout_margin="@dimen/popup_margin"
+                android:background="@drawable/add_photo"
+                android:scaleType="centerCrop" />
+
+            <TextView
+                android:id="@+id/popup_title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="@dimen/popup_margin"
+                android:layout_marginStart="@dimen/popup_margin"
+                android:layout_marginTop="@dimen/popup_title_top_margin"
+                android:text="TextView"
+                android:textAppearance="@style/TextAppearance.AppCompat.Large" />
+
+            <TextView
+                android:id="@+id/popup_topic"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="@dimen/popup_margin"
+                android:text="TextView"
+                android:textAppearance="@style/TextAppearance.AppCompat.Medium" />
+
+            <TextView
+                android:id="@+id/popup_industry"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="@dimen/popup_margin"
+                android:text="TextView"
+                android:textAppearance="@style/TextAppearance.AppCompat.Medium" />
+
+            <TextView
+                android:id="@+id/popup_date"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="@dimen/popup_margin"
+                android:text="TextView"
+                android:textAppearance="@style/TextAppearance.AppCompat.Medium" />
+
+            <TextView
+                android:id="@+id/popup_time"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="@dimen/popup_margin"
+                android:text="TextView"
+                android:textAppearance="@style/TextAppearance.AppCompat.Medium" />
+
+            <TextView
+                android:id="@+id/popup_description"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="@dimen/popup_margin"
+                android:text="TextView"
+                android:textAppearance="@style/TextAppearance.AppCompat.Medium" />
+
+        </LinearLayout>
+
+        <Button
+            android:id="@+id/popup_attend"
+            android:layout_width="@dimen/button_width"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/person_popup"
+            android:layout_centerHorizontal="true"
+            android:layout_marginBottom="@dimen/button_margin"
+            android:text="@string/event_attend_button" />
+
+        <TextView
+            android:id="@+id/popup_attending"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/person_popup"
+            android:layout_centerHorizontal="true"
+            android:layout_margin="@dimen/popup_margin"
+            android:paddingBottom="16dp"
+            android:text="@string/popup_attending_text"
+            android:textAppearance="@style/TextAppearance.AppCompat.Large"
+            android:visibility="visible" />
+    </RelativeLayout>
+</ScrollView>

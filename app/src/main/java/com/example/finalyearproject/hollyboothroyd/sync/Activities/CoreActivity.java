@@ -6,14 +6,18 @@ import com.example.finalyearproject.hollyboothroyd.sync.Activities.Fragments.New
 import com.example.finalyearproject.hollyboothroyd.sync.Activities.Fragments.NewEvent.NewEventDescriptionFragment;
 import com.example.finalyearproject.hollyboothroyd.sync.Activities.Fragments.NewEvent.NewEventLogisticsFragment;
 import com.example.finalyearproject.hollyboothroyd.sync.Activities.Fragments.SettingsFragment;
+import com.example.finalyearproject.hollyboothroyd.sync.Activities.Fragments.ViewEventsFragment;
+import com.example.finalyearproject.hollyboothroyd.sync.Model.Event;
 import com.example.finalyearproject.hollyboothroyd.sync.Model.UserConnections;
 import com.example.finalyearproject.hollyboothroyd.sync.Model.Person;
+import com.example.finalyearproject.hollyboothroyd.sync.Model.UserEvents;
 import com.example.finalyearproject.hollyboothroyd.sync.Services.AccountManager;
 
-import android.app.FragmentManager;
+import android.content.Intent;
+import android.support.v4.app.FragmentManager;
 import android.net.Uri;
 import android.os.Bundle;
-import android.app.FragmentTransaction;
+import android.support.v4.app.FragmentTransaction;
 import android.view.View;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
@@ -29,19 +33,24 @@ import android.widget.TextView;
 import com.example.finalyearproject.hollyboothroyd.sync.Activities.Fragments.GMapFragment;
 import com.example.finalyearproject.hollyboothroyd.sync.R;
 import com.example.finalyearproject.hollyboothroyd.sync.Services.DatabaseManager;
+import com.google.android.gms.maps.model.LatLng;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.ValueEventListener;
 import com.squareup.picasso.Picasso;
 
+import java.util.HashMap;
+
 public class CoreActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener, ConnectionFragment.OnListFragmentInteractionListener,
         LogoutFragment.OnFragmentInteractionListener, SettingsFragment.OnFragmentInteractionListener, NewEventBasicInfoFragment.OnFragmentInteractionListener,
-        NewEventLogisticsFragment.OnFragmentInteractionListener, NewEventDescriptionFragment.OnFragmentInteractionListener{
+        NewEventLogisticsFragment.OnFragmentInteractionListener, NewEventDescriptionFragment.OnFragmentInteractionListener, ViewEventsFragment.OnListFragmentInteractionListener{
 
     private DatabaseManager mDatabaseManager;
     private AccountManager mAccountManager;
-    private FragmentManager mFragmentManager;
+    private FragmentManager mSupportFragmentManager;
+
+    private UserEvents mUserEvents;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -50,9 +59,10 @@ public class CoreActivity extends AppCompatActivity
         mAccountManager = new AccountManager();
 
         UserConnections connections = new UserConnections();
+        mUserEvents = new UserEvents();
 
-        mFragmentManager = getFragmentManager();
-        mFragmentManager.beginTransaction().replace(R.id.content_frame, new GMapFragment()).commit();
+        mSupportFragmentManager = getSupportFragmentManager();
+        mSupportFragmentManager.beginTransaction().replace(R.id.content_frame, new GMapFragment()).commit();
         setContentView(R.layout.activity_navigation_drawer);
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
@@ -93,7 +103,9 @@ public class CoreActivity extends AppCompatActivity
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 Person currentUser = dataSnapshot.getValue(Person.class);
-                Picasso.with(CoreActivity.this).load(currentUser.getImageId()).into(profileImage);
+                if (currentUser.getImageId() != null ){
+                    Picasso.with(CoreActivity.this).load(currentUser.getImageId()).into(profileImage);
+                }
                 userNameText.setText(currentUser.getFirstName() + " " + currentUser.getLastName());
                 userPositionText.setText(currentUser.getPosition());
 
@@ -160,21 +172,21 @@ public class CoreActivity extends AppCompatActivity
         int id = item.getItemId();
 
         if (id == R.id.nav_menu_map) {
-            mFragmentManager.beginTransaction().replace(R.id.content_frame, new GMapFragment()).commit();
+            mSupportFragmentManager.beginTransaction().replace(R.id.content_frame, new GMapFragment()).commit();
         } else if (id == R.id.nav_view_connections) {
-            mFragmentManager.beginTransaction().replace(R.id.content_frame, new ConnectionFragment()).commit();
+            mSupportFragmentManager.beginTransaction().replace(R.id.content_frame, new ConnectionFragment()).commit();
         } else if (id == R.id.nav_sync_up) {
 
         } else if (id == R.id.nav_view_events) {
-
+            mSupportFragmentManager.beginTransaction().replace(R.id.content_frame, new ViewEventsFragment()).commit();
         } else if (id == R.id.nav_create_event) {
-            mFragmentManager.beginTransaction().replace(R.id.content_frame, new NewEventBasicInfoFragment()).commit();
+            mSupportFragmentManager.beginTransaction().replace(R.id.content_frame, new NewEventBasicInfoFragment()).commit();
         } else if (id == R.id.nav_edit_profile) {
 
         } else if (id == R.id.nav_settings) {
-            mFragmentManager.beginTransaction().replace(R.id.content_frame, new SettingsFragment()).commit();
+            mSupportFragmentManager.beginTransaction().replace(R.id.content_frame, new SettingsFragment()).commit();
         } else if (id == R.id.nav_logout) {
-            mFragmentManager.beginTransaction().replace(R.id.content_frame, new LogoutFragment()).commit();
+            mSupportFragmentManager.beginTransaction().replace(R.id.content_frame, new LogoutFragment()).commit();
         }
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
@@ -209,7 +221,7 @@ public class CoreActivity extends AppCompatActivity
         args.putString(NewEventLogisticsFragment.ARG_TOPIC, eventTopic);
         eventLogisticsFragment.setArguments(args);
 
-        FragmentTransaction transaction = mFragmentManager.beginTransaction();
+        FragmentTransaction transaction = mSupportFragmentManager.beginTransaction();
 
         // Replace whatever is in the fragment_container view with this fragment,
         // and add the transaction to the back stack so the user can navigate back
@@ -222,7 +234,7 @@ public class CoreActivity extends AppCompatActivity
 
     @Override
     public void onNewEventLogisticsNextButtonPressed(String eventTitle, String eventIndustry, String eventTopic, String date, String time,
-                                                     String street, String city, String state, String zipcode, String country) {
+                                                     String street, String city, String state, String zipcode, String country, LatLng position) {
         // New event logistics data pass to next fragment
         // TODO: Check if fragment is open before
 
@@ -238,9 +250,11 @@ public class CoreActivity extends AppCompatActivity
         args.putString(NewEventDescriptionFragment.ARG_STATE, state);
         args.putString(NewEventDescriptionFragment.ARG_ZIPCODE, zipcode);
         args.putString(NewEventDescriptionFragment.ARG_COUNTRY, country);
+        args.putDouble(NewEventDescriptionFragment.ARG_LONGITUDE, position.longitude);
+        args.putDouble(NewEventDescriptionFragment.ARG_LATITUDE, position.latitude);
         eventDescriptionFragment.setArguments(args);
 
-        FragmentTransaction transaction = mFragmentManager.beginTransaction();
+        FragmentTransaction transaction = mSupportFragmentManager.beginTransaction();
 
         // Replace whatever is in the fragment_container view with this fragment,
         // and add the transaction to the back stack so the user can navigate back
@@ -252,7 +266,18 @@ public class CoreActivity extends AppCompatActivity
     }
 
     @Override
-    public void onNewEventDescriptionDoneButtonPressed(Uri uri) {
+    public void onNewEventDescriptionDoneButtonPressed(Double longitude, Double latitude) {
+        mSupportFragmentManager.beginTransaction().replace(R.id.content_frame, new GMapFragment()).commit();
+    }
 
+    @Override
+    public void onListFragmentInteraction(Event item) {
+
+    }
+
+    @Override
+    public void onLogoutInteraction() {
+        mUserEvents.clearEvents();
+        startActivity(new Intent(this, LoginActivity.class));
     }
 }

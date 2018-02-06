@@ -51,7 +51,7 @@
             android:layout_marginTop="@dimen/entry_top_margin"
             android:ems="10"
             android:hint="@string/New_Event_Industry"
-            android:inputType="textEmailAddress" />
+            android:inputType="textPersonName" />
 
     </LinearLayout>
 

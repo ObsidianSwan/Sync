@@ -1,22 +1,44 @@
 package com.example.finalyearproject.hollyboothroyd.sync.Activities.Fragments.NewEvent;
 
+import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
+import android.annotation.TargetApi;
 import android.app.DatePickerDialog;
 import android.app.TimePickerDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
-import android.app.Fragment;
+import android.support.v4.app.Fragment;
+import android.provider.ContactsContract;
+import android.support.annotation.NonNull;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.Toast;
 
+import com.example.finalyearproject.hollyboothroyd.sync.Activities.CoreActivity;
+import com.example.finalyearproject.hollyboothroyd.sync.Activities.NewAccount.NewAccountPhotoActivity;
+import com.example.finalyearproject.hollyboothroyd.sync.Model.Event;
+import com.example.finalyearproject.hollyboothroyd.sync.Model.Person;
 import com.example.finalyearproject.hollyboothroyd.sync.R;
+import com.example.finalyearproject.hollyboothroyd.sync.Services.AccountManager;
+import com.example.finalyearproject.hollyboothroyd.sync.Services.DatabaseManager;
+import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.storage.UploadTask;
 import com.theartofdev.edmodo.cropper.CropImage;
 import com.theartofdev.edmodo.cropper.CropImageView;
+
+import java.util.ArrayList;
 
 import static android.app.Activity.RESULT_OK;
 
@@ -39,6 +61,8 @@ public class NewEventDescriptionFragment extends Fragment {
     public static final String ARG_STATE = "state";
     public static final String ARG_ZIPCODE = "zipcode";
     public static final String ARG_COUNTRY = "country";
+    public static final String ARG_LONGITUDE = "longitude";
+    public static final String ARG_LATITUDE = "latitude";
 
     private String mTitle;
     private String mIndustry;
@@ -50,11 +74,17 @@ public class NewEventDescriptionFragment extends Fragment {
     private String mState;
     private String mZipCode;
     private String mCountry;
+    private Double mLongitude;
+    private Double mLatitude;
 
     private ImageButton mEventImage;
+    private EditText mDescription;
     private Button mDoneButton;
     private Uri mImageUri;
     private static final int GALLERY_CODE = 1;
+
+    private AccountManager accountManager;
+    private DatabaseManager databaseManager;
 
     private OnFragmentInteractionListener mListener;
 
@@ -70,7 +100,7 @@ public class NewEventDescriptionFragment extends Fragment {
      */
     // TODO: Rename and change types and number of parameters
     public static NewEventDescriptionFragment newInstance(String title, String industry, String topic, String date, String time,
-                                                          String street, String city, String state, String zipcode, String country) {
+                                                          String street, String city, String state, String zipcode, String country, LatLng position) {
         NewEventDescriptionFragment fragment = new NewEventDescriptionFragment();
         Bundle args = new Bundle();
         args.putString(ARG_TITLE, title);
@@ -83,6 +113,8 @@ public class NewEventDescriptionFragment extends Fragment {
         args.putString(ARG_STATE, state);
         args.putString(ARG_ZIPCODE, zipcode);
         args.putString(ARG_COUNTRY, country);
+        args.putDouble(ARG_LONGITUDE, position.longitude);
+        args.putDouble(ARG_LATITUDE, position.latitude);
         fragment.setArguments(args);
         return fragment;
     }
@@ -94,6 +126,15 @@ public class NewEventDescriptionFragment extends Fragment {
             mTitle = getArguments().getString(ARG_TITLE);
             mIndustry = getArguments().getString(ARG_INDUSTRY);
             mTopic = getArguments().getString(ARG_TOPIC);
+            mDate = getArguments().getString(ARG_DATE);
+            mTime = getArguments().getString(ARG_TIME);
+            mStreet = getArguments().getString(ARG_STREET);
+            mCity = getArguments().getString(ARG_CITY);
+            mState = getArguments().getString(ARG_STATE);
+            mZipCode = getArguments().getString(ARG_ZIPCODE);
+            mCountry = getArguments().getString(ARG_COUNTRY);
+            mLongitude = getArguments().getDouble(ARG_LONGITUDE);
+            mLatitude = getArguments().getDouble(ARG_LATITUDE);
         }
     }
 
@@ -103,6 +144,10 @@ public class NewEventDescriptionFragment extends Fragment {
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_new_event_description, container, false);
 
+        accountManager = new AccountManager();
+        databaseManager = new DatabaseManager();
+
+        mDescription = (EditText) view.findViewById(R.id.new_event_description_text);
         mEventImage = (ImageButton) view.findViewById(R.id.new_event_image_button);
 
         mEventImage.setOnClickListener(new View.OnClickListener() {
@@ -116,24 +161,15 @@ public class NewEventDescriptionFragment extends Fragment {
 
         mDoneButton = (Button) view.findViewById(R.id.event_description_done_button);
 
-/*        mNextButton.setOnClickListener(new View.OnClickListener() {
+        mDoneButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                String date = mDate.getText().toString();
-                String time = mTime.getText().toString();
-                String street = mStreet.getText().toString();
-                String city = mCity.getText().toString();
-                String state = mState.getText().toString();
-                String zipcode = mZipCode.getText().toString();
-                String country = mCountry.getText().toString();
+                String description = mDescription.getText().toString();
+                registerEvent(description);
 
-                if (areEntriesValid(date, time, street, city, state, zipcode, country)) {
-                    if (mListener != null) {
-                        //mListener.onFragmentInteraction(eventTitle, eventIndustry, eventTopic);
-                    }
-                }
+
             }
-        });*/
+        });
         return view;
     }
 
@@ -144,9 +180,9 @@ public class NewEventDescriptionFragment extends Fragment {
         if (requestCode == GALLERY_CODE && resultCode == RESULT_OK) {
             mImageUri = data.getData();
             CropImage.activity(mImageUri)
-                    .setAspectRatio(1,1)
+                    .setAspectRatio(1, 1)
                     .setGuidelines(CropImageView.Guidelines.ON)
-                    .start(getActivity());
+                    .start(getActivity(), this);
         }
 
         if (requestCode == CropImage.CROP_IMAGE_ACTIVITY_REQUEST_CODE) {
@@ -158,6 +194,66 @@ public class NewEventDescriptionFragment extends Fragment {
                 Exception error = result.getError();
             }
         }
+    }
+
+    private void registerEvent(final String description) {
+        // TODO: Add progress spinner
+        //showProgress(true);
+
+        if (mImageUri == null) {
+            //TODO: Create event without image
+        }
+
+        databaseManager.uploadEventImage(mImageUri).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+            @Override
+            public void onSuccess(final UploadTask.TaskSnapshot taskSnapshot) {
+                // Get a URL to the uploaded content
+                String downloadUrl = taskSnapshot.getDownloadUrl().toString();
+                final String userId = accountManager.getCurrentUser().getUid();
+                // Add the event to the Firebase Database with the image storage reference
+
+                DatabaseReference newEventRef = databaseManager.getNewEventReference();
+                final String refKey = newEventRef.getKey();
+                Event event = new Event(refKey, mTitle, mIndustry, mTopic, mDate, mTime, mStreet,
+                        mCity, mState, mZipCode, mCountry, mLongitude, mLatitude, description, downloadUrl, userId);
+                databaseManager.addEvent(newEventRef, event).addOnCompleteListener(new OnCompleteListener<Void>() {
+                    @Override
+                    public void onComplete(@NonNull Task<Void> task) {
+                        //showProgress(false);
+                        if (task.isSuccessful()) {
+
+                            databaseManager.addEventCreator(refKey, userId).addOnCompleteListener(new OnCompleteListener<Void>() {
+                                @Override
+                                public void onComplete(@NonNull Task<Void> task) {
+                                    if (task.isSuccessful()) {
+                                        Toast.makeText(getActivity(), R.string.event_creation_successful, Toast.LENGTH_LONG).show();
+                                        if (mListener != null) {
+                                            mListener.onNewEventDescriptionDoneButtonPressed(mLongitude, mLatitude);
+                                        }
+                                    } else {
+                                        //TODO: add logging tags. Debugging. Better retry
+                                        Toast.makeText(getActivity(), R.string.generic_event_creation_failed, Toast.LENGTH_LONG).show();
+                                        //showProgress(false);
+                                    }
+                                }
+                            });
+                        } else {
+                            //TODO: add logging tags. Debugging. Better retry
+                            Toast.makeText(getActivity(), R.string.generic_event_creation_failed, Toast.LENGTH_LONG).show();
+                            //showProgress(false);
+                        }
+                    }
+                });
+            }
+        }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+                // Adding the events's image was not successful
+                //TODO: add logging tags. Debugging. Better retry
+                Toast.makeText(getActivity(), R.string.generic_event_creation_failed, Toast.LENGTH_LONG).show();
+                //showProgress(false);
+            }
+        });
     }
 
     // TODO: Rename method, update argument and hook method into UI event
@@ -195,7 +291,42 @@ public class NewEventDescriptionFragment extends Fragment {
      * >Communicating with Other Fragments</a> for more information.
      */
     public interface OnFragmentInteractionListener {
-        // TODO: Update argument type and name
-        void onNewEventDescriptionDoneButtonPressed(Uri uri);
+        void onNewEventDescriptionDoneButtonPressed(Double longitude, Double Latitude);
     }
+
+    /**
+     * Shows the progress UI and hides the login form.
+     */
+    /*@TargetApi(Build.VERSION_CODES.HONEYCOMB_MR2)
+    private void showProgress(final boolean show) {
+        // On Honeycomb MR2 we have the ViewPropertyAnimator APIs, which allow
+        // for very easy animations. If available, use these APIs to fade-in
+        // the progress spinner.
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB_MR2) {
+            int shortAnimTime = getResources().getInteger(android.R.integer.config_shortAnimTime);
+
+            mSignUpFormView.setVisibility(show ? View.GONE : View.VISIBLE);
+            mSignUpFormView.animate().setDuration(shortAnimTime).alpha(
+                    show ? 0 : 1).setListener(new AnimatorListenerAdapter() {
+                @Override
+                public void onAnimationEnd(Animator animation) {
+                    mSignUpFormView.setVisibility(show ? View.GONE : View.VISIBLE);
+                }
+            });
+
+            mProgressView.setVisibility(show ? View.VISIBLE : View.GONE);
+            mProgressView.animate().setDuration(shortAnimTime).alpha(
+                    show ? 1 : 0).setListener(new AnimatorListenerAdapter() {
+                @Override
+                public void onAnimationEnd(Animator animation) {
+                    mProgressView.setVisibility(show ? View.VISIBLE : View.GONE);
+                }
+            });
+        } else {
+            // The ViewPropertyAnimator APIs are not available, so simply show
+            // and hide the relevant UI components.
+            mProgressView.setVisibility(show ? View.VISIBLE : View.GONE);
+            mSignUpFormView.setVisibility(show ? View.GONE : View.VISIBLE);
+        }
+    }*/
 }

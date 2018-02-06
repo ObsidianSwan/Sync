@@ -11,9 +11,7 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.model.Marker;
 import com.squareup.picasso.Picasso;
 
-import java.net.URI;
 import java.util.HashMap;
-import java.util.List;
 
 /**
  * Created by hollyboothroyd on 12/8/2017.

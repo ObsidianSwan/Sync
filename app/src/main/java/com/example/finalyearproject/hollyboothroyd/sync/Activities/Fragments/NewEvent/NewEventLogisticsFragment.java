@@ -3,9 +3,11 @@ package com.example.finalyearproject.hollyboothroyd.sync.Activities.Fragments.Ne
 import android.app.DatePickerDialog;
 import android.app.TimePickerDialog;
 import android.content.Context;
+import android.location.Address;
+import android.location.Geocoder;
 import android.net.Uri;
 import android.os.Bundle;
-import android.app.Fragment;
+import android.support.v4.app.Fragment;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -14,13 +16,17 @@ import android.widget.Button;
 import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.TimePicker;
+import android.widget.Toast;
 
 import com.example.finalyearproject.hollyboothroyd.sync.R;
+import com.google.android.gms.maps.model.LatLng;
 
+import java.io.IOException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
 import java.util.regex.Pattern;
 
 /**
@@ -153,7 +159,13 @@ public class NewEventLogisticsFragment extends Fragment {
                             public void onTimeSet(TimePicker view, int hourOfDay,
                                                   int minute) {
                                 // Display Selected time in textbox
-                                mTime.setText(hourOfDay + ":" + minute);
+                                String minuteString;
+                                if(minute < 10){
+                                    minuteString = "0" + Integer.toString(minute);
+                                } else {
+                                    minuteString = Integer.toString(minute);
+                                }
+                                mTime.setText(hourOfDay + ":" + minuteString);
                             }
                         }, mHour, mMinute, true);
                 timePickerDialog.show();
@@ -171,9 +183,12 @@ public class NewEventLogisticsFragment extends Fragment {
                 String zipcode = mZipCode.getText().toString();
                 String country = mCountry.getText().toString();
 
-                if (areEntriesValid(date, time, street, city, state, zipcode, country)) {
+                String completeAddress = street + ", " + city + ", " + state + ", " + zipcode + ", " + country;
+                LatLng position = getLocationFromAddress(completeAddress);
+
+                if (areEntriesValid(date, time, street, city, state, zipcode, country, position)) {
                     if (mListener != null) {
-                        mListener.onNewEventLogisticsNextButtonPressed(mTitle, mIndustry, mTopic, date, time, street, city, state, zipcode, country);
+                        mListener.onNewEventLogisticsNextButtonPressed(mTitle, mIndustry, mTopic, date, time, street, city, state, zipcode, country, position);
                     }
                 }
             }
@@ -181,7 +196,7 @@ public class NewEventLogisticsFragment extends Fragment {
         return view;
     }
 
-    private boolean areEntriesValid(String date, String time, String street, String city, String state, String zipcode, String country) {
+    private boolean areEntriesValid(String date, String time, String street, String city, String state, String zipcode, String country, LatLng position) {
         // Reset errors.
         mDate.setError(null);
         mTime.setError(null);
@@ -202,6 +217,8 @@ public class NewEventLogisticsFragment extends Fragment {
             mDate.setError(getString(R.string.error_invalid_date));
             focusView = mDate;
         }
+
+        // Check for a valid time
         if (TextUtils.isEmpty(time)) {
             mTime.setError(getString(R.string.error_field_required));
             focusView = mTime;
@@ -209,30 +226,27 @@ public class NewEventLogisticsFragment extends Fragment {
             mTime.setError(getString(R.string.error_invalid_time));
             focusView = mTime;
         }
-        // Check for a valid event industry
+        // Check for a valid event address
         if (TextUtils.isEmpty(street)) {
             mStreet.setError(getString(R.string.error_field_required));
             focusView = mStreet;
-        }
-        // Check for a valid event topic
-        if (TextUtils.isEmpty(city)) {
+        } else if (TextUtils.isEmpty(city)) {
             mCity.setError(getString(R.string.error_field_required));
             focusView = mCity;
-        }
-        // Check for a valid event industry
-        if (TextUtils.isEmpty(state)) {
+        } else if (TextUtils.isEmpty(state)) {
             mState.setError(getString(R.string.error_field_required));
             focusView = mState;
-        }
-        // Check for a valid event topic
-        if (TextUtils.isEmpty(zipcode)) {
+        } else if (TextUtils.isEmpty(zipcode)) {
             mZipCode.setError(getString(R.string.error_field_required));
             focusView = mZipCode;
-        }
-        // Check for a valid event industry
-        if (TextUtils.isEmpty(country)) {
+        } else if (TextUtils.isEmpty(country)) {
             mCountry.setError(getString(R.string.error_field_required));
             focusView = mCountry;
+        }
+
+        if(position == null) {
+            Toast.makeText(getActivity(), R.string.enter_valid_address, Toast.LENGTH_LONG).show();
+            focusView = mStreet;
         }
 
         if (focusView != null) {
@@ -269,6 +283,32 @@ public class NewEventLogisticsFragment extends Fragment {
         }
     }
 
+    public LatLng getLocationFromAddress(String inputtedAddress) {
+
+        Geocoder coder = new Geocoder(getContext());
+        List<Address> address;
+        LatLng position = null;
+
+        try {
+            // May throw an IOException
+            address = coder.getFromLocationName(inputtedAddress, 5);
+            if (address == null) {
+                return null;
+            }
+            Address location = address.get(0);
+            location.getLatitude();
+            location.getLongitude();
+
+            position = new LatLng(location.getLatitude(), location.getLongitude() );
+
+        } catch (IOException ex) {
+
+            ex.printStackTrace();
+        }
+
+        return position;
+    }
+
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
@@ -298,6 +338,6 @@ public class NewEventLogisticsFragment extends Fragment {
      */
     public interface OnFragmentInteractionListener {
         void onNewEventLogisticsNextButtonPressed(String eventTitle, String eventIndustry, String eventTopic, String date, String time, String street,
-                                                  String city, String state, String zipcode, String country);
+                                                  String city, String state, String zipcode, String country, LatLng position);
     }
 }

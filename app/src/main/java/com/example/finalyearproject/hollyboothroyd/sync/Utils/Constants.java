@@ -24,6 +24,7 @@ public class Constants {
     public static final int mapZoomLevelDefault = 15;
 
     public static final String personMarkerTag = "Person";
+    public static final String eventMarkerTag = "Event";
 
     // Personalization
     public static final String personPinColorName = "personPinColor";
