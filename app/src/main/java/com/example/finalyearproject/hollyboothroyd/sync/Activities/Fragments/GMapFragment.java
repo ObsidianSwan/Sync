@@ -2,7 +2,7 @@ package com.example.finalyearproject.hollyboothroyd.sync.Activities.Fragments;
 
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
-import android.app.Fragment;
+import android.support.v4.app.Fragment;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.location.Location;
@@ -24,8 +24,10 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.finalyearproject.hollyboothroyd.sync.Model.Event;
 import com.example.finalyearproject.hollyboothroyd.sync.Model.Person;
 import com.example.finalyearproject.hollyboothroyd.sync.Model.UserConnections;
+import com.example.finalyearproject.hollyboothroyd.sync.Model.UserEvents;
 import com.example.finalyearproject.hollyboothroyd.sync.R;
 import com.example.finalyearproject.hollyboothroyd.sync.Services.AccountManager;
 import com.example.finalyearproject.hollyboothroyd.sync.Services.DatabaseManager;
@@ -33,8 +35,8 @@ import com.example.finalyearproject.hollyboothroyd.sync.UI.CustomInfoWindow;
 import com.example.finalyearproject.hollyboothroyd.sync.Utils.Constants;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
-import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.maps.OnMapReadyCallback;
+import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
@@ -72,6 +74,9 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
     private List<Person> mLocalPeopleList;
     private HashMap<String, Person> mPersonMarkerMap;
 
+    private List<Event> mLocalEventsList;
+    private HashMap<String, Event> mEventMarkerMap;
+
     private CustomInfoWindow mCustomInfoWindow;
     private AlertDialog.Builder mDialogBuilder;
     private AlertDialog mDialog;
@@ -88,7 +93,7 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        MapFragment mapFragment = (MapFragment) getChildFragmentManager().findFragmentById(R.id.map);
+        SupportMapFragment mapFragment = (SupportMapFragment) getChildFragmentManager().findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
 
         mDatabaseManager = new DatabaseManager();
@@ -96,6 +101,9 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
 
         mLocalPeopleList = new ArrayList<>();
         mPersonMarkerMap = new HashMap<>();
+
+        mLocalEventsList = new ArrayList<>();
+        mEventMarkerMap = new HashMap<>();
 
         mPreferences = getActivity().getApplicationContext().getSharedPreferences(Constants.preferences, MODE_PRIVATE);
     }
@@ -177,8 +185,27 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
                     //TODO: Check this updates if someone changes their photo. And removes people when they delete account
                     mLocalPeopleList.add(person);
                 }
-                mMap.clear();
+                //mMap.clear();
                 getPeople();
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
+
+        DatabaseReference eventDatabaseReference = mDatabaseManager.getAllEventsDatabaseReference();
+        eventDatabaseReference.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
+                    Event event = snapshot.getValue(Event.class);
+                    //TODO: Check this updates if someone changes their photo. And removes people when they delete account
+                    mLocalEventsList.add(event);
+                }
+                //mMap.clear();
+                getEvents();
             }
 
             @Override
@@ -191,7 +218,7 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
     // Add longitude and latitude to person database
     // Update user location on the map
     @SuppressLint("MissingPermission")
-    private void setUserLocation(){
+    private void setUserLocation() {
         // TODO: Go through location filter
         Location lastKnownLocation = mLocationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
         if (lastKnownLocation == null) {
@@ -222,9 +249,103 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
         }
     }
 
+    private void getEvents() {
+        //TODO: Replace with local events
+        for (Event event : mLocalEventsList) {
+            MarkerOptions markerOptions = new MarkerOptions();
+            markerOptions.icon(BitmapDescriptorFactory.defaultMarker(mPreferences.getFloat(Constants.eventPinColorName, Constants.eventPinColorDefault)));
+            markerOptions.title(event.getTitle());
+            markerOptions.position(new LatLng(event.getLatitude(), event.getLongitude()));
+            markerOptions.snippet("Topic: " + event.getTopic() +
+                    "\nIndustry: " + event.getIndustry() +
+                    "\n\nTime: " + event.getTime() +
+                    "\nDate: " + event.getDate());
+
+            Marker newMarker = mMap.addMarker(markerOptions);
+            newMarker.setTag(Constants.eventMarkerTag);
+
+            // Store person data to a map to use in the mDialog and the CustomInfoWindow
+            mEventMarkerMap.put(newMarker.getId(), event);
+            mCustomInfoWindow.addMarkerImage(newMarker.getId(), event.getImageId());
+        }
+    }
+
     @Override
     public void onInfoWindowClick(final Marker marker) {
         mDialogBuilder = new AlertDialog.Builder(getActivity());
+
+        if (marker.getTag() == Constants.personMarkerTag) {
+            personPopupCreation(marker);
+        } else if (marker.getTag() == Constants.eventMarkerTag) {
+            eventPopupCreation(marker);
+        }
+    }
+
+    private void eventPopupCreation(Marker marker) {
+        View view = getActivity().getLayoutInflater().inflate(R.layout.event_popup, null);
+
+        Button dismissPopupButton = (Button) view.findViewById(R.id.dismiss_popup_button);
+        ImageView eventImage = (ImageView) view.findViewById(R.id.popup_image);
+        TextView eventTitle = (TextView) view.findViewById(R.id.popup_title);
+        TextView eventTopic = (TextView) view.findViewById(R.id.popup_topic);
+        TextView eventIndustry = (TextView) view.findViewById(R.id.popup_industry);
+        TextView eventDate = (TextView) view.findViewById(R.id.popup_date);
+        TextView eventTime = (TextView) view.findViewById(R.id.popup_time);
+        TextView eventDescription = (TextView) view.findViewById(R.id.popup_description);
+        Button attendButton = (Button) view.findViewById(R.id.popup_attend);
+        TextView attendingMessage = (TextView) view.findViewById(R.id.popup_attending);
+
+        final Event event = mEventMarkerMap.get(marker.getId());
+        if (!mEventMarkerMap.isEmpty()) {
+            Picasso.with(getActivity()).load(event.getImageId()).into(eventImage);
+        }
+
+        eventTitle.setText(event.getTitle());
+        eventTopic.setText("Topic: " + event.getTopic());
+        eventIndustry.setText("Industry: " + event.getIndustry());
+        eventDate.setText("Date: " + event.getDate());
+        eventTime.setText("Time: " + event.getTime());
+        eventDescription.setText(event.getDescription());
+
+        if (UserEvents.EVENTS_ATTENDING_MAP.containsKey(event.getUid())) {
+            // Don't show attend button if the user is already attending the event
+            attendButton.setVisibility(View.GONE);
+            attendingMessage.setVisibility(View.VISIBLE);
+        } else {
+            attendButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    //final Event desiredEvent = event;
+                    mDatabaseManager.attendNewEvent(event).addOnCompleteListener(new OnCompleteListener<Void>() {
+                        @Override
+                        public void onComplete(@NonNull Task<Void> task) {
+                            if (task.isSuccessful()) {
+                                Toast.makeText(getActivity(), "You're attending " + event.getTitle() + "!", Toast.LENGTH_LONG).show();
+                                mDialog.dismiss();
+                            } else {
+                                Toast.makeText(getActivity(), R.string.event_attendence_unsuccessful, Toast.LENGTH_LONG).show();
+                            }
+                        }
+                    });
+                }
+            });
+        }
+        dismissPopupButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mDialog.dismiss();
+            }
+        });
+
+        mDialogBuilder.setView(view);
+        mDialog = mDialogBuilder.create();
+        mDialog.show();
+
+
+    }
+
+    private void personPopupCreation(Marker marker) {
+
         View view = getActivity().getLayoutInflater().inflate(R.layout.person_popup, null);
 
         Button dismissPopupButton = (Button) view.findViewById(R.id.dismiss_popup_button);
@@ -258,24 +379,23 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
             connectButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    final Person connection = person;
                     // Get current user. This will be modified when the connection approval process is put in place
                     mDatabaseManager.getUserPeopleDatabaseReference().addListenerForSingleValueEvent(new ValueEventListener() {
                         @Override
                         public void onDataChange(DataSnapshot dataSnapshot) {
                             final Person user = dataSnapshot.getValue(Person.class);
-                            // TODO: Check user not already a connection
                             // TODO: Add connection approval process
                             // First add other user to current user base
-                            mDatabaseManager.addNewConnection(user.getUserId(), connection).addOnCompleteListener(new OnCompleteListener<Void>() {
+                            mDatabaseManager.addNewConnection(user.getUserId(), person).addOnCompleteListener(new OnCompleteListener<Void>() {
                                 @Override
                                 public void onComplete(@NonNull Task<Void> task) {
                                     if (task.isSuccessful()) {
-                                        mDatabaseManager.addNewConnection(connection.getUserId(), user).addOnCompleteListener(new OnCompleteListener<Void>() {
+                                        mDatabaseManager.addNewConnection(person.getUserId(), user).addOnCompleteListener(new OnCompleteListener<Void>() {
                                             @Override
                                             public void onComplete(@NonNull Task<Void> task) {
                                                 if (task.isSuccessful()) {
                                                     Toast.makeText(getActivity(), R.string.connection_successful, Toast.LENGTH_LONG).show();
+                                                    mDialog.dismiss();
                                                 } else {
                                                     Toast.makeText(getActivity(), R.string.connection_unsuccessful, Toast.LENGTH_LONG).show();
                                                 }

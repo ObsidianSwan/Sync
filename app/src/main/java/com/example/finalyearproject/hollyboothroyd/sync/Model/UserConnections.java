@@ -18,7 +18,7 @@ import java.util.Map;
  */
 public class UserConnections {
 
-    public DatabaseManager mDatabaseManager;
+    private DatabaseManager mDatabaseManager;
 
     public static final List<Person> ITEMS = new ArrayList<Person>();
     public static final Map<String, Person> ITEM_MAP = new HashMap<String, Person>();
@@ -31,6 +31,8 @@ public class UserConnections {
         mDatabaseManager.getUserConnectionsDatabaseReference().addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
+                ITEMS.clear();
+                ITEM_MAP.clear();
                 for(DataSnapshot snapshot : dataSnapshot.getChildren()){
                     Person connection = snapshot.getValue(Person.class);
                     ITEMS.add(connection);

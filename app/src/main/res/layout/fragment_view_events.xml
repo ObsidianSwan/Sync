@@ -1,0 +1,83 @@
+<android.support.v4.app.FragmentTabHost xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/tab_host"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:layout_marginTop="@dimen/events_fragment_top_margin"
+    tools:context="com.example.finalyearproject.hollyboothroyd.sync.Activities.Fragments.ViewEventsFragment">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+
+        <TabWidget
+            android:id="@+id/tabs"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+
+        <FrameLayout
+            android:id="@+id/tab_content"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="50dp">
+
+            <LinearLayout
+                android:id="@+id/all_events"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical">
+
+                <android.support.v7.widget.RecyclerView
+                    android:id="@+id/all_events_recycler_view"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_marginEnd="@dimen/event_list_margin"
+                    android:layout_marginStart="@dimen/event_list_margin"
+                    app:layoutManager="LinearLayoutManager"
+                    tools:context="com.example.finalyearproject.hollyboothroyd.sync.Activities.Fragments.ViewEventsFragment"
+                    tools:listitem="@layout/fragment_event" />
+
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/events_attending"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical">
+
+                <android.support.v7.widget.RecyclerView
+                    android:id="@+id/events_attending_recycler_view"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_marginEnd="@dimen/event_list_margin"
+                    android:layout_marginStart="@dimen/event_list_margin"
+                    app:layoutManager="LinearLayoutManager"
+                    tools:context="com.example.finalyearproject.hollyboothroyd.sync.Activities.Fragments.ViewEventsFragment"
+                    tools:listitem="@layout/fragment_event" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/events_hosting"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical">
+
+                <android.support.v7.widget.RecyclerView
+                    android:id="@+id/events_hosting_recycler_view"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_marginEnd="@dimen/event_list_margin"
+                    android:layout_marginStart="@dimen/event_list_margin"
+                    app:layoutManager="LinearLayoutManager"
+                    tools:context="com.example.finalyearproject.hollyboothroyd.sync.Activities.Fragments.ViewEventsFragment"
+                    tools:listitem="@layout/fragment_event" />
+
+            </LinearLayout>
+        </FrameLayout>
+    </LinearLayout>
+
+</android.support.v4.app.FragmentTabHost>

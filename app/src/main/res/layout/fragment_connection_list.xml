@@ -6,7 +6,7 @@
     android:name="com.example.finalyearproject.hollyboothroyd.sync.Activities.Fragments.ConnectionFragment"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:layout_marginTop="@dimen/connections_top_margin"
+    android:layout_marginTop="@dimen/fragment_top_margin"
     android:layout_marginStart="@dimen/connection_list_margin"
     android:layout_marginEnd="@dimen/connection_list_margin"
     app:layoutManager="LinearLayoutManager"
