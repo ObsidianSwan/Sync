@@ -2,6 +2,7 @@ package com.example.finalyearproject.hollyboothroyd.sync.Activities.Fragments;
 
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
+import android.content.Context;
 import android.support.v4.app.Fragment;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
@@ -81,7 +82,11 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
     private AlertDialog.Builder mDialogBuilder;
     private AlertDialog mDialog;
 
-    private SharedPreferences mPreferences;
+    private int mPersonPinColor;
+    private int mEventPinColor;
+    private int mLocationTimeUpdateInterval = Constants.locationTimeUpdateIntervalDefault;
+    private int mLocationDistanceUpdateIntervalName = Constants.locationDistanceUpdateIntervalDefault;
+    private int mMapZoomLevelName = Constants.mapZoomLevelDefault;
 
     @Nullable
     @Override
@@ -104,8 +109,6 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
 
         mLocalEventsList = new ArrayList<>();
         mEventMarkerMap = new HashMap<>();
-
-        mPreferences = getActivity().getApplicationContext().getSharedPreferences(Constants.preferences, MODE_PRIVATE);
     }
 
     @Override
@@ -116,10 +119,7 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
         if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
             if (ContextCompat.checkSelfPermission(getActivity(), android.Manifest.permission.ACCESS_FINE_LOCATION)
                     == PackageManager.PERMISSION_GRANTED) {
-                mLocationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,
-                        mPreferences.getInt(Constants.locationTimeUpdateIntervalName, Constants.locationTimeUpdateIntervalDefault),
-                        mPreferences.getInt(Constants.locationDistanceUpdateIntervalName, Constants.locationDistanceUpdateIntervalDefault),
-                        mLocationListener);
+                requestLocationUpdates();
             }
         }
     }
@@ -168,11 +168,7 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
             setUserLocation();
         } else {
             // Location permission previously granted
-            mLocationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,
-                    mPreferences.getInt(Constants.locationTimeUpdateIntervalName, Constants.locationTimeUpdateIntervalDefault),
-                    mPreferences.getInt(Constants.locationDistanceUpdateIntervalName, Constants.locationDistanceUpdateIntervalDefault),
-                    mLocationListener);
-
+            requestLocationUpdates();
             setUserLocation();
         }
 
@@ -215,6 +211,53 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
         });
     }
 
+    private void requestLocationUpdates() {
+        // Create location update request with the last known good value or default value.
+        // When the database calls are returned, then the users current saved settings will be used instead.
+        try {
+            mLocationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,
+                    mLocationTimeUpdateInterval,
+                    mLocationDistanceUpdateIntervalName,
+                    mLocationListener);
+        } catch (SecurityException ex){
+            //TODO:log
+        }
+        mDatabaseManager.getUserSettings(Constants.locationTimeUpdateIntervalName).addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                if (dataSnapshot.getValue(Integer.class) != null) {
+                    mLocationTimeUpdateInterval = dataSnapshot.getValue(Integer.class);
+                }
+                mDatabaseManager.getUserSettings(Constants.locationDistanceUpdateIntervalName).addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(DataSnapshot dataSnapshot) {
+                        if (dataSnapshot.getValue(Integer.class) != null) {
+                            mLocationDistanceUpdateIntervalName = dataSnapshot.getValue(Integer.class);
+                        }
+                        try {
+                            mLocationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,
+                                    mLocationTimeUpdateInterval,
+                                    mLocationDistanceUpdateIntervalName,
+                                    mLocationListener);
+                        } catch (SecurityException ex){
+                            //TODO:log
+                        }
+                    }
+
+                    @Override
+                    public void onCancelled(DatabaseError databaseError) {
+                        //TODO: Log?
+                    }
+                });
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                //TODO: Log?
+            }
+        });
+    }
+
     // Add longitude and latitude to person database
     // Update user location on the map
     @SuppressLint("MissingPermission")
@@ -224,9 +267,22 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
         if (lastKnownLocation == null) {
             Toast.makeText(getActivity(), R.string.could_not_find_location, Toast.LENGTH_LONG).show();
         } else {
-            LatLng userLocation = new LatLng(lastKnownLocation.getLatitude(), lastKnownLocation.getLongitude());
+            final LatLng userLocation = new LatLng(lastKnownLocation.getLatitude(), lastKnownLocation.getLongitude());
             mDatabaseManager.updateCurrentUserLocation(userLocation);
-            mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(userLocation, mPreferences.getInt(Constants.mapZoomLevelName, Constants.mapZoomLevelDefault)));
+            mDatabaseManager.getUserSettings(Constants.mapZoomLevelName).addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(DataSnapshot dataSnapshot) {
+                    if (dataSnapshot.getValue(Integer.class) != null) {
+                        mMapZoomLevelName = dataSnapshot.getValue(Integer.class);
+                    }
+                    mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(userLocation, mMapZoomLevelName));
+                }
+
+                @Override
+                public void onCancelled(DatabaseError databaseError) {
+                    //TODO: Log?
+                }
+            });
         }
     }
 
@@ -234,7 +290,7 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
         //TODO: Replace with local users
         for (Person person : mLocalPeopleList) {
             MarkerOptions markerOptions = new MarkerOptions();
-            markerOptions.icon(BitmapDescriptorFactory.defaultMarker(mPreferences.getFloat(Constants.personPinColorName, Constants.personPinColorDefault)));
+            markerOptions.icon(BitmapDescriptorFactory.defaultMarker(mPersonPinColor));
             markerOptions.title(person.getFirstName() + " " + person.getLastName());
             markerOptions.position(new LatLng(person.getLatitude(), person.getLongitude()));
             markerOptions.snippet("Position: " + person.getPosition() +
@@ -253,7 +309,7 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
         //TODO: Replace with local events
         for (Event event : mLocalEventsList) {
             MarkerOptions markerOptions = new MarkerOptions();
-            markerOptions.icon(BitmapDescriptorFactory.defaultMarker(mPreferences.getFloat(Constants.eventPinColorName, Constants.eventPinColorDefault)));
+            markerOptions.icon(BitmapDescriptorFactory.defaultMarker(mEventPinColor));
             markerOptions.title(event.getTitle());
             markerOptions.position(new LatLng(event.getLatitude(), event.getLongitude()));
             markerOptions.snippet("Topic: " + event.getTopic() +

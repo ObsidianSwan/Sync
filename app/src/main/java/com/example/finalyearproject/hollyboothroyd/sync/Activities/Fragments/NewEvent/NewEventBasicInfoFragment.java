@@ -39,7 +39,6 @@ public class NewEventBasicInfoFragment extends Fragment {
      *
      * @return A new instance of fragment NewEventBasicInfoFragment.
      */
-    // TODO: Rename and change types and number of parameters
     public static NewEventBasicInfoFragment newInstance() {
         NewEventBasicInfoFragment fragment = new NewEventBasicInfoFragment();
         Bundle args = new Bundle();
@@ -55,9 +54,10 @@ public class NewEventBasicInfoFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_new_event_basic_info, container, false);
+
+        getActivity().setTitle(getString(R.string.new_event_action_bar_title));
 
         mEventTitleText = (EditText) view.findViewById(R.id.new_event_title_text);
         mEventIndustryText = (EditText) view.findViewById(R.id.new_event_industry_text);
@@ -113,13 +113,6 @@ public class NewEventBasicInfoFragment extends Fragment {
         }
 
         return true;
-    }
-
-    // TODO: Rename method, update argument and hook method into UI event
-    public void onButtonPressed(Uri uri) {
-        if (mListener != null) {
-            //mListener.onFragmentInteraction(uri);
-        }
     }
 
     @Override

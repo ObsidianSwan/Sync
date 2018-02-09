@@ -5,19 +5,21 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     tools:context="com.example.finalyearproject.hollyboothroyd.sync.Activities.Fragments.NewEvent.NewEventDescriptionFragment">
 
+    <!-- Event progress -->
+    <ProgressBar
+        android:id="@+id/event_description_progress"
+        style="?android:attr/progressBarStyleLarge"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:visibility="gone" />
+
     <LinearLayout
+        android:id="@+id/event_description_layout"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical"
         android:layout_marginTop="@dimen/fragment_top_margin">
-
-        <TextView
-            android:id="@+id/new_event_description_title_text"
-            android:layout_gravity="center"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/New_Event_Main_Title"
-            android:textAppearance="@style/TextAppearance.AppCompat.Headline"/>
 
         <ImageButton
             android:id="@+id/new_event_image_button"

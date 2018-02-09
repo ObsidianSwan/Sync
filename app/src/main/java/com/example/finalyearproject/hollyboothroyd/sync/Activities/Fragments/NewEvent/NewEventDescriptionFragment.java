@@ -28,6 +28,7 @@ import com.example.finalyearproject.hollyboothroyd.sync.Model.Person;
 import com.example.finalyearproject.hollyboothroyd.sync.R;
 import com.example.finalyearproject.hollyboothroyd.sync.Services.AccountManager;
 import com.example.finalyearproject.hollyboothroyd.sync.Services.DatabaseManager;
+import com.example.finalyearproject.hollyboothroyd.sync.Utils.Constants;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
@@ -83,6 +84,9 @@ public class NewEventDescriptionFragment extends Fragment {
     private Uri mImageUri;
     private static final int GALLERY_CODE = 1;
 
+    private View mProgressView;
+    private View mEventDescriptionView;
+
     private AccountManager accountManager;
     private DatabaseManager databaseManager;
 
@@ -98,7 +102,6 @@ public class NewEventDescriptionFragment extends Fragment {
      *
      * @return A new instance of fragment NewEventDescriptionFragment.
      */
-    // TODO: Rename and change types and number of parameters
     public static NewEventDescriptionFragment newInstance(String title, String industry, String topic, String date, String time,
                                                           String street, String city, String state, String zipcode, String country, LatLng position) {
         NewEventDescriptionFragment fragment = new NewEventDescriptionFragment();
@@ -144,8 +147,13 @@ public class NewEventDescriptionFragment extends Fragment {
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_new_event_description, container, false);
 
+        getActivity().setTitle(getString(R.string.new_event_action_bar_title));
+
         accountManager = new AccountManager();
         databaseManager = new DatabaseManager();
+
+        mEventDescriptionView = view.findViewById(R.id.event_description_layout);
+        mProgressView = view.findViewById(R.id.event_description_progress);
 
         mDescription = (EditText) view.findViewById(R.id.new_event_description_text);
         mEventImage = (ImageButton) view.findViewById(R.id.new_event_image_button);
@@ -197,70 +205,67 @@ public class NewEventDescriptionFragment extends Fragment {
     }
 
     private void registerEvent(final String description) {
-        // TODO: Add progress spinner
-        //showProgress(true);
+        showProgress(true);
 
         if (mImageUri == null) {
-            //TODO: Create event without image
+            // If there is no user provided image, use default event image url.
+            registerEventInternal(description, Constants.eventDefaultImgStorageUrl);
+        } else {
+            databaseManager.uploadEventImage(mImageUri).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+                @Override
+                public void onSuccess(final UploadTask.TaskSnapshot taskSnapshot) {
+                    // Get a URL to the uploaded content
+                    String downloadUrl = taskSnapshot.getDownloadUrl().toString();
+                    registerEventInternal(description, downloadUrl);
+                }
+            }).addOnFailureListener(new OnFailureListener() {
+                @Override
+                public void onFailure(@NonNull Exception e) {
+                    // Adding the events's image was not successful
+                    //TODO: add logging tags. Debugging. Better retry
+                    Toast.makeText(getActivity(), R.string.generic_event_creation_failed, Toast.LENGTH_LONG).show();
+                    showProgress(false);
+                }
+            });
         }
-
-        databaseManager.uploadEventImage(mImageUri).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
-            @Override
-            public void onSuccess(final UploadTask.TaskSnapshot taskSnapshot) {
-                // Get a URL to the uploaded content
-                String downloadUrl = taskSnapshot.getDownloadUrl().toString();
-                final String userId = accountManager.getCurrentUser().getUid();
-                // Add the event to the Firebase Database with the image storage reference
-
-                DatabaseReference newEventRef = databaseManager.getNewEventReference();
-                final String refKey = newEventRef.getKey();
-                Event event = new Event(refKey, mTitle, mIndustry, mTopic, mDate, mTime, mStreet,
-                        mCity, mState, mZipCode, mCountry, mLongitude, mLatitude, description, downloadUrl, userId);
-                databaseManager.addEvent(newEventRef, event).addOnCompleteListener(new OnCompleteListener<Void>() {
-                    @Override
-                    public void onComplete(@NonNull Task<Void> task) {
-                        //showProgress(false);
-                        if (task.isSuccessful()) {
-
-                            databaseManager.addEventCreator(refKey, userId).addOnCompleteListener(new OnCompleteListener<Void>() {
-                                @Override
-                                public void onComplete(@NonNull Task<Void> task) {
-                                    if (task.isSuccessful()) {
-                                        Toast.makeText(getActivity(), R.string.event_creation_successful, Toast.LENGTH_LONG).show();
-                                        if (mListener != null) {
-                                            mListener.onNewEventDescriptionDoneButtonPressed(mLongitude, mLatitude);
-                                        }
-                                    } else {
-                                        //TODO: add logging tags. Debugging. Better retry
-                                        Toast.makeText(getActivity(), R.string.generic_event_creation_failed, Toast.LENGTH_LONG).show();
-                                        //showProgress(false);
-                                    }
-                                }
-                            });
-                        } else {
-                            //TODO: add logging tags. Debugging. Better retry
-                            Toast.makeText(getActivity(), R.string.generic_event_creation_failed, Toast.LENGTH_LONG).show();
-                            //showProgress(false);
-                        }
-                    }
-                });
-            }
-        }).addOnFailureListener(new OnFailureListener() {
-            @Override
-            public void onFailure(@NonNull Exception e) {
-                // Adding the events's image was not successful
-                //TODO: add logging tags. Debugging. Better retry
-                Toast.makeText(getActivity(), R.string.generic_event_creation_failed, Toast.LENGTH_LONG).show();
-                //showProgress(false);
-            }
-        });
     }
 
-    // TODO: Rename method, update argument and hook method into UI event
-    public void onButtonPressed(Uri uri) {
-        if (mListener != null) {
-            //mListener.onFragmentInteraction(uri);
-        }
+    private void registerEventInternal(String description, String downloadUrl){
+        final String userId = accountManager.getCurrentUser().getUid();
+        // Add the event to the Firebase Database with the image storage reference
+
+        DatabaseReference newEventRef = databaseManager.getNewEventReference();
+        final String refKey = newEventRef.getKey();
+        Event event = new Event(refKey, mTitle, mIndustry, mTopic, mDate, mTime, mStreet,
+                mCity, mState, mZipCode, mCountry, mLongitude, mLatitude, description, downloadUrl, userId);
+        databaseManager.addEvent(newEventRef, event).addOnCompleteListener(new OnCompleteListener<Void>() {
+            @Override
+            public void onComplete(@NonNull Task<Void> task) {
+                showProgress(false);
+                if (task.isSuccessful()) {
+
+                    databaseManager.addEventCreator(refKey, userId).addOnCompleteListener(new OnCompleteListener<Void>() {
+                        @Override
+                        public void onComplete(@NonNull Task<Void> task) {
+                            if (task.isSuccessful()) {
+                                Toast.makeText(getActivity(), R.string.event_creation_successful, Toast.LENGTH_LONG).show();
+                                if (mListener != null) {
+                                    mListener.onNewEventDescriptionDoneButtonPressed(mLongitude, mLatitude);
+                                }
+                            } else {
+                                //TODO: add logging tags. Debugging. Better retry
+                                Toast.makeText(getActivity(), R.string.generic_event_creation_failed, Toast.LENGTH_LONG).show();
+                                showProgress(false);
+                            }
+                        }
+                    });
+                } else {
+                    //TODO: add logging tags. Debugging. Better retry
+                    Toast.makeText(getActivity(), R.string.generic_event_creation_failed, Toast.LENGTH_LONG).show();
+                    showProgress(false);
+                }
+            }
+        });
     }
 
     @Override
@@ -297,7 +302,7 @@ public class NewEventDescriptionFragment extends Fragment {
     /**
      * Shows the progress UI and hides the login form.
      */
-    /*@TargetApi(Build.VERSION_CODES.HONEYCOMB_MR2)
+    @TargetApi(Build.VERSION_CODES.HONEYCOMB_MR2)
     private void showProgress(final boolean show) {
         // On Honeycomb MR2 we have the ViewPropertyAnimator APIs, which allow
         // for very easy animations. If available, use these APIs to fade-in
@@ -305,12 +310,14 @@ public class NewEventDescriptionFragment extends Fragment {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB_MR2) {
             int shortAnimTime = getResources().getInteger(android.R.integer.config_shortAnimTime);
 
-            mSignUpFormView.setVisibility(show ? View.GONE : View.VISIBLE);
-            mSignUpFormView.animate().setDuration(shortAnimTime).alpha(
+            mDoneButton.setVisibility(show ? View.GONE : View.VISIBLE);
+            mEventDescriptionView.setVisibility(show ? View.GONE : View.VISIBLE);
+            mEventDescriptionView.animate().setDuration(shortAnimTime).alpha(
                     show ? 0 : 1).setListener(new AnimatorListenerAdapter() {
                 @Override
                 public void onAnimationEnd(Animator animation) {
-                    mSignUpFormView.setVisibility(show ? View.GONE : View.VISIBLE);
+                    mDoneButton.setVisibility(show ? View.GONE : View.VISIBLE);
+                    mEventDescriptionView.setVisibility(show ? View.GONE : View.VISIBLE);
                 }
             });
 
@@ -326,7 +333,8 @@ public class NewEventDescriptionFragment extends Fragment {
             // The ViewPropertyAnimator APIs are not available, so simply show
             // and hide the relevant UI components.
             mProgressView.setVisibility(show ? View.VISIBLE : View.GONE);
-            mSignUpFormView.setVisibility(show ? View.GONE : View.VISIBLE);
+            mDoneButton.setVisibility(show ? View.GONE : View.VISIBLE);
+            mEventDescriptionView.setVisibility(show ? View.GONE : View.VISIBLE);
         }
-    }*/
+    }
 }

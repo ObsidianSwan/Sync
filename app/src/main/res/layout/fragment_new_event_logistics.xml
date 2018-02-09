@@ -10,14 +10,6 @@
         android:layout_marginTop="@dimen/fragment_top_margin"
         android:orientation="vertical">
 
-        <TextView
-            android:id="@+id/new_event_description_title_text"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:text="@string/New_Event_Main_Title"
-            android:textAppearance="@style/TextAppearance.AppCompat.Headline" />
-
         <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -43,6 +35,7 @@
                 android:layout_centerHorizontal="true"
                 android:hint="@string/new_event_date_hint"
                 android:inputType="date"
+                android:maxLength="10"
                 android:textAppearance="@style/TextAppearance.AppCompat.Medium" />
 
             <Button
@@ -77,6 +70,7 @@
                 android:layout_centerHorizontal="true"
                 android:inputType="time"
                 android:hint="@string/new_event_time_hint"
+                android:maxLength="5"
                 android:textAppearance="@style/TextAppearance.AppCompat.Medium" />
 
             <Button

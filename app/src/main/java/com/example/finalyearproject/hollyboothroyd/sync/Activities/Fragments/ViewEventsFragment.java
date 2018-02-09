@@ -41,7 +41,6 @@ public class ViewEventsFragment extends Fragment {
     public ViewEventsFragment() {
     }
 
-    // TODO: Customize parameter initialization
     @SuppressWarnings("unused")
     public static ViewEventsFragment newInstance(int columnCount) {
         ViewEventsFragment fragment = new ViewEventsFragment();
@@ -74,6 +73,7 @@ public class ViewEventsFragment extends Fragment {
         mTabHost = (FragmentTabHost) view.findViewById(R.id.tab_host);
         mTabHost.setup(getActivity(), getChildFragmentManager(), R.id.tab_content);
 
+        // TODO: Constants
         mTabHost.addTab(mTabHost.newTabSpec("allEvents").setIndicator("All Events").setContent(new TabHost.TabContentFactory() {
             @Override
             public View createTabContent(String tag) {
@@ -149,7 +149,6 @@ public class ViewEventsFragment extends Fragment {
      * activity.
      */
     public interface OnListFragmentInteractionListener {
-        // TODO: Update argument type and name
         void onListFragmentInteraction(Event item);
     }
 }

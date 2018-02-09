@@ -24,7 +24,8 @@
     <dimen name="new_event_description_margin_top">25dp</dimen>
     <dimen name="new_event_image_top_margin">40dp</dimen>
     <dimen name="event_list_margin">8dp</dimen>
-    <dimen name="event_item_top_margin">20dp</dimen>
+    <dimen name="event_item_top_margin">15dp</dimen>
+    <dimen name="event_item_bottom_margin">5dp</dimen>
     <dimen name="event_item_side_margin">15dp</dimen>
     <dimen name="events_fragment_top_margin">55dp</dimen>
     <dimen name="event_item_height">100dp</dimen>

@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -12,23 +13,39 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.NumberPicker;
 import android.widget.Spinner;
+import android.widget.Toast;
 
 import com.example.finalyearproject.hollyboothroyd.sync.R;
+import com.example.finalyearproject.hollyboothroyd.sync.Services.DatabaseManager;
 import com.example.finalyearproject.hollyboothroyd.sync.Utils.Constants;
+import com.example.finalyearproject.hollyboothroyd.sync.Utils.Util;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.ValueEventListener;
 
 import java.util.HashMap;
 
-import static android.content.Context.MODE_PRIVATE;
-
-public class SettingsFragment extends Fragment implements AdapterView.OnItemSelectedListener{
+public class SettingsFragment extends Fragment implements AdapterView.OnItemSelectedListener {
 
     private OnFragmentInteractionListener mListener;
 
     private final HashMap<String, Float> pinColorMap = new HashMap<String, Float>();
 
-    private SharedPreferences mPreferences;
-    private SharedPreferences.Editor mPreferenceEditor;
+    private DatabaseManager mDatabaseManager;
+
+    private NumberPicker mZoomPicker;
+    private NumberPicker mTimeRefreshRatePicker;
+    private NumberPicker mDisRefreshRatePicker;
+    private Spinner mPersonPinColorSpinner;
+    private Spinner mEventPinColorSpinner;
+
+    // Needed to prevent the spinner from executing OnItemSelected method body
+    private boolean mInitialPersonSpinnerEvent = true;
+    private boolean mInitialEventSpinnerEvent = true;
+
 
     public SettingsFragment() {
         // Required empty public constructor
@@ -51,10 +68,10 @@ public class SettingsFragment extends Fragment implements AdapterView.OnItemSele
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        mPreferences = getActivity().getApplicationContext().getSharedPreferences(Constants.preferences, MODE_PRIVATE);
-        mPreferenceEditor = mPreferences.edit();
+        mDatabaseManager = new DatabaseManager();
 
         // Populate pinColorMap
+        //TODO: Constants
         pinColorMap.put("Azure", BitmapDescriptorFactory.HUE_AZURE);
         pinColorMap.put("Blue", BitmapDescriptorFactory.HUE_BLUE);
         pinColorMap.put("Cyan", BitmapDescriptorFactory.HUE_CYAN);
@@ -76,56 +93,180 @@ public class SettingsFragment extends Fragment implements AdapterView.OnItemSele
 
         getActivity().setTitle(R.string.settings_action_bar_title);
 
-        NumberPicker zoomPicker = (NumberPicker) view.findViewById(R.id.settings_map_zoom_number_picker);
-        NumberPicker timeRefreshRatePicker = (NumberPicker) view.findViewById(R.id.settings_time_refresh_number_picker);
-        NumberPicker disRefreshRatePicker = (NumberPicker) view.findViewById(R.id.settings_dis_refresh_number_picker);
-        Spinner personPinColorSpinner = (Spinner) view.findViewById(R.id.settings_user_color_spinner);
-        Spinner eventPinColorSpinner = (Spinner) view.findViewById(R.id.settings_event_color_spinner);
+        mZoomPicker = (NumberPicker) view.findViewById(R.id.settings_map_zoom_number_picker);
+        mTimeRefreshRatePicker = (NumberPicker) view.findViewById(R.id.settings_time_refresh_number_picker);
+        mDisRefreshRatePicker = (NumberPicker) view.findViewById(R.id.settings_dis_refresh_number_picker);
+        mPersonPinColorSpinner = (Spinner) view.findViewById(R.id.settings_user_color_spinner);
+        mEventPinColorSpinner = (Spinner) view.findViewById(R.id.settings_event_color_spinner);
 
-        zoomPicker.setMinValue(Constants.zoomPickerMinValue);
-        zoomPicker.setMaxValue(Constants.zoomPickerMaxValue);
-        zoomPicker.setOnValueChangedListener(new NumberPicker.OnValueChangeListener() {
-            @Override
-            public void onValueChange(NumberPicker picker, int oldVal, int newVal) {
-                mPreferenceEditor.putInt(Constants.mapZoomLevelName, newVal);
-                mPreferenceEditor.commit();
-            }
-        });
+        setUpZoomPicker();
+        setUpTimeRefreshRatePicker();
+        setUpDisRefreshRatePicker();
 
-        timeRefreshRatePicker.setMinValue(Constants.timeRefreshRatePickerMinValue);
-        timeRefreshRatePicker.setMaxValue(Constants.timeRefreshRatePickerMaxValue);
-        timeRefreshRatePicker.setOnValueChangedListener(new NumberPicker.OnValueChangeListener() {
-            @Override
-            public void onValueChange(NumberPicker picker, int oldVal, int newVal) {
-                mPreferenceEditor.putInt(Constants.locationTimeUpdateIntervalName, newVal);
-                mPreferenceEditor.commit();
-            }
-        });
-
-        disRefreshRatePicker.setMinValue(Constants.disRefreshRatePickerMinValue);
-        disRefreshRatePicker.setMaxValue(Constants.disRefreshRatePickerMaxValue);
-        disRefreshRatePicker.setOnValueChangedListener(new NumberPicker.OnValueChangeListener() {
-            @Override
-            public void onValueChange(NumberPicker picker, int oldVal, int newVal) {
-                mPreferenceEditor.putInt(Constants.locationDistanceUpdateIntervalName, newVal);
-                mPreferenceEditor.commit();
-            }
-        });
-
-        ArrayAdapter<CharSequence> arrayAdapter = ArrayAdapter.createFromResource(getActivity(), R.array.pin_color_array, android.R.layout.simple_spinner_item);
+        final ArrayAdapter<CharSequence> arrayAdapter = ArrayAdapter.createFromResource(getActivity(), R.array.pin_color_array, android.R.layout.simple_spinner_item);
         arrayAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        personPinColorSpinner.setAdapter(arrayAdapter);
-        personPinColorSpinner.setOnItemSelectedListener(this);
-        eventPinColorSpinner.setAdapter(arrayAdapter);
-        eventPinColorSpinner.setOnItemSelectedListener(this);
+        setupPersonPinColorSpinner(arrayAdapter);
+        setupEventPinColorSpinner(arrayAdapter);
 
         return view;
     }
 
-    public void onButtonPressed(Uri uri) {
-        if (mListener != null) {
-            mListener.onFragmentInteraction(uri);
-        }
+    private void setUpZoomPicker() {
+        mZoomPicker.setMinValue(Constants.zoomPickerMinValue);
+        mZoomPicker.setMaxValue(Constants.zoomPickerMaxValue);
+        // During initialization, set the spinner to select the users saved settings
+        mDatabaseManager.getUserSettings(Constants.mapZoomLevelName).addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                int value = 0;
+                if(dataSnapshot.getValue(Integer.class) != null){
+                    value = dataSnapshot.getValue(Integer.class);
+                }
+                mZoomPicker.setValue(value);
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                // TODO:Log
+            }
+        });
+
+        mZoomPicker.setOnValueChangedListener(new NumberPicker.OnValueChangeListener() {
+            @Override
+            public void onValueChange(NumberPicker picker, int oldVal, int newVal) {
+                mDatabaseManager.setUserSettings(Constants.mapZoomLevelName, newVal).addOnCompleteListener(new OnCompleteListener<Void>() {
+                    @Override
+                    public void onComplete(@NonNull Task<Void> task) {
+                        if (task.isSuccessful()) {
+                            Toast.makeText(getActivity(), R.string.setting_change_successful_text, Toast.LENGTH_SHORT).show();
+                        } else {
+                            // TODO: add logging
+                            Toast.makeText(getActivity(), R.string.setting_change_unsuccessful_text, Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                });
+            }
+        });
+    }
+
+    private void setUpTimeRefreshRatePicker() {
+        mTimeRefreshRatePicker.setMinValue(Constants.timeRefreshRatePickerMinValue);
+        mTimeRefreshRatePicker.setMaxValue(Constants.timeRefreshRatePickerMaxValue);
+        // During initialization, set the spinner to select the users saved settings
+        mDatabaseManager.getUserSettings(Constants.locationTimeUpdateIntervalName).addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                int value = 0;
+                if(dataSnapshot.getValue(Integer.class) != null){
+                    value = dataSnapshot.getValue(Integer.class);
+                }
+                mTimeRefreshRatePicker.setValue(value);
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                // TODO:Log
+            }
+        });
+
+        mTimeRefreshRatePicker.setOnValueChangedListener(new NumberPicker.OnValueChangeListener() {
+            @Override
+            public void onValueChange(NumberPicker picker, int oldVal, int newVal) {
+                mDatabaseManager.setUserSettings(Constants.locationTimeUpdateIntervalName, newVal).addOnCompleteListener(new OnCompleteListener<Void>() {
+                    @Override
+                    public void onComplete(@NonNull Task<Void> task) {
+                        if (task.isSuccessful()) {
+                            Toast.makeText(getActivity(), R.string.setting_change_successful_text, Toast.LENGTH_SHORT).show();
+                        } else {
+                            // TODO: add logging
+                            Toast.makeText(getActivity(), R.string.setting_change_unsuccessful_text, Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                });
+            }
+        });
+    }
+
+    private void setUpDisRefreshRatePicker() {
+        mDisRefreshRatePicker.setMinValue(Constants.disRefreshRatePickerMinValue);
+        mDisRefreshRatePicker.setMaxValue(Constants.disRefreshRatePickerMaxValue);
+        // During initialization, set the spinner to select the users saved settings
+        mDatabaseManager.getUserSettings(Constants.locationDistanceUpdateIntervalName).addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                int value = 0;
+                if(dataSnapshot.getValue(Integer.class) != null){
+                    value = dataSnapshot.getValue(Integer.class);
+                }
+                mDisRefreshRatePicker.setValue(value);
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                // TODO:Log
+            }
+        });
+
+        mDisRefreshRatePicker.setOnValueChangedListener(new NumberPicker.OnValueChangeListener() {
+            @Override
+            public void onValueChange(NumberPicker picker, int oldVal, int newVal) {
+                mDatabaseManager.setUserSettings(Constants.locationDistanceUpdateIntervalName, newVal).addOnCompleteListener(new OnCompleteListener<Void>() {
+                    @Override
+                    public void onComplete(@NonNull Task<Void> task) {
+                        if (task.isSuccessful()) {
+                            Toast.makeText(getActivity(), R.string.setting_change_successful_text, Toast.LENGTH_SHORT).show();
+                        } else {
+                            // TODO: add logging
+                            Toast.makeText(getActivity(), R.string.setting_change_unsuccessful_text, Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                });
+            }
+        });
+    }
+
+    private void setupPersonPinColorSpinner(final ArrayAdapter arrayAdapter) {
+        mPersonPinColorSpinner.setAdapter(arrayAdapter);
+        // During initialization, set the spinner to select the users saved settings
+        mDatabaseManager.getUserSettings(Constants.personPinColorName).addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                int pinColor = dataSnapshot.getValue(Integer.class);
+                String key = Util.getMapKey(pinColorMap, pinColor);
+                if (key != null) {
+                    int position = arrayAdapter.getPosition(key);
+                    mPersonPinColorSpinner.setSelection(position, false);
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                // TODO:Log
+            }
+        });
+        mPersonPinColorSpinner.setOnItemSelectedListener(this);
+    }
+
+    private void setupEventPinColorSpinner(final ArrayAdapter arrayAdapter) {
+        mEventPinColorSpinner.setAdapter(arrayAdapter);
+        // During initialization, set the spinner to select the users saved settings
+        mDatabaseManager.getUserSettings(Constants.eventPinColorName).addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                int pinColor = dataSnapshot.getValue(Integer.class);
+                String key = Util.getMapKey(pinColorMap, pinColor);
+                if (key != null) {
+                    int position = arrayAdapter.getPosition(key);
+                    mEventPinColorSpinner.setSelection(position, false);
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                // TODO:Log
+            }
+        });
+        mEventPinColorSpinner.setOnItemSelectedListener(this);
     }
 
     @Override
@@ -146,20 +287,44 @@ public class SettingsFragment extends Fragment implements AdapterView.OnItemSele
     }
 
     @Override
-    public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+    public void onItemSelected(AdapterView<?> parent, View view, final int position, final long id) {
         Spinner spinner = (Spinner) parent;
         float color = pinColorMap.get(spinner.getItemAtPosition(position));
-        if(spinner.getId() == R.id.settings_user_color_spinner)
-        {
-            mPreferenceEditor.putFloat(Constants.personPinColorName, color);
-            mPreferenceEditor.commit();
+        if (spinner.getId() == R.id.settings_user_color_spinner) {
+            // Flag stops the user settings to be set during initialization and creating a toast message.
+            // This is necessary due to a bug in OnItemSelected. This event is called during initialization without any user interaction
+            if (!mInitialPersonSpinnerEvent) {
+                mDatabaseManager.setUserSettings(Constants.personPinColorName, color).addOnCompleteListener(new OnCompleteListener<Void>() {
+                    @Override
+                    public void onComplete(@NonNull Task<Void> task) {
+                        if (task.isSuccessful()) {
+                            Toast.makeText(getActivity(), R.string.setting_change_successful_text, Toast.LENGTH_SHORT).show();
+                        } else {
+                            // TODO: add logging
+                            Toast.makeText(getActivity(), R.string.setting_change_unsuccessful_text, Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                });
+            }
+            mInitialPersonSpinnerEvent = false;
+        } else if (spinner.getId() == R.id.settings_event_color_spinner) {
+            // Flag stops the user settings to be set during initialization and creating a toast message.
+            // This is necessary due to a bug in OnItemSelected. This event is called during initialization without any user interaction
+            if (!mInitialEventSpinnerEvent) {
+                mDatabaseManager.setUserSettings(Constants.eventPinColorName, color).addOnCompleteListener(new OnCompleteListener<Void>() {
+                    @Override
+                    public void onComplete(@NonNull Task<Void> task) {
+                        if (task.isSuccessful()) {
+                            Toast.makeText(getActivity(), R.string.setting_change_successful_text, Toast.LENGTH_SHORT).show();
+                        } else {
+                            // TODO: add logging
+                            Toast.makeText(getActivity(), R.string.setting_change_unsuccessful_text, Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                });
+            }
+            mInitialEventSpinnerEvent = false;
         }
-        else if(spinner.getId() == R.id.settings_event_color_spinner)
-        {
-            mPreferenceEditor.putFloat(Constants.eventPinColorName, color);
-            mPreferenceEditor.commit();
-        }
-
     }
 
     @Override

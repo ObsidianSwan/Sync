@@ -39,7 +39,6 @@
                     tools:context="com.example.finalyearproject.hollyboothroyd.sync.Activities.Fragments.ViewEventsFragment"
                     tools:listitem="@layout/fragment_event" />
 
-
             </LinearLayout>
 
             <LinearLayout

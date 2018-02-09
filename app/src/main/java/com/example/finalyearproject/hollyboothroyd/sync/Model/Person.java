@@ -1,10 +1,13 @@
 package com.example.finalyearproject.hollyboothroyd.sync.Model;
 
+import java.util.HashMap;
+
 /**
  * Created by hollyboothroyd on 11/15/2017.
  */
 
 public class Person {
+    // TODO: mVariable
     private String firstName;
     private String lastName;
     private String position;
@@ -16,13 +19,15 @@ public class Person {
     private double longitude;
     private double latitude;
 
+    private HashMap<String, Integer> userSettings;
+
     // Used during person list population
     public Person() {
     }
 
     // Used during account creation. Location permissions requested after login.
     public Person(String firstName, String lastName, String position, String company,
-                  String industry, String imageId, String userId) {
+                  String industry, String imageId, String userId, HashMap<String, Integer> defaultUserSettings) {
         this.firstName = firstName;
         this.lastName = lastName;
         this.position = position;
@@ -30,9 +35,10 @@ public class Person {
         this.industry = industry;
         this.imageId = imageId;
         this.userId = userId;
+        this.userSettings = defaultUserSettings;
     }
 
-    public Person(String firstName, String lastName, String position, String company,
+/*    public Person(String firstName, String lastName, String position, String company,
                   String industry, String imageId, String userId, double longitude, double latitude) {
         this.firstName = firstName;
         this.lastName = lastName;
@@ -43,7 +49,7 @@ public class Person {
         this.userId = userId;
         this.longitude = longitude;
         this.latitude = latitude;
-    }
+    }*/
 
     public String getFirstName() {
         return firstName;
@@ -104,4 +110,8 @@ public class Person {
     public double getLatitude() { return latitude; }
 
     public void setLatitude(double latitude) { this.latitude = latitude; }
+
+    public HashMap<String, Integer> getUserSettings() { return userSettings; }
+
+    public void setUserSettings(HashMap<String, Integer> userSettings) { this.userSettings = userSettings; }
 }
