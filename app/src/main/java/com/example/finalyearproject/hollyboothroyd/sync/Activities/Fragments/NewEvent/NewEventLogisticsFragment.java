@@ -8,7 +8,9 @@ import android.location.Geocoder;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.text.Editable;
 import android.text.TextUtils;
+import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -42,6 +44,8 @@ public class NewEventLogisticsFragment extends Fragment {
     public static final String ARG_INDUSTRY = "industry";
     public static final String ARG_TOPIC = "topic";
 
+    private static final Pattern sDatePattern =
+            Pattern.compile("^(0[1-9]|[12][0-9]|3[01])[- /.](0[1-9]|1[012])[- /.](19|20)\\d\\d$");
     private static final Pattern sTimePattern =
             Pattern.compile("([01]?[0-9]|2[0-3]):[0-5][0-9]");
 
@@ -78,7 +82,6 @@ public class NewEventLogisticsFragment extends Fragment {
      * @param topic
      * @return A new instance of fragment NewEventLogisticsFragment.
      */
-    // TODO: Rename and change types and number of parameters
     public static NewEventLogisticsFragment newInstance(String title, String industry, String topic) {
         NewEventLogisticsFragment fragment = new NewEventLogisticsFragment();
         Bundle args = new Bundle();
@@ -104,6 +107,8 @@ public class NewEventLogisticsFragment extends Fragment {
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_new_event_logistics, container, false);
+
+        getActivity().setTitle(getString(R.string.new_event_action_bar_title));
 
         mDatePicker = (Button) view.findViewById(R.id.new_event_date_button);
         mTimePicker = (Button) view.findViewById(R.id.new_event_time_button);
@@ -135,12 +140,46 @@ public class NewEventLogisticsFragment extends Fragment {
                             public void onDateSet(DatePicker view, int year,
                                                   int monthOfYear, int dayOfMonth) {
                                 // Display Selected date in textbox
-                                mDate.setText(dayOfMonth + "-"
-                                        + (monthOfYear + 1) + "-" + year);
+                                String dayString;
+                                String monthString;
+                                if(dayOfMonth < 10){
+                                    dayString = "0" + Integer.toString(dayOfMonth);
+                                } else {
+                                    dayString = Integer.toString(dayOfMonth);
+                                }
+                                if(monthOfYear < 10){
+                                    monthString = "0" + Integer.toString(monthOfYear + 1);
+                                } else {
+                                    monthString = Integer.toString(monthOfYear + 1);
+                                }
+                                mDate.setText(dayString + "-"
+                                        + monthString + "-" + year);
 
                             }
                         }, mYear, mMonth, mDay);
                 datePickerDialog.show();
+            }
+        });
+
+        mDate.addTextChangedListener(new TextWatcher() {
+            int previousLength = 0;
+
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+                previousLength = mDate.getText().toString().length();
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                int length = s.length();
+                if ((previousLength < length) && (length == 2 || length == 5)) {
+                    s.append("-");
+                }
             }
         });
 
@@ -159,16 +198,44 @@ public class NewEventLogisticsFragment extends Fragment {
                             public void onTimeSet(TimePicker view, int hourOfDay,
                                                   int minute) {
                                 // Display Selected time in textbox
+                                String hourString;
                                 String minuteString;
+                                if(hourOfDay < 10){
+                                    hourString = "0" + Integer.toString(hourOfDay);
+                                } else {
+                                    hourString = Integer.toString(hourOfDay);
+                                }
                                 if(minute < 10){
                                     minuteString = "0" + Integer.toString(minute);
                                 } else {
                                     minuteString = Integer.toString(minute);
                                 }
-                                mTime.setText(hourOfDay + ":" + minuteString);
+                                mTime.setText(hourString + ":" + minuteString);
                             }
                         }, mHour, mMinute, true);
                 timePickerDialog.show();
+            }
+        });
+
+        mTime.addTextChangedListener(new TextWatcher() {
+            int previousLength = 0;
+
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+                previousLength = mTime.getText().toString().length();
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                int length = s.length();
+                if ((previousLength < length) && (length == 2)) {
+                    s.append(":");
+                }
             }
         });
 
@@ -245,7 +312,11 @@ public class NewEventLogisticsFragment extends Fragment {
         }
 
         if(position == null) {
-            Toast.makeText(getActivity(), R.string.enter_valid_address, Toast.LENGTH_LONG).show();
+            mCountry.setError(getString(R.string.enter_valid_address));
+            mZipCode.setError(getString(R.string.enter_valid_address));
+            mState.setError(getString(R.string.enter_valid_address));
+            mCity.setError(getString(R.string.enter_valid_address));
+            mStreet.setError(getString(R.string.enter_valid_address));
             focusView = mStreet;
         }
 
@@ -260,27 +331,22 @@ public class NewEventLogisticsFragment extends Fragment {
 
     }
 
-    private boolean isDateValid(String inputtedDate) {
-        //TODO: validate date
-/*        SimpleDateFormat dateFormat = new SimpleDateFormat("DD-MM-YYYY");
-        try {
-            Date date = dateFormat.parse(inputtedDate);
-            return date.after((Date) Calendar.getInstance().getTime());
-        } catch (ParseException e) {
+    private boolean isDateValid(String date) {
+        if(!sDatePattern.matcher(date).matches()){
             return false;
-        }*/
-        return true;
+        }
+        SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy");
+        dateFormat.setLenient(false);
+        try {
+            dateFormat.parse(date);
+            return true;
+        } catch (ParseException ex) {
+            return false;
+        }
     }
 
     private boolean isTimeValid(String time) {
         return sTimePattern.matcher(time).matches();
-    }
-
-    // TODO: Rename method, update argument and hook method into UI event
-    public void onButtonPressed(Uri uri) {
-        if (mListener != null) {
-            //mListener.onFragmentInteraction(uri);
-        }
     }
 
     public LatLng getLocationFromAddress(String inputtedAddress) {
@@ -292,7 +358,7 @@ public class NewEventLogisticsFragment extends Fragment {
         try {
             // May throw an IOException
             address = coder.getFromLocationName(inputtedAddress, 5);
-            if (address == null) {
+            if (address.isEmpty()) {
                 return null;
             }
             Address location = address.get(0);

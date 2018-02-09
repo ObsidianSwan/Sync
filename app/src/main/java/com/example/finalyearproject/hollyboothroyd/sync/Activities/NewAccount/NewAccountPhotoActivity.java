@@ -16,9 +16,11 @@ import android.widget.ImageButton;
 import android.widget.Toast;
 
 import com.example.finalyearproject.hollyboothroyd.sync.Activities.CoreActivity;
+import com.example.finalyearproject.hollyboothroyd.sync.Model.Person;
 import com.example.finalyearproject.hollyboothroyd.sync.R;
 import com.example.finalyearproject.hollyboothroyd.sync.Services.AccountManager;
 import com.example.finalyearproject.hollyboothroyd.sync.Services.DatabaseManager;
+import com.example.finalyearproject.hollyboothroyd.sync.Utils.Constants;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
@@ -27,6 +29,8 @@ import com.google.firebase.auth.AuthResult;
 import com.google.firebase.storage.UploadTask;
 import com.theartofdev.edmodo.cropper.CropImage;
 import com.theartofdev.edmodo.cropper.CropImageView;
+
+import java.util.HashMap;
 
 
 public class NewAccountPhotoActivity extends AppCompatActivity {
@@ -41,6 +45,17 @@ public class NewAccountPhotoActivity extends AppCompatActivity {
 
     private View mProgressView;
     private View mSignUpFormView;
+
+    Float personPinColor = Constants.personPinColorDefault;
+    Float eventPinColor = Constants.eventPinColorDefault;
+
+    private HashMap<String, Integer> mDefaultSettingsMap = new HashMap<String, Integer>() {{
+        put(Constants.personPinColorName, personPinColor.intValue());
+        put(Constants.eventPinColorName, eventPinColor.intValue());
+        put(Constants.locationDistanceUpdateIntervalName, Constants.locationDistanceUpdateIntervalDefault);
+        put(Constants.locationTimeUpdateIntervalName, Constants.locationTimeUpdateIntervalDefault);
+        put(Constants.mapZoomLevelName, Constants.mapZoomLevelDefault);
+    }};
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -133,7 +148,8 @@ public class NewAccountPhotoActivity extends AppCompatActivity {
                                             String downloadUrl = taskSnapshot.getDownloadUrl().toString();
                                             String userId = accountManager.getCurrentUser().getUid();
                                             // Add the user to the Firebase Database with the image storage reference
-                                            databaseManager.addPerson(firstName, lastName, position, company, industry, downloadUrl, userId).addOnCompleteListener(new OnCompleteListener<Void>() {
+                                            Person person = new Person(firstName, lastName, position, company, industry, downloadUrl, userId, mDefaultSettingsMap);
+                                            databaseManager.addPerson(person).addOnCompleteListener(new OnCompleteListener<Void>() {
                                                 @Override
                                                 public void onComplete(@NonNull Task<Void> task) {
                                                     showProgress(false);
@@ -190,11 +206,13 @@ public class NewAccountPhotoActivity extends AppCompatActivity {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB_MR2) {
             int shortAnimTime = getResources().getInteger(android.R.integer.config_shortAnimTime);
 
+            mDoneButton.setVisibility(show ? View.GONE : View.VISIBLE);
             mSignUpFormView.setVisibility(show ? View.GONE : View.VISIBLE);
             mSignUpFormView.animate().setDuration(shortAnimTime).alpha(
                     show ? 0 : 1).setListener(new AnimatorListenerAdapter() {
                 @Override
                 public void onAnimationEnd(Animator animation) {
+                    mDoneButton.setVisibility(show ? View.GONE : View.VISIBLE);
                     mSignUpFormView.setVisibility(show ? View.GONE : View.VISIBLE);
                 }
             });
@@ -211,6 +229,7 @@ public class NewAccountPhotoActivity extends AppCompatActivity {
             // The ViewPropertyAnimator APIs are not available, so simply show
             // and hide the relevant UI components.
             mProgressView.setVisibility(show ? View.VISIBLE : View.GONE);
+            mDoneButton.setVisibility(show ? View.GONE : View.VISIBLE);
             mSignUpFormView.setVisibility(show ? View.GONE : View.VISIBLE);
         }
     }

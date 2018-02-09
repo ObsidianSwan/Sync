@@ -106,10 +106,9 @@
     <string name="new_event_location_zipcode">Zip Code</string>
     <string name="new_event_location_country">Country</string>
     <string name="new_event_location_state">State/County</string>
-    <string name="error_invalid_date">Date format is invalid. Required format: DD-MM-YYYY</string>
-    <string name="error_invalid_time">Time format is invalid. Required format: HH:MM</string>
+    <string name="error_invalid_date">Date is invalid. Required format: DD-MM-YYYY</string>
+    <string name="error_invalid_time">Time is invalid. Required format: HH:MM</string>
 
-    <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="new_event_description">Tell us about your event</string>
     <string name="event_creation_successful">Event created!</string>
@@ -120,5 +119,16 @@
     <string name="event_popup_description_header">About</string>
     <string name="event_attendence_unsuccessful">Attendance request was unsuccessful</string>
     <string name="event_attend_button">Attend</string>
+    <string name="new_event_action_bar_title">New Event</string>
+    <string name="setting_change_successful_text">Setting change successful</string>
+    <string name="setting_change_unsuccessful_text">Setting change unsuccessful</string>
+    <string name="create_event_basic_info_tag">create_event_basic_info_fragment</string>
+    <string name="view_events_tag">view_events_fragment</string>
+    <string name="view_connections_tag">view_connections_fragment</string>
+    <string name="settings_tag">settings_fragment</string>
+    <string name="logout_tag">logout_fragment</string>
+    <string name="gmaps_tag">gmaps_fragment</string>
+    <string name="create_event_description_tag">create_event_description_fragment</string>
+    <string name="create_event_logistics_tag">create_event_logistics_fragment</string>
 
 </resources>

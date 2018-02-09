@@ -9,6 +9,7 @@ import android.widget.EditText;
 
 import com.example.finalyearproject.hollyboothroyd.sync.Model.Event;
 import com.example.finalyearproject.hollyboothroyd.sync.Model.Person;
+import com.example.finalyearproject.hollyboothroyd.sync.Utils.Constants;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
@@ -42,15 +43,12 @@ public class DatabaseManager {
     private DatabaseReference mEventDatabaseReference;
     private AccountManager mAccountManager;
 
-    private boolean isAddPersonSuccessful = false;
-
     public DatabaseManager() {
         mDatabase = FirebaseDatabase.getInstance();
         mStorage = FirebaseStorage.getInstance().getReference();
-        // TODO: Make these constants
-        mPeopleDatabaseReference = mDatabase.getReference().child("people");
-        mConnectionsDatabaseReference = mDatabase.getReference().child("connections");
-        mEventDatabaseReference = mDatabase.getReference().child("event");
+        mPeopleDatabaseReference = mDatabase.getReference().child(Constants.peopleDatabaseRefName);
+        mConnectionsDatabaseReference = mDatabase.getReference().child(Constants.connectionDatabaseRefName);
+        mEventDatabaseReference = mDatabase.getReference().child(Constants.eventDatabaseRefName);
 
         mAccountManager = new AccountManager();
 
@@ -74,13 +72,12 @@ public class DatabaseManager {
     }
 
     public Task<UploadTask.TaskSnapshot> uploadPersonImage(Uri imageUri) {
-        // TODO: Constant
-        final StorageReference filePath = mStorage.child("Person_Images").child(imageUri.getLastPathSegment());
+        final StorageReference filePath = mStorage.child(Constants.personImgStorageName).child(imageUri.getLastPathSegment());
         return filePath.putFile(imageUri);
     }
 
-    public Task<Void> addPerson(String firstName, String lastName, String position, String company, String industry, String downloadUrl, String userId) {
-        return mPeopleDatabaseReference.child(userId).setValue(new Person(firstName, lastName, position, company, industry, downloadUrl, userId));
+    public Task<Void> addPerson(Person person) {
+       return mPeopleDatabaseReference.child(person.getUserId()).setValue(person);
     }
 
     public void updateCurrentUserLocation(LatLng userLocation){
@@ -142,9 +139,9 @@ public class DatabaseManager {
     // TODO: Add distance check
     public DatabaseReference getAllEventsDatabaseReference() { return mEventDatabaseReference; }
 
-    public DatabaseReference getEventsAttendingDatabaseReference() { return mPeopleDatabaseReference.child(mAccountManager.getCurrentUser().getUid()).child("events_attending"); }
+    public DatabaseReference getEventsAttendingDatabaseReference() { return getUserPeopleDatabaseReference().child(Constants.peopleEventsAttendingDatabaseRefName); }
 
-    public DatabaseReference getEventsHostingDatabaseReference() { return mPeopleDatabaseReference.child(mAccountManager.getCurrentUser().getUid()).child("events_created"); }
+    public DatabaseReference getEventsHostingDatabaseReference() { return getUserPeopleDatabaseReference().child(Constants.peopleEventsCreatedDatabaseRefName); }
 
     public DatabaseReference getEvent(String uId) { return mEventDatabaseReference.child(uId); }
 
@@ -157,22 +154,30 @@ public class DatabaseManager {
     }
 
     public Task<Void> addEventCreator(String eventKey, String creatorUid){
-        return mPeopleDatabaseReference.child(creatorUid).child("events_created").push().setValue(eventKey);
+        return mPeopleDatabaseReference.child(creatorUid).child(Constants.peopleEventsCreatedDatabaseRefName).push().setValue(eventKey);
     }
 
     public Task<UploadTask.TaskSnapshot> uploadEventImage(Uri imageUri) {
-        // TODO: Constant
-        final StorageReference filePath = mStorage.child("Event_Images").child(imageUri.getLastPathSegment());
+        final StorageReference filePath = mStorage.child(Constants.eventImgStorageName).child(imageUri.getLastPathSegment());
         return filePath.putFile(imageUri);
     }
 
-    // Reason why I saved both the user and the event was to save time for look up
     public Task<Void> attendNewEvent(final Event event){
         String userId = mAccountManager.getCurrentUser().getUid();
 
-        DatabaseReference eventAttending = mEventDatabaseReference.child(event.getUid()).child("event_attendees").push();
+        DatabaseReference eventAttending = mEventDatabaseReference.child(event.getUid()).child(Constants.eventAttendeesDatabaseRefName).push();
         eventAttending.setValue(userId);
 
-        return mPeopleDatabaseReference.child(userId).child("events_attending").push().setValue(event.getUid());
+        return mPeopleDatabaseReference.child(userId).child(Constants.peopleEventsAttendingDatabaseRefName).push().setValue(event.getUid());
+    }
+
+    // Settings
+
+    public DatabaseReference getUserSettings(String settingName) {
+        return getUserPeopleDatabaseReference().child(Constants.userSettingsDatabaseRefName).child(settingName);
+    }
+
+    public Task<Void> setUserSettings(String settingName, Object value) {
+        return getUserPeopleDatabaseReference().child(Constants.userSettingsDatabaseRefName).child(settingName).setValue(value);
     }
 }

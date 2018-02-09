@@ -43,7 +43,6 @@ public class CustomInfoWindow implements GoogleMap.InfoWindowAdapter{
         TextView name = (TextView) view.findViewById(R.id.userName);
         name.setText(marker.getTitle());
 
-        // TODO: Store person and not just image.
         TextView details = (TextView) view.findViewById(R.id.details);
         details.setText(marker.getSnippet());
 

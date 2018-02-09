@@ -11,14 +11,6 @@
         android:orientation="vertical"
         android:layout_marginTop="@dimen/fragment_top_margin">
 
-        <TextView
-            android:id="@+id/new_event_basic_info_title_text"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:text="@string/New_Event_Main_Title"
-            android:textAppearance="@style/TextAppearance.AppCompat.Headline" />
-
         <EditText
             android:id="@+id/new_event_title_text"
             android:layout_width="match_parent"

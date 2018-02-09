@@ -44,13 +44,15 @@ import java.util.HashMap;
 public class CoreActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener, ConnectionFragment.OnListFragmentInteractionListener,
         LogoutFragment.OnFragmentInteractionListener, SettingsFragment.OnFragmentInteractionListener, NewEventBasicInfoFragment.OnFragmentInteractionListener,
-        NewEventLogisticsFragment.OnFragmentInteractionListener, NewEventDescriptionFragment.OnFragmentInteractionListener, ViewEventsFragment.OnListFragmentInteractionListener{
+        NewEventLogisticsFragment.OnFragmentInteractionListener, NewEventDescriptionFragment.OnFragmentInteractionListener, ViewEventsFragment.OnListFragmentInteractionListener {
 
     private DatabaseManager mDatabaseManager;
     private AccountManager mAccountManager;
     private FragmentManager mSupportFragmentManager;
 
     private UserEvents mUserEvents;
+
+    private int mCurrentFragment = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -62,7 +64,47 @@ public class CoreActivity extends AppCompatActivity
         mUserEvents = new UserEvents();
 
         mSupportFragmentManager = getSupportFragmentManager();
-        mSupportFragmentManager.beginTransaction().replace(R.id.content_frame, new GMapFragment()).commit();
+
+        if(savedInstanceState == null){
+            mSupportFragmentManager.beginTransaction().replace(R.id.content_frame, new GMapFragment(), getString(R.string.gmaps_tag)).commit();
+            mCurrentFragment = R.string.gmaps_tag;
+        }else{
+            mCurrentFragment = savedInstanceState.getInt("currentFragment");
+            switch(mCurrentFragment){
+                case R.string.gmaps_tag:
+                    mSupportFragmentManager.beginTransaction().replace(R.id.content_frame, new GMapFragment(), getString(R.string.gmaps_tag)).commit();
+                    mCurrentFragment = R.string.gmaps_tag;
+                    break;
+                case R.string.view_connections_tag:
+                    mSupportFragmentManager.beginTransaction().replace(R.id.content_frame, new ConnectionFragment(), getString(R.string.view_connections_tag)).commit();
+                    mCurrentFragment = R.string.view_connections_tag;
+                    break;
+                case R.string.view_events_tag:
+                    mSupportFragmentManager.beginTransaction().replace(R.id.content_frame, new ViewEventsFragment(), getString(R.string.view_events_tag)).commit();
+                    mCurrentFragment = R.string.view_events_tag;
+                    break;
+                case R.string.create_event_basic_info_tag:
+                    mSupportFragmentManager.beginTransaction().replace(R.id.content_frame, new NewEventBasicInfoFragment(), getString(R.string.create_event_basic_info_tag)).commit();
+                    mCurrentFragment = R.string.create_event_basic_info_tag;
+                    break;
+                case R.string.settings_tag:
+                    mSupportFragmentManager.beginTransaction().replace(R.id.content_frame, new SettingsFragment(), getString(R.string.settings_tag)).commit();
+                    mCurrentFragment = R.string.settings_tag;
+                    break;
+                case R.string.logout_tag:
+                    mSupportFragmentManager.beginTransaction().replace(R.id.content_frame, new LogoutFragment(), getString(R.string.logout_tag)).commit();
+                    mCurrentFragment = R.string.logout_tag;
+                    break;
+            }
+                    //TODO: Add SyncUp and edit profile
+/*                case FRAGMENT_A:
+                    addAreaFragment();
+                    break;
+                case FRAGMENT_B:
+                    addFragmentB();*/
+
+        }
+
         setContentView(R.layout.activity_navigation_drawer);
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
@@ -98,12 +140,18 @@ public class CoreActivity extends AppCompatActivity
         setDrawerHeaderText(profileImage, userNameText, userPositionText, userConnectionsText);
     }
 
+    @Override
+    public void onSaveInstanceState(Bundle savedInstanceState){
+        savedInstanceState.putInt("currentFragment", mCurrentFragment);
+        super.onSaveInstanceState(savedInstanceState);
+    }
+
     private void setDrawerHeaderText(final ImageView profileImage, final TextView userNameText, final TextView userPositionText, final TextView userConnectionsText) {
         mDatabaseManager.getUserPeopleDatabaseReference().addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 Person currentUser = dataSnapshot.getValue(Person.class);
-                if (currentUser.getImageId() != null ){
+                if (currentUser.getImageId() != null) {
                     Picasso.with(CoreActivity.this).load(currentUser.getImageId()).into(profileImage);
                 }
                 userNameText.setText(currentUser.getFirstName() + " " + currentUser.getLastName());
@@ -115,8 +163,7 @@ public class CoreActivity extends AppCompatActivity
                         Long connectionCount = dataSnapshot.getChildrenCount();
                         String connectionText = "";
                         String completeText = "";
-                        if(connectionCount < 1 || connectionCount > 1)
-                        {
+                        if (connectionCount < 1 || connectionCount > 1) {
                             connectionText = getString(R.string.connections_text);
                         } else if (connectionCount == 1) {
                             connectionText = getString(R.string.connection_text);
@@ -145,9 +192,35 @@ public class CoreActivity extends AppCompatActivity
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         if (drawer.isDrawerOpen(GravityCompat.START)) {
             drawer.closeDrawer(GravityCompat.START);
+        } else if (isMenuFragmentShowing()) {
+            mSupportFragmentManager.beginTransaction().replace(R.id.content_frame, new GMapFragment(), getString(R.string.gmaps_tag)).commit();
+            mCurrentFragment = R.string.gmaps_tag;
+        } else if (mSupportFragmentManager.findFragmentByTag(getString(R.string.gmaps_tag)) != null && mSupportFragmentManager.findFragmentByTag(getString(R.string.gmaps_tag)).isVisible()){
+            // Do nothing
         } else {
+            // Bug fix: Pressing the back button does not explicitly tell which fragment originated the back button or the destination fragment
+            // To keep the mCurrentFragment variable accurate, when back is pressed, the nested fragments need to be explicitly checked and mCurrentFragment reassigned
+            if(mCurrentFragment == R.string.create_event_logistics_tag){
+                mCurrentFragment = R.string.create_event_basic_info_tag;
+            } else if (mCurrentFragment == R.string.create_event_description_tag) {
+                mCurrentFragment = R.string.create_event_logistics_tag;
+            }
             super.onBackPressed();
         }
+    }
+
+    // This is needed for the custom back button behaviour.
+    // It checks if one of the menu fragments (view connections, view events, create event, settings, or logout) is showing
+    // If it is then return true
+    private boolean isMenuFragmentShowing() {
+        // Check if the fragment is not null first or the app will crash. If the fragment is not null, check if it is visible
+        // TODO: add edit profile and syncup
+        if(mCurrentFragment == R.string.view_connections_tag || mCurrentFragment == R.string.view_events_tag ||
+                mCurrentFragment == R.string.create_event_basic_info_tag || mCurrentFragment == R.string.settings_tag ||
+                mCurrentFragment == R.string.logout_tag) {
+            return true;
+        }
+        return false;
     }
 
     @Override
@@ -171,22 +244,28 @@ public class CoreActivity extends AppCompatActivity
         // Handle navigation view item clicks here.
         int id = item.getItemId();
 
-        if (id == R.id.nav_menu_map) {
-            mSupportFragmentManager.beginTransaction().replace(R.id.content_frame, new GMapFragment()).commit();
+        if (id == R.id.nav_menu_map && mCurrentFragment != R.string.gmaps_tag) {
+            mSupportFragmentManager.beginTransaction().replace(R.id.content_frame, new GMapFragment(), getString(R.string.gmaps_tag)).commit();
+            mCurrentFragment = R.string.gmaps_tag;
         } else if (id == R.id.nav_view_connections) {
-            mSupportFragmentManager.beginTransaction().replace(R.id.content_frame, new ConnectionFragment()).commit();
+            mSupportFragmentManager.beginTransaction().replace(R.id.content_frame, new ConnectionFragment(), getString(R.string.view_connections_tag)).commit();
+            mCurrentFragment = R.string.view_connections_tag;
         } else if (id == R.id.nav_sync_up) {
 
         } else if (id == R.id.nav_view_events) {
-            mSupportFragmentManager.beginTransaction().replace(R.id.content_frame, new ViewEventsFragment()).commit();
+            mSupportFragmentManager.beginTransaction().replace(R.id.content_frame, new ViewEventsFragment(), getString(R.string.view_events_tag)).commit();
+            mCurrentFragment = R.string.view_events_tag;
         } else if (id == R.id.nav_create_event) {
-            mSupportFragmentManager.beginTransaction().replace(R.id.content_frame, new NewEventBasicInfoFragment()).commit();
+            mSupportFragmentManager.beginTransaction().replace(R.id.content_frame, new NewEventBasicInfoFragment(), getString(R.string.create_event_basic_info_tag)).commit();
+            mCurrentFragment = R.string.create_event_basic_info_tag;
         } else if (id == R.id.nav_edit_profile) {
 
         } else if (id == R.id.nav_settings) {
-            mSupportFragmentManager.beginTransaction().replace(R.id.content_frame, new SettingsFragment()).commit();
+            mSupportFragmentManager.beginTransaction().replace(R.id.content_frame, new SettingsFragment(), getString(R.string.settings_tag)).commit();
+            mCurrentFragment = R.string.settings_tag;
         } else if (id == R.id.nav_logout) {
-            mSupportFragmentManager.beginTransaction().replace(R.id.content_frame, new LogoutFragment()).commit();
+            mSupportFragmentManager.beginTransaction().replace(R.id.content_frame, new LogoutFragment(), getString(R.string.logout_tag)).commit();
+            mCurrentFragment = R.string.logout_tag;
         }
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
@@ -225,11 +304,13 @@ public class CoreActivity extends AppCompatActivity
 
         // Replace whatever is in the fragment_container view with this fragment,
         // and add the transaction to the back stack so the user can navigate back
-        transaction.replace(R.id.content_frame, eventLogisticsFragment);
+        transaction.replace(R.id.content_frame, eventLogisticsFragment, getString(R.string.create_event_logistics_tag));
         transaction.addToBackStack(null);
 
         // Commit the transaction
         transaction.commit();
+
+        mCurrentFragment = R.string.create_event_logistics_tag;
     }
 
     @Override
@@ -258,26 +339,28 @@ public class CoreActivity extends AppCompatActivity
 
         // Replace whatever is in the fragment_container view with this fragment,
         // and add the transaction to the back stack so the user can navigate back
-        transaction.replace(R.id.content_frame, eventDescriptionFragment);
+        transaction.replace(R.id.content_frame, eventDescriptionFragment, getString(R.string.create_event_description_tag));
         transaction.addToBackStack(null);
 
         // Commit the transaction
         transaction.commit();
+
+        mCurrentFragment = R.string.create_event_description_tag;
     }
 
     @Override
     public void onNewEventDescriptionDoneButtonPressed(Double longitude, Double latitude) {
-        mSupportFragmentManager.beginTransaction().replace(R.id.content_frame, new GMapFragment()).commit();
+        mSupportFragmentManager.beginTransaction().replace(R.id.content_frame, new GMapFragment(), getString(R.string.gmaps_tag)).commit();
+        mCurrentFragment = R.string.gmaps_tag;
     }
 
     @Override
-    public void onListFragmentInteraction(Event item) {
-
-    }
+    public void onListFragmentInteraction(Event item) { }
 
     @Override
     public void onLogoutInteraction() {
         mUserEvents.clearEvents();
         startActivity(new Intent(this, LoginActivity.class));
+        mCurrentFragment = 0;
     }
 }
