@@ -82,8 +82,8 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
     private AlertDialog.Builder mDialogBuilder;
     private AlertDialog mDialog;
 
-    private int mPersonPinColor;
-    private int mEventPinColor;
+    private float mPersonPinColor = Constants.personPinColorDefault;
+    private float mEventPinColor = Constants.eventPinColorDefault;
     private int mLocationTimeUpdateInterval = Constants.locationTimeUpdateIntervalDefault;
     private int mLocationDistanceUpdateIntervalName = Constants.locationDistanceUpdateIntervalDefault;
     private int mMapZoomLevelName = Constants.mapZoomLevelDefault;
@@ -109,6 +109,38 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
 
         mLocalEventsList = new ArrayList<>();
         mEventMarkerMap = new HashMap<>();
+
+        mDatabaseManager.getUserSettings(Constants.personPinColorName).addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                float value = Constants.personPinColorDefault;
+                if(dataSnapshot.getValue(Integer.class) != null){
+                    value = dataSnapshot.getValue(Float.class);
+                }
+                mPersonPinColor = value;
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
+
+        mDatabaseManager.getUserSettings(Constants.eventPinColorName).addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                float value = Constants.eventPinColorDefault;
+                if(dataSnapshot.getValue(Integer.class) != null){
+                    value = dataSnapshot.getValue(Float.class);
+                }
+                mEventPinColor = value;
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
     }
 
     @Override

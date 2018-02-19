@@ -3,7 +3,9 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/Sync.iml" filepath="$PROJECT_DIR$/Sync.iml" />
+      <module fileurl="file://C:\Users\hollyboothroyd\Documents\FinalYear\Project\Sync\Sync.iml" filepath="C:\Users\hollyboothroyd\Documents\FinalYear\Project\Sync\Sync.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
+      <module fileurl="file://C:\Users\hollyboothroyd\Documents\FinalYear\Project\Sync\app\app.iml" filepath="C:\Users\hollyboothroyd\Documents\FinalYear\Project\Sync\app\app.iml" />
     </modules>
   </component>
 </project>
