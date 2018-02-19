@@ -360,6 +360,7 @@ public class CoreActivity extends AppCompatActivity
     @Override
     public void onLogoutInteraction() {
         mUserEvents.clearEvents();
+        mAccountManager.signUserOut();
         startActivity(new Intent(this, LoginActivity.class));
         mCurrentFragment = 0;
     }

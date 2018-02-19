@@ -66,7 +66,6 @@ public class LogoutFragment extends Fragment {
         logoutButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mAccountManager.signUserOut();
                 if (mListener != null) {
                     mListener.onLogoutInteraction();
                 }
