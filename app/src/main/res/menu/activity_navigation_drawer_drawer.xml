@@ -9,6 +9,10 @@
             android:icon="@drawable/nav_menu_map"
             android:title="@string/Map_Title" />
         <item
+            android:id="@+id/nav_menu_notification"
+            android:icon="@drawable/nav_menu_notification"
+            android:title="@string/nav_menu_notification_text" />
+        <item
             android:id="@+id/nav_view_connections"
             android:icon="@drawable/nav_view_connections"
             android:title="@string/View_Connections" />

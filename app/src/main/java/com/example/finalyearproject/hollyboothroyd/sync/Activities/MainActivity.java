@@ -34,6 +34,7 @@ public class MainActivity extends AppCompatActivity {
 
         mAuth = FirebaseAuth.getInstance();
 
+        // TODO: Place these into utils. Access one central DBMan and AccountMan.
         databaseManager = new DatabaseManager();
         accountManager = new AccountManager();
 

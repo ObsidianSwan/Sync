@@ -1,0 +1,97 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:layout_marginTop="@dimen/fragment_top_margin"
+    android:layout_below="@+id/toolbar"
+    android:scrollbars="vertical"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    tools:context="com.example.finalyearproject.hollyboothroyd.sync.Activities.Fragments.EditProfileFragment">
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+        <LinearLayout
+            android:id="@+id/edit_profile_form"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:scrollbars="vertical">
+
+            <ImageButton
+                android:id="@+id/edit_profile_photo_button"
+                android:layout_width="200dp"
+                android:layout_height="200dp"
+                android:layout_gravity="center"
+                android:layout_marginTop="@dimen/entry_top_margin"
+                android:background="@android:color/transparent"
+                android:scaleType="centerCrop"
+                app:srcCompat="@drawable/add_photo" />
+
+            <EditText
+                android:id="@+id/edit_first_name_text"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="@dimen/entry_side_margin"
+                android:layout_marginStart="@dimen/entry_side_margin"
+                android:layout_marginTop="@dimen/entry_top_margin"
+                android:ems="10"
+                android:hint="@string/First_Name"
+                android:inputType="textPersonName" />
+
+            <EditText
+                android:id="@+id/edit_last_name_text"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="@dimen/entry_side_margin"
+                android:layout_marginStart="@dimen/entry_side_margin"
+                android:layout_marginTop="@dimen/entry_top_margin"
+                android:ems="10"
+                android:hint="@string/Last_Name"
+                android:inputType="textPersonName" />
+
+            <EditText
+                android:id="@+id/edit_position_text"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="@dimen/entry_side_margin"
+                android:layout_marginStart="@dimen/entry_side_margin"
+                android:layout_marginTop="@dimen/entry_top_margin"
+                android:ems="10"
+                android:hint="@string/Position_Text_Hint"
+                android:inputType="textPersonName" />
+
+            <EditText
+                android:id="@+id/edit_company_text"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="@dimen/entry_side_margin"
+                android:layout_marginStart="@dimen/entry_side_margin"
+                android:layout_marginTop="@dimen/entry_top_margin"
+                android:ems="10"
+                android:hint="@string/Company_Text_Hint"
+                android:inputType="textPersonName" />
+
+            <EditText
+                android:id="@+id/edit_industry_text"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="@dimen/entry_side_margin"
+                android:layout_marginStart="@dimen/entry_side_margin"
+                android:layout_marginTop="@dimen/entry_top_margin"
+                android:ems="10"
+                android:hint="@string/Industry_Text_Hint"
+                android:inputType="textPersonName" />
+
+            <Button
+                android:id="@+id/edit_profile_commit_button"
+                android:layout_width="@dimen/button_width"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_margin="@dimen/button_margin"
+                android:text="@string/commit_button" />
+
+        </LinearLayout>
+    </ScrollView>
+
+</RelativeLayout>

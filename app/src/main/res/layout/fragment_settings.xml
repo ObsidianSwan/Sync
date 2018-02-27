@@ -3,13 +3,14 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:layout_marginTop="@dimen/fragment_top_margin"
     android:orientation="vertical"
     tools:context="com.example.finalyearproject.hollyboothroyd.sync.Activities.Fragments.SettingsFragment">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="@dimen/fragment_top_margin"
+        android:layout_marginTop="@dimen/fragment_top_item_margin"
         android:orientation="vertical">
 
         <TextView
@@ -159,6 +160,5 @@
                 android:layout_alignParentEnd="true" />
 
         </RelativeLayout>
-
     </LinearLayout>
 </LinearLayout>

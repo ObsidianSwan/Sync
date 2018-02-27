@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="@dimen/event_item_height"
-    android:layout_marginEnd="@dimen/event_item_side_margin"
-    android:layout_marginStart="@dimen/event_item_side_margin"
-    android:layout_marginTop="@dimen/event_item_top_margin"
-    android:layout_marginBottom="@dimen/event_item_bottom_margin"
+    android:layout_height="@dimen/list_item_height"
+    android:layout_marginEnd="@dimen/list_item_side_margin"
+    android:layout_marginStart="@dimen/list_item_side_margin"
+    android:layout_marginTop="@dimen/list_item_top_margin"
+    android:layout_marginBottom="@dimen/list_item_bottom_margin"
     android:orientation="horizontal">
 
     <ImageView

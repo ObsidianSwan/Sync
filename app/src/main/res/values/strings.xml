@@ -92,6 +92,7 @@
     <string name="sign_up_successful">Sign up successful!</string>
     <string name="popup_connected_text">You\'re connected!</string>
 
+
     <string name="New_Event_Main_Title">New Event</string>
     <string name="New_Event_Title">Title</string>
     <string name="New_Event_Topic">Topic</string>
@@ -130,5 +131,27 @@
     <string name="gmaps_tag">gmaps_fragment</string>
     <string name="create_event_description_tag">create_event_description_fragment</string>
     <string name="create_event_logistics_tag">create_event_logistics_fragment</string>
+    <string name="settings_account_text">Account</string>
+    <string name="edit_profile_tag">edit_profile_fragment</string>
+    <string name="edit_profile_no_changes_toast">No entries need updating</string>
+    <string name="edit_profile_successfully_changed">Profile updated</string>
+    <string name="commit_button">Commit</string>
+    <string name="menu_notification_text">Notifications</string>
+    <string name="nav_menu_notification_text">Notifications</string>
+    <string name="nav_view_notifications">notifications_fragment</string>
+    <string name="notifications_tag">notifications_fragment</string>
+    <string name="notification_connection_request_title">Connection Request</string>
+    <string name="notification_error_text">Missing notification</string>
+    <string name="notification_profile_view_text">New profile view</string>
+    <string name="confirm_button_text">Confirm</string>
+    <string name="ignore_button_text">Ignore</string>
+    <string name="notifications_action_bar_title">Notifications</string>
+    <string name="generic_error_text">Something went wrong</string>
+    <string name="connection_denied_toast_text">Connection denied</string>
+    <string name="connection_accepted_toast_text">Connection made!</string>
+    <string name="connection_request_sent_success">Connection request sent!</string>
+    <string name="connection_request_failed">Connection request failed!</string>
+    <string name="popup_connection_pending_text">Connection request pending!</string>
+    <string name="accept_connection_request_button_text">Accept connection request</string>
 
 </resources>

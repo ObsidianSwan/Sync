@@ -2,6 +2,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:layout_marginTop="@dimen/fragment_top_margin"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     tools:context="com.example.finalyearproject.hollyboothroyd.sync.Activities.Fragments.NewEvent.NewEventDescriptionFragment">
 
@@ -18,8 +19,7 @@
         android:id="@+id/event_description_layout"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:orientation="vertical"
-        android:layout_marginTop="@dimen/fragment_top_margin">
+        android:orientation="vertical">
 
         <ImageButton
             android:id="@+id/new_event_image_button"

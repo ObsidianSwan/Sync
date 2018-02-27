@@ -28,7 +28,7 @@ public class Event {
     private List<String> mAttendees;
 
 
-    // Used during person list population
+    // Used during event list population
     public Event() {
     }
 
