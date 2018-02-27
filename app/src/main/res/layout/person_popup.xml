@@ -85,6 +85,18 @@
         android:paddingBottom="16dp"
         android:text="@string/popup_connected_text"
         android:textAppearance="@style/TextAppearance.AppCompat.Large"
-        android:visibility="visible" />
+        android:visibility="invisible" />
+
+    <TextView
+        android:id="@+id/popup_connection_pending"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/person_popup"
+        android:layout_centerHorizontal="true"
+        android:layout_margin="@dimen/popup_margin"
+        android:paddingBottom="16dp"
+        android:text="@string/popup_connection_pending_text"
+        android:textAppearance="@style/TextAppearance.AppCompat.Large"
+        android:visibility="invisible" />
 
 </RelativeLayout>

@@ -4,7 +4,7 @@
     android:id="@+id/tab_host"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:layout_marginTop="@dimen/events_fragment_top_margin"
+    android:layout_marginTop="@dimen/fragment_top_margin"
     tools:context="com.example.finalyearproject.hollyboothroyd.sync.Activities.Fragments.ViewEventsFragment">
 
     <LinearLayout
@@ -33,8 +33,8 @@
                     android:id="@+id/all_events_recycler_view"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:layout_marginEnd="@dimen/event_list_margin"
-                    android:layout_marginStart="@dimen/event_list_margin"
+                    android:layout_marginEnd="@dimen/list_margin"
+                    android:layout_marginStart="@dimen/list_margin"
                     app:layoutManager="LinearLayoutManager"
                     tools:context="com.example.finalyearproject.hollyboothroyd.sync.Activities.Fragments.ViewEventsFragment"
                     tools:listitem="@layout/fragment_event" />
@@ -51,8 +51,8 @@
                     android:id="@+id/events_attending_recycler_view"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:layout_marginEnd="@dimen/event_list_margin"
-                    android:layout_marginStart="@dimen/event_list_margin"
+                    android:layout_marginEnd="@dimen/list_margin"
+                    android:layout_marginStart="@dimen/list_margin"
                     app:layoutManager="LinearLayoutManager"
                     tools:context="com.example.finalyearproject.hollyboothroyd.sync.Activities.Fragments.ViewEventsFragment"
                     tools:listitem="@layout/fragment_event" />
@@ -69,8 +69,8 @@
                     android:id="@+id/events_hosting_recycler_view"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:layout_marginEnd="@dimen/event_list_margin"
-                    android:layout_marginStart="@dimen/event_list_margin"
+                    android:layout_marginEnd="@dimen/list_margin"
+                    android:layout_marginStart="@dimen/list_margin"
                     app:layoutManager="LinearLayoutManager"
                     tools:context="com.example.finalyearproject.hollyboothroyd.sync.Activities.Fragments.ViewEventsFragment"
                     tools:listitem="@layout/fragment_event" />

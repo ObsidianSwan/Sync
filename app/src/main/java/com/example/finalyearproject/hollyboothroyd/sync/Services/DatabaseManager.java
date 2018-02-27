@@ -7,9 +7,12 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.widget.EditText;
 
+import com.example.finalyearproject.hollyboothroyd.sync.Model.Connection;
 import com.example.finalyearproject.hollyboothroyd.sync.Model.Event;
+import com.example.finalyearproject.hollyboothroyd.sync.Model.Notification;
 import com.example.finalyearproject.hollyboothroyd.sync.Model.Person;
 import com.example.finalyearproject.hollyboothroyd.sync.Utils.Constants;
+import com.example.finalyearproject.hollyboothroyd.sync.Utils.NotificationType;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
@@ -20,6 +23,7 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.Query;
+import com.google.firebase.database.ServerValue;
 import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
@@ -39,7 +43,9 @@ public class DatabaseManager {
     private FirebaseDatabase mDatabase;
     private StorageReference mStorage;
     private DatabaseReference mPeopleDatabaseReference;
+    private DatabaseReference mUserNotificationDatabaseReference;
     private DatabaseReference mConnectionsDatabaseReference;
+
     private DatabaseReference mEventDatabaseReference;
     private AccountManager mAccountManager;
 
@@ -48,9 +54,12 @@ public class DatabaseManager {
         mStorage = FirebaseStorage.getInstance().getReference();
         mPeopleDatabaseReference = mDatabase.getReference().child(Constants.peopleDatabaseRefName);
         mConnectionsDatabaseReference = mDatabase.getReference().child(Constants.connectionDatabaseRefName);
+
         mEventDatabaseReference = mDatabase.getReference().child(Constants.eventDatabaseRefName);
 
         mAccountManager = new AccountManager();
+        //TODO: when DMMan and AccountMan is put into utils return this to be here.
+        //mUserNotificationDatabaseReference = mPeopleDatabaseReference.child(mAccountManager.getCurrentUser().getUid()).child(Constants.userNotificationDatabaseRefName);
 
         mPeopleDatabaseReference.addValueEventListener(new ValueEventListener() {
             @Override
@@ -76,11 +85,16 @@ public class DatabaseManager {
         return filePath.putFile(imageUri);
     }
 
-    public Task<Void> addPerson(Person person) {
-       return mPeopleDatabaseReference.child(person.getUserId()).setValue(person);
+    public Task<Void> deletePersonImage(String oldImageUri) {
+        StorageReference oldImageRef = mStorage.getStorage().getReferenceFromUrl(oldImageUri);
+        return oldImageRef.delete();
     }
 
-    public void updateCurrentUserLocation(LatLng userLocation){
+    public Task<Void> addPerson(Person person) {
+        return mPeopleDatabaseReference.child(person.getUserId()).setValue(person);
+    }
+
+    public void updateCurrentUserLocation(LatLng userLocation) {
         // TODO: Put hashmap conversion in utils
         HashMap<String, Object> personLocationHash = new HashMap<>();
         personLocationHash.put("longitude", userLocation.longitude);
@@ -96,13 +110,18 @@ public class DatabaseManager {
         });
     }
 
-    public Person getCurrentUserPerson(){
+    public DatabaseReference getPersonReference(String personId){
+        return mPeopleDatabaseReference.child(personId);
+    }
+
+
+/*    public Person getCurrentUserPerson() {
         final Person currentPerson = new Person();
         String userId = mAccountManager.getCurrentUser().getUid();
         mPeopleDatabaseReference.child(userId).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                if(dataSnapshot.getValue(Person.class) != null){
+                if (dataSnapshot.getValue(Person.class) != null) {
                     currentPerson.setFirstName(dataSnapshot.getValue(Person.class).getFirstName());
                     currentPerson.setLastName(dataSnapshot.getValue(Person.class).getLastName());
                     currentPerson.setPosition(dataSnapshot.getValue(Person.class).getPosition());
@@ -121,31 +140,80 @@ public class DatabaseManager {
             }
         });
         return currentPerson;
+    }*/
+
+    public DatabaseReference getUserPeopleDatabaseReference() {
+        return mPeopleDatabaseReference.child(mAccountManager.getCurrentUser().getUid());
     }
 
     // Connections
 
-    public DatabaseReference getUserPeopleDatabaseReference() { return  mPeopleDatabaseReference.child(mAccountManager.getCurrentUser().getUid()); }
+    public DatabaseReference getUserConnectionsDatabaseReference() {
+        return mPeopleDatabaseReference.child(mAccountManager.getCurrentUser().getUid()).child(Constants.connectionDatabaseRefName);
+    }
 
-    public DatabaseReference getUserConnectionsDatabaseReference() { return mConnectionsDatabaseReference.child(mAccountManager.getCurrentUser().getUid()); }
+    public Task<Void> deleteUserConnectionRequestNotification(String notificationId) {
+        return mPeopleDatabaseReference.child(mAccountManager.getCurrentUser().getUid()).child(Constants.userNotificationDatabaseRefName).child(notificationId).setValue(null);
+    }
 
-    public Task<Void> addNewConnection(final String userId, final Person connection){
-        DatabaseReference newConnection = mConnectionsDatabaseReference.child(userId).push();
-        return newConnection.setValue(connection);
+    public DatabaseReference getNewConnectionReference(String personId) {
+        return mPeopleDatabaseReference.child(personId).child(Constants.connectionDatabaseRefName).push();
+    }
+
+    public Task<Void> addUserConnection(DatabaseReference connectionReference, Connection connection){
+        return connectionReference.setValue(connection);
+    }
+
+    public DatabaseReference getUserConnectionRequestsDatabaseReference() {
+        return mPeopleDatabaseReference.child(mAccountManager.getCurrentUser().getUid()).child(Constants.connectionRequestsDatabaseRefName);
+    }
+
+    public Task<Void> deleteUserConnectionRequest(String connectionId, String personId) {
+        return mPeopleDatabaseReference.child(personId).child(Constants.connectionRequestsDatabaseRefName).child(connectionId).setValue(null);
+    }
+
+    public DatabaseReference getNewConnectionRequestReference() {
+        return mPeopleDatabaseReference.child(mAccountManager.getCurrentUser().getUid()).child(Constants.connectionRequestsDatabaseRefName).push();
+    }
+
+    public Task<Void> addUserConnectionRequest(DatabaseReference connectionRequestReference, Connection connection){
+        return connectionRequestReference.setValue(connection);
+    }
+
+    // Notifications
+
+    public DatabaseReference getNewNotifcationReference(String personId) {
+        return mPeopleDatabaseReference.child(personId).child(Constants.userNotificationDatabaseRefName).push();
+    }
+
+    public Task<Void> sendNotification(DatabaseReference notificationReference, Notification notification) {
+        return notificationReference.setValue(notification);
+    }
+
+    public DatabaseReference getNotifications() {
+        return mPeopleDatabaseReference.child(mAccountManager.getCurrentUser().getUid()).child(Constants.userNotificationDatabaseRefName);
     }
 
     // Events
 
     // TODO: Add distance check
-    public DatabaseReference getAllEventsDatabaseReference() { return mEventDatabaseReference; }
+    public DatabaseReference getAllEventsDatabaseReference() {
+        return mEventDatabaseReference;
+    }
 
-    public DatabaseReference getEventsAttendingDatabaseReference() { return getUserPeopleDatabaseReference().child(Constants.peopleEventsAttendingDatabaseRefName); }
+    public DatabaseReference getEventsAttendingDatabaseReference() {
+        return getUserPeopleDatabaseReference().child(Constants.peopleEventsAttendingDatabaseRefName);
+    }
 
-    public DatabaseReference getEventsHostingDatabaseReference() { return getUserPeopleDatabaseReference().child(Constants.peopleEventsCreatedDatabaseRefName); }
+    public DatabaseReference getEventsHostingDatabaseReference() {
+        return getUserPeopleDatabaseReference().child(Constants.peopleEventsCreatedDatabaseRefName);
+    }
 
-    public DatabaseReference getEvent(String uId) { return mEventDatabaseReference.child(uId); }
+    public DatabaseReference getEvent(String uId) {
+        return mEventDatabaseReference.child(uId);
+    }
 
-    public DatabaseReference getNewEventReference(){
+    public DatabaseReference getNewEventReference() {
         return mEventDatabaseReference.push();
     }
 
@@ -153,7 +221,7 @@ public class DatabaseManager {
         return newEventReference.setValue(event);
     }
 
-    public Task<Void> addEventCreator(String eventKey, String creatorUid){
+    public Task<Void> addEventCreator(String eventKey, String creatorUid) {
         return mPeopleDatabaseReference.child(creatorUid).child(Constants.peopleEventsCreatedDatabaseRefName).push().setValue(eventKey);
     }
 
@@ -162,7 +230,7 @@ public class DatabaseManager {
         return filePath.putFile(imageUri);
     }
 
-    public Task<Void> attendNewEvent(final Event event){
+    public Task<Void> attendNewEvent(final Event event) {
         String userId = mAccountManager.getCurrentUser().getUid();
 
         DatabaseReference eventAttending = mEventDatabaseReference.child(event.getUid()).child(Constants.eventAttendeesDatabaseRefName).push();

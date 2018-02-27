@@ -41,13 +41,13 @@ public class MyEventRecyclerViewAdapter extends RecyclerView.Adapter<MyEventRecy
         mContext = context;
         mValues = items;
         mListener = listener;
+        mDatabaseManager = new DatabaseManager();
     }
 
     @Override
     public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(parent.getContext())
                 .inflate(R.layout.fragment_event, parent, false);
-        mDatabaseManager = new DatabaseManager();
         return new ViewHolder(view);
     }
 

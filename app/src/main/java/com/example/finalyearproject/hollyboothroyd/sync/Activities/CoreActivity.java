@@ -1,16 +1,20 @@
 package com.example.finalyearproject.hollyboothroyd.sync.Activities;
 
 import com.example.finalyearproject.hollyboothroyd.sync.Activities.Fragments.ConnectionFragment;
+import com.example.finalyearproject.hollyboothroyd.sync.Activities.Fragments.EditProfileFragment;
 import com.example.finalyearproject.hollyboothroyd.sync.Activities.Fragments.LogoutFragment;
 import com.example.finalyearproject.hollyboothroyd.sync.Activities.Fragments.NewEvent.NewEventBasicInfoFragment;
 import com.example.finalyearproject.hollyboothroyd.sync.Activities.Fragments.NewEvent.NewEventDescriptionFragment;
 import com.example.finalyearproject.hollyboothroyd.sync.Activities.Fragments.NewEvent.NewEventLogisticsFragment;
+import com.example.finalyearproject.hollyboothroyd.sync.Activities.Fragments.NotificationFragment;
 import com.example.finalyearproject.hollyboothroyd.sync.Activities.Fragments.SettingsFragment;
 import com.example.finalyearproject.hollyboothroyd.sync.Activities.Fragments.ViewEventsFragment;
 import com.example.finalyearproject.hollyboothroyd.sync.Model.Event;
+import com.example.finalyearproject.hollyboothroyd.sync.Model.NotificationBase;
 import com.example.finalyearproject.hollyboothroyd.sync.Model.UserConnections;
 import com.example.finalyearproject.hollyboothroyd.sync.Model.Person;
 import com.example.finalyearproject.hollyboothroyd.sync.Model.UserEvents;
+import com.example.finalyearproject.hollyboothroyd.sync.Model.UserNotifications;
 import com.example.finalyearproject.hollyboothroyd.sync.Services.AccountManager;
 
 import android.content.Intent;
@@ -39,18 +43,18 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.ValueEventListener;
 import com.squareup.picasso.Picasso;
 
-import java.util.HashMap;
-
 public class CoreActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener, ConnectionFragment.OnListFragmentInteractionListener,
         LogoutFragment.OnFragmentInteractionListener, SettingsFragment.OnFragmentInteractionListener, NewEventBasicInfoFragment.OnFragmentInteractionListener,
-        NewEventLogisticsFragment.OnFragmentInteractionListener, NewEventDescriptionFragment.OnFragmentInteractionListener, ViewEventsFragment.OnListFragmentInteractionListener {
+        NewEventLogisticsFragment.OnFragmentInteractionListener, NewEventDescriptionFragment.OnFragmentInteractionListener, ViewEventsFragment.OnListFragmentInteractionListener,
+        EditProfileFragment.OnFragmentInteractionListener, NotificationFragment.OnListFragmentInteractionListener {
 
     private DatabaseManager mDatabaseManager;
     private AccountManager mAccountManager;
     private FragmentManager mSupportFragmentManager;
 
     private UserEvents mUserEvents;
+    private UserNotifications mUserNotifications;
 
     private int mCurrentFragment = 0;
 
@@ -62,18 +66,23 @@ public class CoreActivity extends AppCompatActivity
 
         UserConnections connections = new UserConnections();
         mUserEvents = new UserEvents();
+        mUserNotifications = new UserNotifications();
 
         mSupportFragmentManager = getSupportFragmentManager();
 
-        if(savedInstanceState == null){
+        if (savedInstanceState == null) {
             mSupportFragmentManager.beginTransaction().replace(R.id.content_frame, new GMapFragment(), getString(R.string.gmaps_tag)).commit();
             mCurrentFragment = R.string.gmaps_tag;
-        }else{
+        } else {
             mCurrentFragment = savedInstanceState.getInt("currentFragment");
-            switch(mCurrentFragment){
+            switch (mCurrentFragment) {
                 case R.string.gmaps_tag:
                     mSupportFragmentManager.beginTransaction().replace(R.id.content_frame, new GMapFragment(), getString(R.string.gmaps_tag)).commit();
                     mCurrentFragment = R.string.gmaps_tag;
+                    break;
+                case R.string.notifications_tag:
+                    mSupportFragmentManager.beginTransaction().replace(R.id.content_frame, new NotificationFragment(), getString(R.string.notifications_tag)).commit();
+                    mCurrentFragment = R.string.notifications_tag;
                     break;
                 case R.string.view_connections_tag:
                     mSupportFragmentManager.beginTransaction().replace(R.id.content_frame, new ConnectionFragment(), getString(R.string.view_connections_tag)).commit();
@@ -87,6 +96,10 @@ public class CoreActivity extends AppCompatActivity
                     mSupportFragmentManager.beginTransaction().replace(R.id.content_frame, new NewEventBasicInfoFragment(), getString(R.string.create_event_basic_info_tag)).commit();
                     mCurrentFragment = R.string.create_event_basic_info_tag;
                     break;
+                case R.string.edit_profile_tag:
+                    mSupportFragmentManager.beginTransaction().replace(R.id.content_frame, new EditProfileFragment(), getString(R.string.edit_profile_tag)).commit();
+                    mCurrentFragment = R.string.edit_profile_tag;
+                    break;
                 case R.string.settings_tag:
                     mSupportFragmentManager.beginTransaction().replace(R.id.content_frame, new SettingsFragment(), getString(R.string.settings_tag)).commit();
                     mCurrentFragment = R.string.settings_tag;
@@ -96,7 +109,7 @@ public class CoreActivity extends AppCompatActivity
                     mCurrentFragment = R.string.logout_tag;
                     break;
             }
-                    //TODO: Add SyncUp and edit profile
+            //TODO: Add SyncUp
 /*                case FRAGMENT_A:
                     addAreaFragment();
                     break;
@@ -141,13 +154,13 @@ public class CoreActivity extends AppCompatActivity
     }
 
     @Override
-    public void onSaveInstanceState(Bundle savedInstanceState){
+    public void onSaveInstanceState(Bundle savedInstanceState) {
         savedInstanceState.putInt("currentFragment", mCurrentFragment);
         super.onSaveInstanceState(savedInstanceState);
     }
 
     private void setDrawerHeaderText(final ImageView profileImage, final TextView userNameText, final TextView userPositionText, final TextView userConnectionsText) {
-        mDatabaseManager.getUserPeopleDatabaseReference().addListenerForSingleValueEvent(new ValueEventListener() {
+        mDatabaseManager.getUserPeopleDatabaseReference().addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 Person currentUser = dataSnapshot.getValue(Person.class);
@@ -195,12 +208,12 @@ public class CoreActivity extends AppCompatActivity
         } else if (isMenuFragmentShowing()) {
             mSupportFragmentManager.beginTransaction().replace(R.id.content_frame, new GMapFragment(), getString(R.string.gmaps_tag)).commit();
             mCurrentFragment = R.string.gmaps_tag;
-        } else if (mSupportFragmentManager.findFragmentByTag(getString(R.string.gmaps_tag)) != null && mSupportFragmentManager.findFragmentByTag(getString(R.string.gmaps_tag)).isVisible()){
+        } else if (mSupportFragmentManager.findFragmentByTag(getString(R.string.gmaps_tag)) != null && mSupportFragmentManager.findFragmentByTag(getString(R.string.gmaps_tag)).isVisible()) {
             // Do nothing
         } else {
             // Bug fix: Pressing the back button does not explicitly tell which fragment originated the back button or the destination fragment
             // To keep the mCurrentFragment variable accurate, when back is pressed, the nested fragments need to be explicitly checked and mCurrentFragment reassigned
-            if(mCurrentFragment == R.string.create_event_logistics_tag){
+            if (mCurrentFragment == R.string.create_event_logistics_tag) {
                 mCurrentFragment = R.string.create_event_basic_info_tag;
             } else if (mCurrentFragment == R.string.create_event_description_tag) {
                 mCurrentFragment = R.string.create_event_logistics_tag;
@@ -215,7 +228,7 @@ public class CoreActivity extends AppCompatActivity
     private boolean isMenuFragmentShowing() {
         // Check if the fragment is not null first or the app will crash. If the fragment is not null, check if it is visible
         // TODO: add edit profile and syncup
-        if(mCurrentFragment == R.string.view_connections_tag || mCurrentFragment == R.string.view_events_tag ||
+        if (mCurrentFragment == R.string.view_connections_tag || mCurrentFragment == R.string.view_events_tag ||
                 mCurrentFragment == R.string.create_event_basic_info_tag || mCurrentFragment == R.string.settings_tag ||
                 mCurrentFragment == R.string.logout_tag) {
             return true;
@@ -247,6 +260,9 @@ public class CoreActivity extends AppCompatActivity
         if (id == R.id.nav_menu_map && mCurrentFragment != R.string.gmaps_tag) {
             mSupportFragmentManager.beginTransaction().replace(R.id.content_frame, new GMapFragment(), getString(R.string.gmaps_tag)).commit();
             mCurrentFragment = R.string.gmaps_tag;
+        } else if (id == R.id.nav_menu_notification) {
+            mSupportFragmentManager.beginTransaction().replace(R.id.content_frame, new NotificationFragment(), getString(R.string.notifications_tag)).commit();
+            mCurrentFragment = R.string.notifications_tag;
         } else if (id == R.id.nav_view_connections) {
             mSupportFragmentManager.beginTransaction().replace(R.id.content_frame, new ConnectionFragment(), getString(R.string.view_connections_tag)).commit();
             mCurrentFragment = R.string.view_connections_tag;
@@ -259,7 +275,8 @@ public class CoreActivity extends AppCompatActivity
             mSupportFragmentManager.beginTransaction().replace(R.id.content_frame, new NewEventBasicInfoFragment(), getString(R.string.create_event_basic_info_tag)).commit();
             mCurrentFragment = R.string.create_event_basic_info_tag;
         } else if (id == R.id.nav_edit_profile) {
-
+            mSupportFragmentManager.beginTransaction().replace(R.id.content_frame, new EditProfileFragment(), getString(R.string.edit_profile_tag)).commit();
+            mCurrentFragment = R.string.edit_profile_tag;
         } else if (id == R.id.nav_settings) {
             mSupportFragmentManager.beginTransaction().replace(R.id.content_frame, new SettingsFragment(), getString(R.string.settings_tag)).commit();
             mCurrentFragment = R.string.settings_tag;
@@ -355,13 +372,25 @@ public class CoreActivity extends AppCompatActivity
     }
 
     @Override
-    public void onListFragmentInteraction(Event item) { }
+    public void onListFragmentInteraction(Event item) {
+    }
 
     @Override
     public void onLogoutInteraction() {
         mUserEvents.clearEvents();
+        mUserNotifications.clearNotifications();
         mAccountManager.signUserOut();
         startActivity(new Intent(this, LoginActivity.class));
         mCurrentFragment = 0;
+    }
+
+    @Override
+    public void onEditProfileInteraction(Uri uri) {
+
+    }
+
+    @Override
+    public void onListFragmentInteraction(NotificationBase item) {
+
     }
 }

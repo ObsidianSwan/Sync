@@ -8,9 +8,6 @@ import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 
 public class Constants {
 
-    // SharePreferences Settings
-    public static final String preferences = "Settings";
-
     // Map update and search names and defaults
     public static final String locationTimeUpdateIntervalName = "locationTimeUpdateInterval";
     public static final String locationDistanceUpdateIntervalName = "locationDistanceUpdateInterval";
@@ -45,7 +42,9 @@ public class Constants {
 
     // Database/storage references
     public static final String peopleDatabaseRefName = "people";
+    public static final String userNotificationDatabaseRefName = "notifications";
     public static final String connectionDatabaseRefName = "connections";
+    public static final String connectionRequestsDatabaseRefName = "connection_requests";
     public static final String eventDatabaseRefName = "event";
     public static final String peopleEventsCreatedDatabaseRefName = "events_created";
     public static final String peopleEventsAttendingDatabaseRefName = "events_attending";

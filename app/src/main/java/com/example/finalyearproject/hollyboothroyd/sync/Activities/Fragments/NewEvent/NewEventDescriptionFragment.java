@@ -185,6 +185,7 @@ public class NewEventDescriptionFragment extends Fragment {
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
+        //TODO: Utils
         if (requestCode == GALLERY_CODE && resultCode == RESULT_OK) {
             mImageUri = data.getData();
             CropImage.activity(mImageUri)

@@ -4,7 +4,6 @@ import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.support.v4.app.Fragment;
-import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationListener;
@@ -25,7 +24,12 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.finalyearproject.hollyboothroyd.sync.Model.Connection;
 import com.example.finalyearproject.hollyboothroyd.sync.Model.Event;
+import com.example.finalyearproject.hollyboothroyd.sync.Model.Notification;
+import com.example.finalyearproject.hollyboothroyd.sync.Model.NotificationBase;
+import com.example.finalyearproject.hollyboothroyd.sync.Model.UserNotifications;
+import com.example.finalyearproject.hollyboothroyd.sync.Utils.NotificationType;
 import com.example.finalyearproject.hollyboothroyd.sync.Model.Person;
 import com.example.finalyearproject.hollyboothroyd.sync.Model.UserConnections;
 import com.example.finalyearproject.hollyboothroyd.sync.Model.UserEvents;
@@ -114,7 +118,7 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 float value = Constants.personPinColorDefault;
-                if(dataSnapshot.getValue(Integer.class) != null){
+                if (dataSnapshot.getValue(Integer.class) != null) {
                     value = dataSnapshot.getValue(Float.class);
                 }
                 mPersonPinColor = value;
@@ -130,7 +134,7 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 float value = Constants.eventPinColorDefault;
-                if(dataSnapshot.getValue(Integer.class) != null){
+                if (dataSnapshot.getValue(Integer.class) != null) {
                     value = dataSnapshot.getValue(Float.class);
                 }
                 mEventPinColor = value;
@@ -251,7 +255,7 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
                     mLocationTimeUpdateInterval,
                     mLocationDistanceUpdateIntervalName,
                     mLocationListener);
-        } catch (SecurityException ex){
+        } catch (SecurityException ex) {
             //TODO:log
         }
         mDatabaseManager.getUserSettings(Constants.locationTimeUpdateIntervalName).addListenerForSingleValueEvent(new ValueEventListener() {
@@ -271,7 +275,7 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
                                     mLocationTimeUpdateInterval,
                                     mLocationDistanceUpdateIntervalName,
                                     mLocationListener);
-                        } catch (SecurityException ex){
+                        } catch (SecurityException ex) {
                             //TODO:log
                         }
                     }
@@ -442,8 +446,9 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
         TextView personPosition = (TextView) view.findViewById(R.id.popup_position);
         TextView personCompany = (TextView) view.findViewById(R.id.popup_company);
         TextView personIndustry = (TextView) view.findViewById(R.id.popup_industry);
-        Button connectButton = (Button) view.findViewById(R.id.popup_connect);
-        TextView connectedMessage = (TextView) view.findViewById(R.id.popup_connected);
+        final Button connectButton = (Button) view.findViewById(R.id.popup_connect);
+        final TextView connectedMessage = (TextView) view.findViewById(R.id.popup_connected);
+        final TextView connectionPendingMessage = (TextView) view.findViewById(R.id.popup_connection_pending);
 
         final Person person = mPersonMarkerMap.get(marker.getId());
         if (!mPersonMarkerMap.isEmpty()) {
@@ -459,38 +464,61 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
         if (person.getUserId().equals(String.valueOf(mAccountManager.getCurrentUser().getUid()))) {
             // Don't show connection button for the users marker popup
             connectButton.setVisibility(View.GONE);
-        } else if (UserConnections.ITEM_MAP.containsKey(person.getUserId())) {
+        } else if (UserConnections.CONNECTION_ITEM_MAP.containsKey(person.getUserId())) {
             // Don't show connection button if the person is already a connection
             connectButton.setVisibility(View.GONE);
             connectedMessage.setVisibility(View.VISIBLE);
-        } else {
+        } else if (UserConnections.CONNECTION_REQUEST_ITEM_MAP.containsKey(person.getUserId())) {
+            // Don't show connection button if a connection is already pending
+            connectButton.setVisibility(View.GONE);
+            connectionPendingMessage.setVisibility(View.VISIBLE);
+        } else if (UserNotifications.ITEM_MAP.containsKey(person.getUserId())){
+            final NotificationBase notification = UserNotifications.ITEM_MAP.get(person.getUserId());
+            connectButton.setText(R.string.accept_connection_request_button_text);
             connectButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    // Get current user. This will be modified when the connection approval process is put in place
                     mDatabaseManager.getUserPeopleDatabaseReference().addListenerForSingleValueEvent(new ValueEventListener() {
                         @Override
                         public void onDataChange(DataSnapshot dataSnapshot) {
                             final Person user = dataSnapshot.getValue(Person.class);
-                            // TODO: Add connection approval process
-                            // First add other user to current user base
-                            mDatabaseManager.addNewConnection(user.getUserId(), person).addOnCompleteListener(new OnCompleteListener<Void>() {
+                            // First add the other user (requestee) to current users (requestor) connection list
+                            DatabaseReference connectionRef = mDatabaseManager.getNewConnectionReference(user.getUserId());
+                            String dbRef = connectionRef.getKey();
+                            Connection connection = new Connection(dbRef, notification.getId());
+                            mDatabaseManager.addUserConnection(connectionRef, connection).addOnCompleteListener(new OnCompleteListener<Void>() {
                                 @Override
                                 public void onComplete(@NonNull Task<Void> task) {
                                     if (task.isSuccessful()) {
-                                        mDatabaseManager.addNewConnection(person.getUserId(), user).addOnCompleteListener(new OnCompleteListener<Void>() {
+                                        // Then add the current user (requestor) to the other users (requestee) connection list
+                                        DatabaseReference connectionRef = mDatabaseManager.getNewConnectionReference(notification.getId());
+                                        String dbRef = connectionRef.getKey();
+                                        Connection connection = new Connection(dbRef, user.getUserId());
+                                        mDatabaseManager.addUserConnection(connectionRef, connection).addOnCompleteListener(new OnCompleteListener<Void>() {
                                             @Override
                                             public void onComplete(@NonNull Task<Void> task) {
                                                 if (task.isSuccessful()) {
-                                                    Toast.makeText(getActivity(), R.string.connection_successful, Toast.LENGTH_LONG).show();
-                                                    mDialog.dismiss();
+                                                    // Remove the connection request notification from the current users (requestor) database
+                                                    mDatabaseManager.deleteUserConnectionRequestNotification(notification.getDbRefKey()).addOnCompleteListener(new OnCompleteListener<Void>() {
+                                                        @Override
+                                                        public void onComplete(@NonNull Task<Void> task) {
+                                                            if (task.isSuccessful()) {
+                                                                // Don't show connection button when the person is a connection
+                                                                connectButton.setVisibility(View.GONE);
+                                                                connectedMessage.setVisibility(View.VISIBLE);
+                                                                Toast.makeText(getContext(), R.string.connection_accepted_toast_text, Toast.LENGTH_SHORT).show();
+                                                            } else {
+                                                                Toast.makeText(getContext(), R.string.generic_error_text, Toast.LENGTH_SHORT).show();
+                                                            }
+                                                        }
+                                                    });
                                                 } else {
-                                                    Toast.makeText(getActivity(), R.string.connection_unsuccessful, Toast.LENGTH_LONG).show();
+                                                    Toast.makeText(getContext(), R.string.generic_error_text, Toast.LENGTH_SHORT).show();
                                                 }
                                             }
                                         });
                                     } else {
-                                        Toast.makeText(getActivity(), R.string.connection_unsuccessful, Toast.LENGTH_LONG).show();
+                                        Toast.makeText(getContext(), R.string.generic_error_text, Toast.LENGTH_SHORT).show();
                                     }
                                 }
                             });
@@ -498,7 +526,42 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
 
                         @Override
                         public void onCancelled(DatabaseError databaseError) {
+                            //TODO:Log
+                        }
+                    });
+                }
+            });
+        } else {
+            connectButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    DatabaseReference newNotificationRef = mDatabaseManager.getNewNotifcationReference(person.getUserId());
+                    String refKey = newNotificationRef.getKey();
+                    Notification notification = new Notification(refKey, mAccountManager.getCurrentUser().getUid(), NotificationType.CONNECTION_REQUEST);
+                    mDatabaseManager.sendNotification(newNotificationRef, notification).addOnCompleteListener(new OnCompleteListener<Void>() {
+                        @Override
+                        public void onComplete(@NonNull Task<Void> task) {
+                            if (task.isSuccessful()) {
+                                DatabaseReference connectionRequestRef = mDatabaseManager.getNewConnectionRequestReference();
+                                String refKey = connectionRequestRef.getKey();
+                                Connection connection = new Connection(refKey, person.getUserId());
+                                mDatabaseManager.addUserConnectionRequest(connectionRequestRef, connection).addOnCompleteListener(new OnCompleteListener<Void>() {
+                                    @Override
+                                    public void onComplete(@NonNull Task<Void> task) {
+                                        if (task.isSuccessful()) {
+                                            // Don't show connection button now that the connection request is pending
+                                            connectButton.setVisibility(View.GONE);
+                                            connectionPendingMessage.setVisibility(View.VISIBLE);
+                                            Toast.makeText(getActivity(), R.string.connection_request_sent_success, Toast.LENGTH_SHORT).show();
+                                        } else {
+                                            Toast.makeText(getActivity(), R.string.connection_request_failed, Toast.LENGTH_SHORT).show();
+                                        }
+                                    }
+                                });
+                            } else {
+                                Toast.makeText(getActivity(), R.string.connection_request_failed, Toast.LENGTH_SHORT).show();
 
+                            }
                         }
                     });
                 }
