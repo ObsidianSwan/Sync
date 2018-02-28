@@ -45,6 +45,8 @@ public class Constants {
     public static final String userNotificationDatabaseRefName = "notifications";
     public static final String connectionDatabaseRefName = "connections";
     public static final String connectionRequestsDatabaseRefName = "connection_requests";
+    public static final String connectionRemovalDatabaseRefName = "connection_removals";
+
     public static final String eventDatabaseRefName = "event";
     public static final String peopleEventsCreatedDatabaseRefName = "events_created";
     public static final String peopleEventsAttendingDatabaseRefName = "events_attending";

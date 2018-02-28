@@ -108,15 +108,14 @@ public class MyEventRecyclerViewAdapter extends RecyclerView.Adapter<MyEventRecy
             attendButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    //final Event desiredEvent = event;
                     mDatabaseManager.attendNewEvent(event).addOnCompleteListener(new OnCompleteListener<Void>() {
                         @Override
                         public void onComplete(@NonNull Task<Void> task) {
                             if (task.isSuccessful()) {
-                                Toast.makeText(mContext, "You're attending " + event.getTitle() + "!", Toast.LENGTH_LONG).show();
+                                Toast.makeText(mContext, "You're attending " + event.getTitle() + "!", Toast.LENGTH_SHORT).show();
                                 mDialog.dismiss();
                             } else {
-                                Toast.makeText(mContext, R.string.event_attendence_unsuccessful, Toast.LENGTH_LONG).show();
+                                Toast.makeText(mContext, R.string.event_attendence_unsuccessful, Toast.LENGTH_SHORT).show();
                             }
                         }
                     });

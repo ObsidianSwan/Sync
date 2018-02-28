@@ -60,18 +60,6 @@ public class DatabaseManager {
         mAccountManager = new AccountManager();
         //TODO: when DMMan and AccountMan is put into utils return this to be here.
         //mUserNotificationDatabaseReference = mPeopleDatabaseReference.child(mAccountManager.getCurrentUser().getUid()).child(Constants.userNotificationDatabaseRefName);
-
-        mPeopleDatabaseReference.addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-
-            }
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-
-            }
-        });
     }
 
     // Users
@@ -152,10 +140,6 @@ public class DatabaseManager {
         return mPeopleDatabaseReference.child(mAccountManager.getCurrentUser().getUid()).child(Constants.connectionDatabaseRefName);
     }
 
-    public Task<Void> deleteUserConnectionRequestNotification(String notificationId) {
-        return mPeopleDatabaseReference.child(mAccountManager.getCurrentUser().getUid()).child(Constants.userNotificationDatabaseRefName).child(notificationId).setValue(null);
-    }
-
     public DatabaseReference getNewConnectionReference(String personId) {
         return mPeopleDatabaseReference.child(personId).child(Constants.connectionDatabaseRefName).push();
     }
@@ -164,12 +148,14 @@ public class DatabaseManager {
         return connectionReference.setValue(connection);
     }
 
-    public DatabaseReference getUserConnectionRequestsDatabaseReference() {
-        return mPeopleDatabaseReference.child(mAccountManager.getCurrentUser().getUid()).child(Constants.connectionRequestsDatabaseRefName);
+    // Connection Requests
+
+    public Task<Void> deleteUserConnectionRequestNotification(String notificationId) {
+        return mPeopleDatabaseReference.child(mAccountManager.getCurrentUser().getUid()).child(Constants.userNotificationDatabaseRefName).child(notificationId).setValue(null);
     }
 
-    public Task<Void> deleteUserConnectionRequest(String connectionId, String personId) {
-        return mPeopleDatabaseReference.child(personId).child(Constants.connectionRequestsDatabaseRefName).child(connectionId).setValue(null);
+    public DatabaseReference getUserConnectionRequestsDatabaseReference() {
+        return mPeopleDatabaseReference.child(mAccountManager.getCurrentUser().getUid()).child(Constants.connectionRequestsDatabaseRefName);
     }
 
     public DatabaseReference getNewConnectionRequestReference() {
@@ -179,6 +165,38 @@ public class DatabaseManager {
     public Task<Void> addUserConnectionRequest(DatabaseReference connectionRequestReference, Connection connection){
         return connectionRequestReference.setValue(connection);
     }
+
+    public Task<Void> deleteCurrentUserConnectionRequest(String connectionId) {
+        return mPeopleDatabaseReference.child(mAccountManager.getCurrentUser().getUid()).child(Constants.connectionRequestsDatabaseRefName).child(connectionId).setValue(null);
+    }
+
+    public Task<Void> deleteUserConnectionRequest(String connectionId, String personId) {
+        return mPeopleDatabaseReference.child(personId).child(Constants.connectionRequestsDatabaseRefName).child(connectionId).setValue(null);
+    }
+
+    // Delete Connection
+
+    public DatabaseReference getDeletedConnectionReference(String personId) {
+        return mPeopleDatabaseReference.child(personId).child(Constants.connectionRemovalDatabaseRefName).push();
+    }
+
+    public Task<Void> addDeletedUserConnection(DatabaseReference deletedConnectionReference, Connection deletedConnection){
+        return  deletedConnectionReference.setValue(deletedConnection);
+    }
+
+    public DatabaseReference getDeletedUserConnections(){
+        return mPeopleDatabaseReference.child(mAccountManager.getCurrentUser().getUid()).child(Constants.connectionRemovalDatabaseRefName);
+    }
+
+    public Task<Void> deleteCurrentUserConnection(String connectionId){
+        return mPeopleDatabaseReference.child(mAccountManager.getCurrentUser().getUid()).child(Constants.connectionDatabaseRefName).child(connectionId).setValue(null);
+    }
+
+    public Task<Void> deleteCurrentUserDeletedConnection(String connectionId){
+        return mPeopleDatabaseReference.child(mAccountManager.getCurrentUser().getUid()).child(Constants.connectionRemovalDatabaseRefName).child(connectionId).setValue(null);
+    }
+
+
 
     // Notifications
 

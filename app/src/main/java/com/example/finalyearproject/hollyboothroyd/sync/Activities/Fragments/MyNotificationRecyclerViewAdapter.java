@@ -99,6 +99,7 @@ public class MyNotificationRecyclerViewAdapter extends RecyclerView.Adapter<MyNo
                 connectionRequestViewHolder.mConfirmButton.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
+                        // Get the current users profile information
                         mDatabaseManager.getUserPeopleDatabaseReference().addListenerForSingleValueEvent(new ValueEventListener() {
                             @Override
                             public void onDataChange(DataSnapshot dataSnapshot) {
@@ -125,17 +126,9 @@ public class MyNotificationRecyclerViewAdapter extends RecyclerView.Adapter<MyNo
                                                             public void onComplete(@NonNull Task<Void> task) {
                                                                 if (task.isSuccessful()) {
                                                                     // Remove the connection request from other users (requestee) database
-                                                                    Connection connection = UserConnections.CONNECTION_REQUEST_ITEM_MAP.get(notification.getId());
-                                                                    mDatabaseManager.deleteUserConnectionRequest(connection.getConnectionDbRef(), notification.getId()).addOnCompleteListener(new OnCompleteListener<Void>() {
-                                                                        @Override
-                                                                        public void onComplete(@NonNull Task<Void> task) {
-                                                                            if (task.isSuccessful()) {
-                                                                                // Update the UI to remove the notification in the list
-                                                                                removeNotification(holder.getAdapterPosition());
-                                                                                Toast.makeText(mContext, R.string.connection_accepted_toast_text, Toast.LENGTH_SHORT).show();
-                                                                            }
-                                                                        }
-                                                                    });
+                                                                    // Update the UI to remove the notification in the list
+                                                                    removeNotification(holder.getAdapterPosition());
+                                                                    Toast.makeText(mContext, R.string.connection_accepted_toast_text, Toast.LENGTH_SHORT).show();
                                                                 } else {
                                                                     Toast.makeText(mContext, R.string.generic_error_text, Toast.LENGTH_SHORT).show();
                                                                 }
