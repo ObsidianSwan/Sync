@@ -55,6 +55,7 @@ public class CoreActivity extends AppCompatActivity
 
     private UserEvents mUserEvents;
     private UserNotifications mUserNotifications;
+    private UserConnections mUserConnections;
 
     private int mCurrentFragment = 0;
 
@@ -64,7 +65,7 @@ public class CoreActivity extends AppCompatActivity
         mDatabaseManager = new DatabaseManager();
         mAccountManager = new AccountManager();
 
-        UserConnections connections = new UserConnections();
+        mUserConnections = new UserConnections();
         mUserEvents = new UserEvents();
         mUserNotifications = new UserNotifications();
 
@@ -378,7 +379,14 @@ public class CoreActivity extends AppCompatActivity
     @Override
     public void onLogoutInteraction() {
         mUserEvents.clearEvents();
+        mUserEvents.clearListeners();
+
         mUserNotifications.clearNotifications();
+        mUserNotifications.clearListeners();
+
+        mUserConnections.clearConnections();
+        mUserConnections.clearListeners();
+
         mAccountManager.signUserOut();
         startActivity(new Intent(this, LoginActivity.class));
         mCurrentFragment = 0;
@@ -393,4 +401,5 @@ public class CoreActivity extends AppCompatActivity
     public void onListFragmentInteraction(NotificationBase item) {
 
     }
+
 }

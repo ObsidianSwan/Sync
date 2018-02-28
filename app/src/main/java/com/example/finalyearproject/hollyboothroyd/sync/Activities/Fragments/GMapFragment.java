@@ -228,6 +228,7 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
         });
 
         DatabaseReference eventDatabaseReference = mDatabaseManager.getAllEventsDatabaseReference();
+        //TODO: Clear listeners
         eventDatabaseReference.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
@@ -446,7 +447,7 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
         TextView personPosition = (TextView) view.findViewById(R.id.popup_position);
         TextView personCompany = (TextView) view.findViewById(R.id.popup_company);
         TextView personIndustry = (TextView) view.findViewById(R.id.popup_industry);
-        final Button connectButton = (Button) view.findViewById(R.id.popup_connect);
+        final Button connectButton = (Button) view.findViewById(R.id.popup_button);
         final TextView connectedMessage = (TextView) view.findViewById(R.id.popup_connected);
         final TextView connectionPendingMessage = (TextView) view.findViewById(R.id.popup_connection_pending);
 
@@ -473,36 +474,44 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
             connectButton.setVisibility(View.GONE);
             connectionPendingMessage.setVisibility(View.VISIBLE);
         } else if (UserNotifications.ITEM_MAP.containsKey(person.getUserId())){
+
             final NotificationBase notification = UserNotifications.ITEM_MAP.get(person.getUserId());
             connectButton.setText(R.string.accept_connection_request_button_text);
+
             connectButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
                     mDatabaseManager.getUserPeopleDatabaseReference().addListenerForSingleValueEvent(new ValueEventListener() {
                         @Override
                         public void onDataChange(DataSnapshot dataSnapshot) {
+
                             final Person user = dataSnapshot.getValue(Person.class);
                             // First add the other user (requestee) to current users (requestor) connection list
                             DatabaseReference connectionRef = mDatabaseManager.getNewConnectionReference(user.getUserId());
                             String dbRef = connectionRef.getKey();
                             Connection connection = new Connection(dbRef, notification.getId());
+
                             mDatabaseManager.addUserConnection(connectionRef, connection).addOnCompleteListener(new OnCompleteListener<Void>() {
                                 @Override
                                 public void onComplete(@NonNull Task<Void> task) {
                                     if (task.isSuccessful()) {
+
                                         // Then add the current user (requestor) to the other users (requestee) connection list
                                         DatabaseReference connectionRef = mDatabaseManager.getNewConnectionReference(notification.getId());
                                         String dbRef = connectionRef.getKey();
                                         Connection connection = new Connection(dbRef, user.getUserId());
+
                                         mDatabaseManager.addUserConnection(connectionRef, connection).addOnCompleteListener(new OnCompleteListener<Void>() {
                                             @Override
                                             public void onComplete(@NonNull Task<Void> task) {
                                                 if (task.isSuccessful()) {
+
                                                     // Remove the connection request notification from the current users (requestor) database
                                                     mDatabaseManager.deleteUserConnectionRequestNotification(notification.getDbRefKey()).addOnCompleteListener(new OnCompleteListener<Void>() {
                                                         @Override
                                                         public void onComplete(@NonNull Task<Void> task) {
                                                             if (task.isSuccessful()) {
+
                                                                 // Don't show connection button when the person is a connection
                                                                 connectButton.setVisibility(View.GONE);
                                                                 connectedMessage.setVisibility(View.VISIBLE);

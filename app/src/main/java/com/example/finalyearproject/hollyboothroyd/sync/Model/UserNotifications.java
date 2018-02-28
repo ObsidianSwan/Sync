@@ -26,11 +26,13 @@ public class UserNotifications {
     public static final List<NotificationBase> ITEMS = new ArrayList<NotificationBase>();
     public static final Map<String, NotificationBase> ITEM_MAP = new HashMap<String, NotificationBase>();
 
+    private ValueEventListener mUserNotificationsListener;
+
     // TODO: Convert into singleton
     public UserNotifications(){
         mDatabaseManager = new DatabaseManager();
 
-        mDatabaseManager.getNotifications().addValueEventListener(new ValueEventListener() {
+        mUserNotificationsListener = mDatabaseManager.getNotifications().addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 ITEMS.clear();
@@ -39,7 +41,7 @@ public class UserNotifications {
                     final Notification notification = snapshot.getValue(Notification.class);
                     switch (notification.getType()){
                         case CONNECTION_REQUEST:
-                            mDatabaseManager.getPeopleDatabaseReference().child(notification.getItemId()).addValueEventListener(new ValueEventListener() {
+                            mDatabaseManager.getPeopleDatabaseReference().child(notification.getItemId()).addListenerForSingleValueEvent(new ValueEventListener() {
                                 @Override
                                 public void onDataChange(DataSnapshot dataSnapshot) {
                                     Person person = dataSnapshot.getValue(Person.class);
@@ -62,6 +64,10 @@ public class UserNotifications {
 
             }
         });
+    }
+
+    public void clearListeners(){
+        mDatabaseManager.getNotifications().removeEventListener(mUserNotificationsListener);
     }
 
     public void clearNotifications() {

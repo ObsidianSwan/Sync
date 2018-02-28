@@ -28,12 +28,16 @@ public class UserEvents {
     public static final List<Event> EVENTS_HOSTING = new ArrayList<Event>();
     public static final Map<String, Event> EVENTS_HOSTING_MAP = new HashMap<String, Event>();
 
+    private ValueEventListener mAllEventsListener;
+    private ValueEventListener mEventsAttendingListener;
+    private ValueEventListener mEventsHostingListener;
+
     // TODO: Convert into singleton
     public UserEvents() {
 
         mDatabaseManager = new DatabaseManager();
 
-        mDatabaseManager.getAllEventsDatabaseReference().addValueEventListener(new ValueEventListener() {
+        mAllEventsListener = mDatabaseManager.getAllEventsDatabaseReference().addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 ALL_EVENTS.clear();
@@ -51,7 +55,7 @@ public class UserEvents {
             }
         });
 
-        mDatabaseManager.getEventsAttendingDatabaseReference().addValueEventListener(new ValueEventListener() {
+        mEventsAttendingListener = mDatabaseManager.getEventsAttendingDatabaseReference().addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 EVENTS_ATTENDING.clear();
@@ -79,7 +83,7 @@ public class UserEvents {
             }
         });
 
-        mDatabaseManager.getEventsHostingDatabaseReference().addValueEventListener(new ValueEventListener() {
+        mEventsHostingListener = mDatabaseManager.getEventsHostingDatabaseReference().addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 EVENTS_HOSTING.clear();
@@ -106,7 +110,12 @@ public class UserEvents {
 
             }
         });
+    }
 
+    public void clearListeners(){
+        mDatabaseManager.getAllEventsDatabaseReference().removeEventListener(mAllEventsListener);
+        mDatabaseManager.getEventsAttendingDatabaseReference().removeEventListener(mEventsAttendingListener);
+        mDatabaseManager.getEventsHostingDatabaseReference().removeEventListener(mEventsHostingListener);
     }
 
     public void clearEvents() {

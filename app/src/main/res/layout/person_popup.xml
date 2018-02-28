@@ -67,7 +67,7 @@
     </LinearLayout>
 
     <Button
-        android:id="@+id/popup_connect"
+        android:id="@+id/popup_button"
         android:layout_width="@dimen/button_width"
         android:layout_height="wrap_content"
         android:layout_below="@+id/person_popup"
