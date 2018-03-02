@@ -646,6 +646,7 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
                                                                                 public void onComplete(@NonNull Task<Void> task) {
                                                                                     if (task.isSuccessful()) {
                                                                                         Toast.makeText(getContext(), R.string.connection_accepted_toast_text, Toast.LENGTH_SHORT).show();
+                                                                                        mDialog.dismiss();
                                                                                     } else {
                                                                                         // TODO LOG
                                                                                     }

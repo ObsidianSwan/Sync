@@ -163,5 +163,6 @@
     <string name="delete_event_button_text">Delete event</string>
     <string name="delete_event_unsuccessful">Couldn\'t delete event</string>
     <string name="delete_event_successful">Event deleted!</string>
+    <string name="delete_account_success">Account deleted</string>
 
 </resources>

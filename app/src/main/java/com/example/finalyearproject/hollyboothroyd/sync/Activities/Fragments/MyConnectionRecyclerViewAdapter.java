@@ -111,51 +111,7 @@ public class MyConnectionRecyclerViewAdapter extends RecyclerView.Adapter<MyConn
         disconnectButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                final Person connection = UserConnections.CONNECTION_ITEM_MAP.get(person.getUserId());
-
-                // Get the connection database reference from the connectionId
-                mDatabaseManager.getUserConnectionReference(connection.getUserId()).addListenerForSingleValueEvent(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(DataSnapshot dataSnapshot) {
-                        String dbRef = dataSnapshot.getValue(String.class);
-                        // Remove the connection from the connection database
-                        mDatabaseManager.deleteConnection(dbRef).addOnCompleteListener(new OnCompleteListener<Void>() {
-                            @Override
-                            public void onComplete(@NonNull Task<Void> task) {
-                                if (task.isSuccessful()) {
-                                    // Remove the connection reference from the current users database
-                                    mDatabaseManager.deleteUserConnection(mAccountManager.getCurrentUser().getUid(), connection.getUserId()).addOnCompleteListener(new OnCompleteListener<Void>() {
-                                        @Override
-                                        public void onComplete(@NonNull Task<Void> task) {
-                                            if(task.isSuccessful()){
-                                                mDatabaseManager.deleteUserConnection(connection.getUserId(), mAccountManager.getCurrentUser().getUid()).addOnCompleteListener(new OnCompleteListener<Void>() {
-                                                    @Override
-                                                    public void onComplete(@NonNull Task<Void> task) {
-                                                        if(task.isSuccessful()){
-                                                            removeConnection(holder.getAdapterPosition());
-                                                            Toast.makeText(mContext, "You're no longer connected with " + person.getFirstName(), Toast.LENGTH_SHORT).show();
-                                                            mDialog.dismiss();
-                                                        } else {
-                                                            // TODO: Log
-                                                        }
-                                                    }
-                                                });
-                                            } else {
-                                                // TODO: Log
-                                            }
-                                        }
-                                    });
-                                } else {
-                                    Toast.makeText(mContext, R.string.cannot_disconnect_toast_text, Toast.LENGTH_SHORT).show();
-                                }
-                            }
-                        });
-                    }
-                    @Override
-                    public void onCancelled(DatabaseError databaseError) {
-
-                    }
-                });
+                deleteConnection(person, holder);
             }
         });
         dismissPopupButton.setOnClickListener(new View.OnClickListener()
@@ -171,7 +127,56 @@ public class MyConnectionRecyclerViewAdapter extends RecyclerView.Adapter<MyConn
         mDialog.show();
     }
 
-    private void removeConnection(int position) {
+    private void deleteConnection(final Person person, final ViewHolder holder){
+        final Person connection = UserConnections.CONNECTION_ITEM_MAP.get(person.getUserId());
+
+        // Get the connection database reference from the connectionId
+        mDatabaseManager.getUserConnectionReference(connection.getUserId()).addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                String dbRef = dataSnapshot.getValue(String.class);
+                // Remove the connection from the connection database
+                mDatabaseManager.deleteConnection(dbRef).addOnCompleteListener(new OnCompleteListener<Void>() {
+                    @Override
+                    public void onComplete(@NonNull Task<Void> task) {
+                        if (task.isSuccessful()) {
+                            // Remove the connection reference from the current users database
+                            mDatabaseManager.deleteUserConnection(mAccountManager.getCurrentUser().getUid(), connection.getUserId()).addOnCompleteListener(new OnCompleteListener<Void>() {
+                                @Override
+                                public void onComplete(@NonNull Task<Void> task) {
+                                    if(task.isSuccessful()){
+                                        // Remove the connection reference from the connection users database
+                                        mDatabaseManager.deleteUserConnection(connection.getUserId(), mAccountManager.getCurrentUser().getUid()).addOnCompleteListener(new OnCompleteListener<Void>() {
+                                            @Override
+                                            public void onComplete(@NonNull Task<Void> task) {
+                                                if(task.isSuccessful()){
+                                                    removeConnectionItem(holder.getAdapterPosition());
+                                                    Toast.makeText(mContext, "You're no longer connected with " + person.getFirstName(), Toast.LENGTH_SHORT).show();
+                                                    mDialog.dismiss();
+                                                } else {
+                                                    // TODO: Log
+                                                }
+                                            }
+                                        });
+                                    } else {
+                                        // TODO: Log
+                                    }
+                                }
+                            });
+                        } else {
+                            Toast.makeText(mContext, R.string.cannot_disconnect_toast_text, Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                });
+            }
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
+    }
+
+    private void removeConnectionItem(int position) {
         notifyItemRemoved(position);
         notifyItemRangeChanged(position, mValues.size());
     }
