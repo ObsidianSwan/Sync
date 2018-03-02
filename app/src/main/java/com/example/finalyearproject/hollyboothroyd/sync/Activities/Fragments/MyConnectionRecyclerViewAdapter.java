@@ -142,8 +142,8 @@ public class MyConnectionRecyclerViewAdapter extends RecyclerView.Adapter<MyConn
         mDialog = mDialogBuilder.create();
         mDialog.show();
     }
-
-    private void deleteConnection(final ViewHolder holder, final Person person){
+  
+private void deleteConnection(final ViewHolder holder, final Person person){
         // Get the connection database reference from the connectionId
         mDatabaseManager.getUserConnectionReference(person.getUserId()).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
@@ -163,7 +163,7 @@ public class MyConnectionRecyclerViewAdapter extends RecyclerView.Adapter<MyConn
                                             @Override
                                             public void onComplete(@NonNull Task<Void> task) {
                                                 if(task.isSuccessful()){
-                                                    removeConnection(holder.getAdapterPosition());
+                                                    removeConnectionItem(holder.getAdapterPosition());
                                                     Toast.makeText(mContext, "You're no longer connected with " + person.getFirstName(), Toast.LENGTH_SHORT).show();
                                                     mDialog.dismiss();
                                                 } else {
@@ -188,8 +188,8 @@ public class MyConnectionRecyclerViewAdapter extends RecyclerView.Adapter<MyConn
             }
         });
     }
-
-    private void removeConnection(int position) {
+    
+    private void removeConnectionItem(int position) {
         notifyItemRemoved(position);
         notifyItemRangeChanged(position, mValues.size());
     }

@@ -165,5 +165,5 @@
     <string name="delete_event_successful">Event deleted!</string>
     <string name="notification_view_profile_button_text">View profile</string>
     <string name="notification_remove_button_text">Remove</string>
-
+    <string name="delete_account_success">Account deleted</string>
 </resources>

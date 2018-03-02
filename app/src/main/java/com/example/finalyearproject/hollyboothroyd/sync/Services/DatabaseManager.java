@@ -82,6 +82,10 @@ public class DatabaseManager {
         return mPeopleDatabaseReference.child(person.getUserId()).setValue(person);
     }
 
+    public Task<Void> deletePerson(){
+        return mPeopleDatabaseReference.child(mAccountManager.getCurrentUser().getUid()).setValue(null);
+    }
+
     public void updateCurrentUserLocation(LatLng userLocation) {
         // TODO: Put hashmap conversion in utils
         HashMap<String, Object> personLocationHash = new HashMap<>();
@@ -101,34 +105,6 @@ public class DatabaseManager {
     public DatabaseReference getPersonReference(String personId){
         return mPeopleDatabaseReference.child(personId);
     }
-
-
-/*    public Person getCurrentUserPerson() {
-        final Person currentPerson = new Person();
-        String userId = mAccountManager.getCurrentUser().getUid();
-        mPeopleDatabaseReference.child(userId).addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                if (dataSnapshot.getValue(Person.class) != null) {
-                    currentPerson.setFirstName(dataSnapshot.getValue(Person.class).getFirstName());
-                    currentPerson.setLastName(dataSnapshot.getValue(Person.class).getLastName());
-                    currentPerson.setPosition(dataSnapshot.getValue(Person.class).getPosition());
-                    currentPerson.setCompany(dataSnapshot.getValue(Person.class).getCompany());
-                    currentPerson.setIndustry(dataSnapshot.getValue(Person.class).getIndustry());
-                    currentPerson.setLatitude(dataSnapshot.getValue(Person.class).getLatitude());
-                    currentPerson.setLongitude(dataSnapshot.getValue(Person.class).getLongitude());
-                    currentPerson.setImageId(dataSnapshot.getValue(Person.class).getImageId());
-                }
-
-            }
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-
-            }
-        });
-        return currentPerson;
-    }*/
 
     public DatabaseReference getUserPeopleDatabaseReference() {
         return mPeopleDatabaseReference.child(mAccountManager.getCurrentUser().getUid());

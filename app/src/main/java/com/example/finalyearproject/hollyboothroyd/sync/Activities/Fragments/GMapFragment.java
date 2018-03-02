@@ -659,7 +659,6 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
         mDialog = mDialogBuilder.create();
         mDialog.show();
     }
-
     private void addConnection(final NotificationBase notification){
         mDatabaseManager.getUserPeopleDatabaseReference().addListenerForSingleValueEvent(new ValueEventListener() {
             @Override

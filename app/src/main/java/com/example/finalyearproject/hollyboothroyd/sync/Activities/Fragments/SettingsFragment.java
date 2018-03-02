@@ -16,7 +16,12 @@ import android.widget.NumberPicker;
 import android.widget.Spinner;
 import android.widget.Toast;
 
+import com.example.finalyearproject.hollyboothroyd.sync.Model.Event;
+import com.example.finalyearproject.hollyboothroyd.sync.Model.Person;
+import com.example.finalyearproject.hollyboothroyd.sync.Model.UserConnections;
+import com.example.finalyearproject.hollyboothroyd.sync.Model.UserEvents;
 import com.example.finalyearproject.hollyboothroyd.sync.R;
+import com.example.finalyearproject.hollyboothroyd.sync.Services.AccountManager;
 import com.example.finalyearproject.hollyboothroyd.sync.Services.DatabaseManager;
 import com.example.finalyearproject.hollyboothroyd.sync.Utils.Constants;
 import com.example.finalyearproject.hollyboothroyd.sync.Utils.Util;
@@ -36,6 +41,7 @@ public class SettingsFragment extends Fragment implements AdapterView.OnItemSele
     private final HashMap<String, Float> pinColorMap = new HashMap<String, Float>();
 
     private DatabaseManager mDatabaseManager;
+    private AccountManager mAccountManager;
 
     private NumberPicker mZoomPicker;
     private NumberPicker mTimeRefreshRatePicker;
@@ -71,6 +77,7 @@ public class SettingsFragment extends Fragment implements AdapterView.OnItemSele
         super.onCreate(savedInstanceState);
 
         mDatabaseManager = new DatabaseManager();
+        mAccountManager = new AccountManager();
 
         // Populate pinColorMap
         //TODO: Constants
@@ -115,26 +122,125 @@ public class SettingsFragment extends Fragment implements AdapterView.OnItemSele
         mDeleteAccountButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(mDeleteAccountButton.getText().equals(R.string.delete_account_button)){
+                if(mDeleteAccountButton.getText().toString().equals(getString(R.string.delete_account_button))){
                     mDeleteAccountButton.setText(R.string.verify_account_deletion_text_button);
-                } else if (mDeleteAccountButton.getText().equals(R.string.verify_account_deletion_text_button)){
+                } else if (mDeleteAccountButton.getText().toString().equals(getString(R.string.verify_account_deletion_text_button))){
                     mDeleteAccountButton.setText(R.string.verify_account_deletion_text_two_button);
-                } else if (mDeleteAccountButton.getText().equals(R.string.verify_account_deletion_text_two_button)){
-                    // Delete events attending
-
+                } else if (mDeleteAccountButton.getText().toString().equals(getString(R.string.verify_account_deletion_text_two_button))){
+                    // Stop attending events
+                    for(Event event : UserEvents.EVENTS_ATTENDING){
+                        stopAttendingEvent(event.getUid());
+                    }
                     // Delete events hosting
-
+                    for(Event event : UserEvents.EVENTS_HOSTING){
+                        deleteEvent(event.getUid());
+                    }
                     // Delete connections
-
+                    for(Person connection : UserConnections.CONNECTION_ITEMS){
+                        deleteConnection(connection.getUserId());
+                    }
                     // Delete account database
-
-                    // Delete account
+                    mDatabaseManager.deletePerson().addOnCompleteListener(new OnCompleteListener<Void>() {
+                        @Override
+                        public void onComplete(@NonNull Task<Void> task) {
+                            if(task.isSuccessful()){
+                                // Delete account in Core Activity so the appropriate clean up can occur
+                                if (mListener != null) {
+                                    mListener.onSettingsInteraction();
+                                }
+                            }
+                        }
+                    });
                 }
             }
         });
 
         return view;
     }
+
+    private void stopAttendingEvent(final String eventId){
+        final String userId = mAccountManager.getCurrentUser().getUid();
+        mDatabaseManager.deleteUserAttendingEvent(eventId).addOnCompleteListener(new OnCompleteListener<Void>() {
+            @Override
+            public void onComplete(@NonNull Task<Void> task) {
+                if(task.isSuccessful()){
+                    mDatabaseManager.deleteEventAttending(eventId, userId);
+                    // TODO check deletion happened
+                } else{
+                    // TODO log
+                }
+            }
+        });
+    }
+
+    private void deleteEvent(final String eventId){
+        // Delete attending references in user attending database
+        mDatabaseManager.getUsersAttendingEvent(eventId).addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                for(DataSnapshot snapshot : dataSnapshot.getChildren()){
+                    String attendeeId = snapshot.getKey();
+                    mDatabaseManager.deleteEventAttending(eventId, attendeeId);
+                    // TODO How to check if the deletions all happened successfully
+                }
+                // Stop hosting the event
+                mDatabaseManager.deleteEventHosting(eventId).addOnCompleteListener(new OnCompleteListener<Void>() {
+                    @Override
+                    public void onComplete(@NonNull Task<Void> task) {
+                        if(task.isSuccessful()){
+                            // Delete event in event database
+                            mDatabaseManager.deleteEvent(eventId);
+                            // TODO how to check if deletion happened successfully
+                        } else {
+                            // TODO LOg
+                        }
+                    }
+                });
+            }
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
+    }
+
+    private void deleteConnection(final String connectionId){
+        // Get the connection database reference from the connectionId
+        mDatabaseManager.getUserConnectionReference(connectionId).addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                String dbRef = dataSnapshot.getValue(String.class);
+                // Remove the connection from the connection database
+                mDatabaseManager.deleteConnection(dbRef).addOnCompleteListener(new OnCompleteListener<Void>() {
+                    @Override
+                    public void onComplete(@NonNull Task<Void> task) {
+                        if (task.isSuccessful()) {
+                            // Remove the connection reference from the current users database
+                            mDatabaseManager.deleteUserConnection(mAccountManager.getCurrentUser().getUid(), connectionId).addOnCompleteListener(new OnCompleteListener<Void>() {
+                                @Override
+                                public void onComplete(@NonNull Task<Void> task) {
+                                    if(task.isSuccessful()){
+                                        // Remove the connection reference from the connection users database
+                                        mDatabaseManager.deleteUserConnection(connectionId, mAccountManager.getCurrentUser().getUid());
+                                        // TODO check success
+                                    } else {
+                                        // TODO: Log
+                                    }
+                                }
+                            });
+                        } else {
+                            // TODO: Log
+                        }
+                    }
+                });
+            }
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
+    }
+
 
     private void setUpZoomPicker() {
         mZoomPicker.setMinValue(Constants.zoomPickerMinValue);
@@ -368,6 +474,6 @@ public class SettingsFragment extends Fragment implements AdapterView.OnItemSele
      * >Communicating with Other Fragments</a> for more information.
      */
     public interface OnFragmentInteractionListener {
-        void onFragmentInteraction(Uri uri);
+        void onSettingsInteraction();
     }
 }
