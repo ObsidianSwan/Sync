@@ -18,6 +18,7 @@ import com.example.finalyearproject.hollyboothroyd.sync.Model.UserNotifications;
 import com.example.finalyearproject.hollyboothroyd.sync.Services.AccountManager;
 
 import android.content.Intent;
+import android.support.annotation.NonNull;
 import android.support.v4.app.FragmentManager;
 import android.net.Uri;
 import android.os.Bundle;
@@ -33,11 +34,14 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.example.finalyearproject.hollyboothroyd.sync.Activities.Fragments.GMapFragment;
 import com.example.finalyearproject.hollyboothroyd.sync.R;
 import com.example.finalyearproject.hollyboothroyd.sync.Services.DatabaseManager;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.ValueEventListener;
@@ -165,32 +169,32 @@ public class CoreActivity extends AppCompatActivity
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 Person currentUser = dataSnapshot.getValue(Person.class);
-                if (currentUser.getImageId() != null) {
+                if (currentUser != null) {
                     Picasso.with(CoreActivity.this).load(currentUser.getImageId()).into(profileImage);
-                }
-                userNameText.setText(currentUser.getFirstName() + " " + currentUser.getLastName());
-                userPositionText.setText(currentUser.getPosition());
+                    userNameText.setText(currentUser.getFirstName() + " " + currentUser.getLastName());
+                    userPositionText.setText(currentUser.getPosition());
 
-                mDatabaseManager.getUserConnectionsDatabaseReference().addValueEventListener(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(DataSnapshot dataSnapshot) {
-                        Long connectionCount = dataSnapshot.getChildrenCount();
-                        String connectionText = "";
-                        String completeText = "";
-                        if (connectionCount < 1 || connectionCount > 1) {
-                            connectionText = getString(R.string.connections_text);
-                        } else if (connectionCount == 1) {
-                            connectionText = getString(R.string.connection_text);
+                    mDatabaseManager.getUserConnectionsDatabaseReference().addValueEventListener(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(DataSnapshot dataSnapshot) {
+                            Long connectionCount = dataSnapshot.getChildrenCount();
+                            String connectionText = "";
+                            String completeText = "";
+                            if (connectionCount < 1 || connectionCount > 1) {
+                                connectionText = getString(R.string.connections_text);
+                            } else if (connectionCount == 1) {
+                                connectionText = getString(R.string.connection_text);
+                            }
+                            completeText = String.valueOf(connectionCount) + " " + connectionText;
+                            userConnectionsText.setText(completeText);
                         }
-                        completeText = String.valueOf(connectionCount) + " " + connectionText;
-                        userConnectionsText.setText(completeText);
-                    }
 
-                    @Override
-                    public void onCancelled(DatabaseError databaseError) {
+                        @Override
+                        public void onCancelled(DatabaseError databaseError) {
 
-                    }
-                });
+                        }
+                    });
+                }
             }
 
             @Override
@@ -302,7 +306,26 @@ public class CoreActivity extends AppCompatActivity
     }
 
     @Override
-    public void onFragmentInteraction(Uri uri) {
+    public void onSettingsInteraction() {
+        mUserEvents.clearEvents();
+        mUserEvents.clearListeners();
+
+        mUserNotifications.clearNotifications();
+        mUserNotifications.clearListeners();
+
+        mUserConnections.clearConnections();
+        mUserConnections.clearListeners();
+
+        mAccountManager.getCurrentUser().delete().addOnCompleteListener(new OnCompleteListener<Void>() {
+            @Override
+            public void onComplete(@NonNull Task<Void> task) {
+                if(task.isSuccessful()){
+                    Toast.makeText(getApplicationContext(), R.string.delete_account_success, Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
+        startActivity(new Intent(this, LoginActivity.class));
+        mCurrentFragment = 0;
 
     }
 
