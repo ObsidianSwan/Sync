@@ -1,7 +1,5 @@
 package com.example.finalyearproject.hollyboothroyd.sync.Utils;
 
-import com.google.android.gms.maps.model.BitmapDescriptorFactory;
-
 import java.util.Date;
 import java.util.HashMap;
 import java.util.concurrent.TimeUnit;
@@ -38,5 +36,4 @@ public class Util {
         }
         return String.format ("%dm", diffInMinutes);
     }
-
 }
