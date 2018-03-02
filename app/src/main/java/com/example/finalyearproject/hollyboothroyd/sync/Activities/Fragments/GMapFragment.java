@@ -2,7 +2,6 @@ package com.example.finalyearproject.hollyboothroyd.sync.Activities.Fragments;
 
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
-import android.content.Context;
 import android.support.v4.app.Fragment;
 import android.content.pm.PackageManager;
 import android.location.Location;
@@ -24,7 +23,6 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.example.finalyearproject.hollyboothroyd.sync.Model.Connection;
 import com.example.finalyearproject.hollyboothroyd.sync.Model.Event;
 import com.example.finalyearproject.hollyboothroyd.sync.Model.Notification;
 import com.example.finalyearproject.hollyboothroyd.sync.Model.NotificationBase;
@@ -59,7 +57,6 @@ import java.util.HashMap;
 import java.util.List;
 
 import static android.content.Context.LOCATION_SERVICE;
-import static android.content.Context.MODE_PRIVATE;
 
 /**
  * Created by hollyboothroyd on 12/11/2017.
@@ -85,6 +82,9 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
     private CustomInfoWindow mCustomInfoWindow;
     private AlertDialog.Builder mDialogBuilder;
     private AlertDialog mDialog;
+
+    private Button mPopupButton;
+    private TextView mConnectionPendingMessage;
 
     private float mPersonPinColor = Constants.personPinColorDefault;
     private float mEventPinColor = Constants.eventPinColorDefault;
@@ -572,7 +572,6 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
     }
 
     private void personPopupCreation(Marker marker) {
-
         View view = getActivity().getLayoutInflater().inflate(R.layout.person_popup, null);
 
         Button dismissPopupButton = (Button) view.findViewById(R.id.dismiss_popup_button);
@@ -581,9 +580,8 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
         TextView personPosition = (TextView) view.findViewById(R.id.popup_position);
         TextView personCompany = (TextView) view.findViewById(R.id.popup_company);
         TextView personIndustry = (TextView) view.findViewById(R.id.popup_industry);
-        final Button connectButton = (Button) view.findViewById(R.id.popup_button);
-        final TextView connectedMessage = (TextView) view.findViewById(R.id.popup_connected);
-        final TextView connectionPendingMessage = (TextView) view.findViewById(R.id.popup_connection_pending);
+        mPopupButton = (Button) view.findViewById(R.id.popup_button);
+        mConnectionPendingMessage = (TextView) view.findViewById(R.id.popup_connection_pending);
 
         final Person person = mPersonMarkerMap.get(marker.getId());
         if (!mPersonMarkerMap.isEmpty()) {
@@ -595,120 +593,40 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
         personCompany.setText("Company: " + person.getCompany());
         personIndustry.setText("Industry: " + person.getIndustry());
 
-
+        // This is the current users popup
         if (person.getUserId().equals(String.valueOf(mAccountManager.getCurrentUser().getUid()))) {
             // Don't show connection button for the users marker popup
-            connectButton.setVisibility(View.GONE);
-        } else if (UserConnections.CONNECTION_ITEM_MAP.containsKey(person.getUserId())) {
-            // Don't show connection button if the person is already a connection
-            connectButton.setVisibility(View.GONE);
-            connectedMessage.setVisibility(View.VISIBLE);
-        } else if (UserConnections.CONNECTION_REQUEST_ITEM_MAP.containsKey(person.getUserId())) {
-            // Don't show connection button if a connection is already pending
-            connectButton.setVisibility(View.GONE);
-            connectionPendingMessage.setVisibility(View.VISIBLE);
-        } else if (UserNotifications.ITEM_MAP.containsKey(person.getUserId())) {
-            final NotificationBase notification = UserNotifications.ITEM_MAP.get(person.getUserId());
-            connectButton.setText(R.string.accept_connection_request_button_text);
-            connectButton.setOnClickListener(new View.OnClickListener() {
+            mPopupButton.setVisibility(View.GONE);
+        } // The users are connected
+        else if (UserConnections.CONNECTION_ITEM_MAP.containsKey(person.getUserId())) {
+            mPopupButton.setText(R.string.disconnect_button);
+            mPopupButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    mDatabaseManager.getUserPeopleDatabaseReference().addListenerForSingleValueEvent(new ValueEventListener() {
-                        @Override
-                        public void onDataChange(DataSnapshot dataSnapshot) {
-                            final String currentUserId = mAccountManager.getCurrentUser().getUid();
-                            // Create a new connection item in the connection database
-                            DatabaseReference connectionRef = mDatabaseManager.getNewConnectionReference();
-                            final String dbRef = connectionRef.getKey();
-                            //Connection connection = new Connection(dbRef, notification.getId(), currentUserId);
-                            mDatabaseManager.addNewConnection(connectionRef, notification.getId(), currentUserId).addOnCompleteListener(new OnCompleteListener<Void>() {
-                                @Override
-                                public void onComplete(@NonNull Task<Void> task) {
-                                    if (task.isSuccessful()) {
-                                        // Add connection reference key to current users database
-                                        mDatabaseManager.addConnectionReference(dbRef, notification.getId(), currentUserId).addOnCompleteListener(new OnCompleteListener<Void>() {
-                                            @Override
-                                            public void onComplete(@NonNull Task<Void> task) {
-                                                if (task.isSuccessful()) {
-                                                    // Add connection reference key to other users database
-                                                    mDatabaseManager.addConnectionReference(dbRef, currentUserId, notification.getId()).addOnCompleteListener(new OnCompleteListener<Void>() {
-                                                        @Override
-                                                        public void onComplete(@NonNull Task<Void> task) {
-                                                            if (task.isSuccessful()) {
-                                                                // Delete connection request in the other users database
-                                                                mDatabaseManager.deleteUserConnectionRequest(notification.getId()).addOnCompleteListener(new OnCompleteListener<Void>() {
-                                                                    @Override
-                                                                    public void onComplete(@NonNull Task<Void> task) {
-                                                                        if (task.isSuccessful()) {
-                                                                            // Delete connection notification in the current users database
-                                                                            mDatabaseManager.deleteUserConnectionRequestNotification(notification.getDbRefKey()).addOnCompleteListener(new OnCompleteListener<Void>() {
-                                                                                @Override
-                                                                                public void onComplete(@NonNull Task<Void> task) {
-                                                                                    if (task.isSuccessful()) {
-                                                                                        Toast.makeText(getContext(), R.string.connection_accepted_toast_text, Toast.LENGTH_SHORT).show();
-                                                                                    } else {
-                                                                                        // TODO LOG
-                                                                                    }
-                                                                                }
-                                                                            });
-                                                                        } else {
-                                                                            // TODO: LOG
-                                                                        }
-                                                                    }
-                                                                });
-                                                            } else {
-                                                                //TODO:Log
-                                                            }
-                                                        }
-                                                    });
-                                                } else {
-                                                    //TODO:Log
-                                                }
-                                            }
-                                        });
-                                    } else {
-                                        //TODO: Log
-                                    }
-                                }
-                            });
-                        }
-                        @Override
-                        public void onCancelled(DatabaseError databaseError) {
-                            //TODO:Log
-                        }
-                    });
+                    deleteConnection(person);
                 }
             });
-        } else {
-            connectButton.setOnClickListener(new View.OnClickListener() {
+        } // The current user has already sent a connection request to the other user
+        else if (UserConnections.CONNECTION_REQUEST_ITEM_MAP.containsKey(person.getUserId())) {
+            // Don't show connection button if a connection is already pending
+            mPopupButton.setVisibility(View.GONE);
+            mConnectionPendingMessage.setVisibility(View.VISIBLE);
+        } // The current user has a connection request from the other user
+        else if (UserNotifications.CONNECTION_REQUEST_ITEMS_MAP.containsKey(person.getUserId())) {
+            final NotificationBase notification = UserNotifications.CONNECTION_REQUEST_ITEMS_MAP.get(person.getUserId());
+            mPopupButton.setText(R.string.accept_connection_request_button_text);
+            mPopupButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    DatabaseReference newNotificationRef = mDatabaseManager.getNewNotifcationReference(person.getUserId());
-                    String refKey = newNotificationRef.getKey();
-                    Notification notification = new Notification(refKey, mAccountManager.getCurrentUser().getUid(), NotificationType.CONNECTION_REQUEST);
-                    mDatabaseManager.sendNotification(newNotificationRef, notification).addOnCompleteListener(new OnCompleteListener<Void>() {
-                        @Override
-                        public void onComplete(@NonNull Task<Void> task) {
-                            if (task.isSuccessful()) {
-                                // Save reference to the request so the other users the current user has requested is known
-                                mDatabaseManager.addUserConnectionRequest(person.getUserId()).addOnCompleteListener(new OnCompleteListener<Void>() {
-                                    @Override
-                                    public void onComplete(@NonNull Task<Void> task) {
-                                        if (task.isSuccessful()) {
-                                            // Don't show connection button now that the connection request is pending
-                                            connectButton.setVisibility(View.GONE);
-                                            connectionPendingMessage.setVisibility(View.VISIBLE);
-                                            Toast.makeText(getActivity(), R.string.connection_request_sent_success, Toast.LENGTH_SHORT).show();
-                                        } else {
-                                            Toast.makeText(getActivity(), R.string.connection_request_failed, Toast.LENGTH_SHORT).show();
-                                        }
-                                    }
-                                });
-                            } else {
-                                Toast.makeText(getActivity(), R.string.connection_request_failed, Toast.LENGTH_SHORT).show();
-                            }
-                        }
-                    });
+                    addConnection(notification);
+                }
+            });
+        } // Users are not connected and no connection requests have been sent
+        else {
+            mPopupButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    sendConnectionRequest(person.getUserId());
                 }
             });
         }
@@ -720,9 +638,171 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
             }
         });
 
+        // Send a profile view notification unless it is the current users profile
+        if (!person.getUserId().equals(String.valueOf(mAccountManager.getCurrentUser().getUid()))) {
+            DatabaseReference newNotificationRef = mDatabaseManager.getNewNotifcationReference(person.getUserId());
+            String refKey = newNotificationRef.getKey();
+            Notification notification = new Notification(refKey, mAccountManager.getCurrentUser().getUid(), NotificationType.PROFILE_VIEW);
+            mDatabaseManager.sendNotification(newNotificationRef, notification).addOnCompleteListener(new OnCompleteListener<Void>() {
+                @Override
+                public void onComplete(@NonNull Task<Void> task) {
+                    if (task.isSuccessful()) {
+                        //TODO log
+                    } else {
+                        //TODO log
+                    }
+                }
+            });
+        }
+
         mDialogBuilder.setView(view);
         mDialog = mDialogBuilder.create();
         mDialog.show();
+    }
+
+    private void addConnection(final NotificationBase notification){
+        mDatabaseManager.getUserPeopleDatabaseReference().addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                final String currentUserId = mAccountManager.getCurrentUser().getUid();
+                // Create a new connection item in the connection database
+                DatabaseReference connectionRef = mDatabaseManager.getNewConnectionReference();
+                final String dbRef = connectionRef.getKey();
+                //Connection connection = new Connection(dbRef, notification.getId(), currentUserId);
+                mDatabaseManager.addNewConnection(connectionRef, notification.getId(), currentUserId).addOnCompleteListener(new OnCompleteListener<Void>() {
+                    @Override
+                    public void onComplete(@NonNull Task<Void> task) {
+                        if (task.isSuccessful()) {
+                            // Add connection reference key to current users database
+                            mDatabaseManager.addConnectionReference(dbRef, notification.getId(), currentUserId).addOnCompleteListener(new OnCompleteListener<Void>() {
+                                @Override
+                                public void onComplete(@NonNull Task<Void> task) {
+                                    if (task.isSuccessful()) {
+                                        // Add connection reference key to other users database
+                                        mDatabaseManager.addConnectionReference(dbRef, currentUserId, notification.getId()).addOnCompleteListener(new OnCompleteListener<Void>() {
+                                            @Override
+                                            public void onComplete(@NonNull Task<Void> task) {
+                                                if (task.isSuccessful()) {
+                                                    // Delete connection request in the other users database
+                                                    mDatabaseManager.deleteUserConnectionRequest(notification.getId()).addOnCompleteListener(new OnCompleteListener<Void>() {
+                                                        @Override
+                                                        public void onComplete(@NonNull Task<Void> task) {
+                                                            if (task.isSuccessful()) {
+                                                                // Delete connection notification in the current users database
+                                                                mDatabaseManager.deleteUserNotification(notification.getDbRefKey()).addOnCompleteListener(new OnCompleteListener<Void>() {
+                                                                    @Override
+                                                                    public void onComplete(@NonNull Task<Void> task) {
+                                                                        if (task.isSuccessful()) {
+                                                                            Toast.makeText(getContext(), R.string.connection_accepted_toast_text, Toast.LENGTH_SHORT).show();
+                                                                            mDialog.dismiss();
+                                                                        } else {
+                                                                            // TODO LOG
+                                                                        }
+                                                                    }
+                                                                });
+                                                            } else {
+                                                                // TODO: LOG
+                                                            }
+                                                        }
+                                                    });
+                                                } else {
+                                                    //TODO:Log
+                                                }
+                                            }
+                                        });
+                                    } else {
+                                        //TODO:Log
+                                    }
+                                }
+                            });
+                        } else {
+                            //TODO: Log
+                        }
+                    }
+                });
+            }
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                //TODO:Log
+            }
+        });
+    }
+
+    private void sendConnectionRequest(final String personId){
+        DatabaseReference newNotificationRef = mDatabaseManager.getNewNotifcationReference(personId);
+        String refKey = newNotificationRef.getKey();
+        Notification notification = new Notification(refKey, mAccountManager.getCurrentUser().getUid(), NotificationType.CONNECTION_REQUEST);
+        mDatabaseManager.sendNotification(newNotificationRef, notification).addOnCompleteListener(new OnCompleteListener<Void>() {
+            @Override
+            public void onComplete(@NonNull Task<Void> task) {
+                if (task.isSuccessful()) {
+                    // Save reference to the request so the other users the current user has requested is known
+                    mDatabaseManager.addUserConnectionRequest(personId).addOnCompleteListener(new OnCompleteListener<Void>() {
+                        @Override
+                        public void onComplete(@NonNull Task<Void> task) {
+                            if (task.isSuccessful()) {
+                                // Don't show connection button now that the connection request is pending
+                                mPopupButton.setVisibility(View.GONE);
+                                mConnectionPendingMessage.setVisibility(View.VISIBLE);
+                                Toast.makeText(getActivity(), R.string.connection_request_sent_success, Toast.LENGTH_SHORT).show();
+                            } else {
+                                Toast.makeText(getActivity(), R.string.connection_request_failed, Toast.LENGTH_SHORT).show();
+                            }
+                        }
+                    });
+                } else {
+                    Toast.makeText(getActivity(), R.string.connection_request_failed, Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
+    }
+
+    private void deleteConnection(final Person person) {
+        final Person connection = UserConnections.CONNECTION_ITEM_MAP.get(person.getUserId());
+
+        // Get the connection database reference from the connectionId
+        mDatabaseManager.getUserConnectionReference(connection.getUserId()).addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                String dbRef = dataSnapshot.getValue(String.class);
+                // Remove the connection from the connection database
+                mDatabaseManager.deleteConnection(dbRef).addOnCompleteListener(new OnCompleteListener<Void>() {
+                    @Override
+                    public void onComplete(@NonNull Task<Void> task) {
+                        if (task.isSuccessful()) {
+                            // Remove the connection reference from the current users database
+                            mDatabaseManager.deleteUserConnection(mAccountManager.getCurrentUser().getUid(), connection.getUserId()).addOnCompleteListener(new OnCompleteListener<Void>() {
+                                @Override
+                                public void onComplete(@NonNull Task<Void> task) {
+                                    if (task.isSuccessful()) {
+                                        mDatabaseManager.deleteUserConnection(connection.getUserId(), mAccountManager.getCurrentUser().getUid()).addOnCompleteListener(new OnCompleteListener<Void>() {
+                                            @Override
+                                            public void onComplete(@NonNull Task<Void> task) {
+                                                if (task.isSuccessful()) {
+                                                    Toast.makeText(getActivity(), "You're no longer connected with " + person.getFirstName(), Toast.LENGTH_SHORT).show();
+                                                    mDialog.dismiss();
+                                                } else {
+                                                    // TODO: Log
+                                                }
+                                            }
+                                        });
+                                    } else {
+                                        // TODO: Log
+                                    }
+                                }
+                            });
+                        } else {
+                            Toast.makeText(getActivity(), R.string.cannot_disconnect_toast_text, Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                });
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
     }
 
     @Override

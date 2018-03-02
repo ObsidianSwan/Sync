@@ -7,6 +7,7 @@ package com.example.finalyearproject.hollyboothroyd.sync.Model;
 import android.widget.Switch;
 
 import com.example.finalyearproject.hollyboothroyd.sync.Services.DatabaseManager;
+import com.example.finalyearproject.hollyboothroyd.sync.Utils.NotificationType;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.ValueEventListener;
@@ -24,7 +25,11 @@ public class UserNotifications {
     private DatabaseManager mDatabaseManager;
 
     public static final List<NotificationBase> ITEMS = new ArrayList<NotificationBase>();
-    public static final Map<String, NotificationBase> ITEM_MAP = new HashMap<String, NotificationBase>();
+    //public static final Map<String, NotificationBase> ITEM_MAP = new HashMap<String, NotificationBase>();
+
+    // Different lists are needed to make sure the correct item is being retrieved when there are multiple
+    // types of notifications that may have the same key
+    public static final Map<String, NotificationBase> CONNECTION_REQUEST_ITEMS_MAP = new HashMap<String, NotificationBase>();
 
     private ValueEventListener mUserNotificationsListener;
 
@@ -36,25 +41,45 @@ public class UserNotifications {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 ITEMS.clear();
-                ITEM_MAP.clear();
+                //ITEM_MAP.clear();
                 for(DataSnapshot snapshot : dataSnapshot.getChildren()){
                     final Notification notification = snapshot.getValue(Notification.class);
-                    switch (notification.getType()){
-                        case CONNECTION_REQUEST:
-                            mDatabaseManager.getPeopleDatabaseReference().child(notification.getItemId()).addListenerForSingleValueEvent(new ValueEventListener() {
-                                @Override
-                                public void onDataChange(DataSnapshot dataSnapshot) {
-                                    Person person = dataSnapshot.getValue(Person.class);
-                                    ConnectionRequestNotification connectionRequest = new ConnectionRequestNotification(notification.getDbRefKey(), person, notification.getTimeStampDate());
-                                    ITEMS.add(connectionRequest);
-                                    ITEM_MAP.put(connectionRequest.getId(), connectionRequest);
-                                }
+                    if(notification != null) {
+                        switch (notification.getType()) {
+                            case CONNECTION_REQUEST:
+                                mDatabaseManager.getPeopleDatabaseReference().child(notification.getItemId()).addListenerForSingleValueEvent(new ValueEventListener() {
+                                    @Override
+                                    public void onDataChange(DataSnapshot dataSnapshot) {
+                                        Person person = dataSnapshot.getValue(Person.class);
+                                        NotificationBase connectionRequest = new NotificationBase(notification.getDbRefKey(), person.getUserId(), person.getFirstName() + " " + person.getLastName() + ": " + person.getPosition(),
+                                                person.getImageId(), NotificationType.CONNECTION_REQUEST, notification.getTimeStampDate());
+                                        ITEMS.add(connectionRequest);
+                                        CONNECTION_REQUEST_ITEMS_MAP.put(connectionRequest.getId(), connectionRequest);
+                                    }
 
-                                @Override
-                                public void onCancelled(DatabaseError databaseError) {
+                                    @Override
+                                    public void onCancelled(DatabaseError databaseError) {
 
-                                }
-                            });
+                                    }
+                                });
+                                break;
+                            case PROFILE_VIEW:
+                                mDatabaseManager.getPeopleDatabaseReference().child(notification.getItemId()).addListenerForSingleValueEvent(new ValueEventListener() {
+                                    @Override
+                                    public void onDataChange(DataSnapshot dataSnapshot) {
+                                        Person person = dataSnapshot.getValue(Person.class);
+                                        NotificationBase profileView = new NotificationBase(notification.getDbRefKey(), person.getUserId(), person.getFirstName() + " " + person.getLastName() + ": " + person.getPosition(),
+                                                person.getImageId(), NotificationType.PROFILE_VIEW, notification.getTimeStampDate());
+                                        ITEMS.add(profileView);
+                                    }
+
+                                    @Override
+                                    public void onCancelled(DatabaseError databaseError) {
+
+                                    }
+                                });
+                                break;
+                        }
                     }
                 }
             }
@@ -74,6 +99,6 @@ public class UserNotifications {
         // Clear the list and map so when a user logs out and a new one logs in,
         // the notifications list is accurate for that user
         ITEMS.clear();
-        ITEM_MAP.clear();
+        CONNECTION_REQUEST_ITEMS_MAP.clear();
     }
 }

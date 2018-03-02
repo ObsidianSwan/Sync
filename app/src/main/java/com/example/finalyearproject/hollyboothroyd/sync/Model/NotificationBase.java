@@ -8,7 +8,7 @@ import java.util.Date;
  * Created by hollyboothroyd on 2/25/2018.
  */
 
-public abstract class NotificationBase {
+public class NotificationBase {
 
     private String mDbRefKey;
     private String mId;
