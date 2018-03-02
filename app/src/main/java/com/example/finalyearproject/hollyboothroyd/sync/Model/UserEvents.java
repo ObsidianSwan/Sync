@@ -61,7 +61,7 @@ public class UserEvents {
                 EVENTS_ATTENDING.clear();
                 EVENTS_ATTENDING_MAP.clear();
                 for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
-                    mDatabaseManager.getEvent(snapshot.getValue(String.class)).addListenerForSingleValueEvent(new ValueEventListener() {
+                    mDatabaseManager.getEvent(snapshot.getKey()).addListenerForSingleValueEvent(new ValueEventListener() {
                         @Override
                         public void onDataChange(DataSnapshot dataSnapshot) {
                             Event event = dataSnapshot.getValue(Event.class);
@@ -89,7 +89,7 @@ public class UserEvents {
                 EVENTS_HOSTING.clear();
                 EVENTS_HOSTING_MAP.clear();
                 for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
-                    mDatabaseManager.getEvent(snapshot.getValue(String.class)).addListenerForSingleValueEvent(new ValueEventListener() {
+                    mDatabaseManager.getEvent(snapshot.getKey()).addListenerForSingleValueEvent(new ValueEventListener() {
                         @Override
                         public void onDataChange(DataSnapshot dataSnapshot) {
                             Event event = dataSnapshot.getValue(Event.class);

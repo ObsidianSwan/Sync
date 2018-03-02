@@ -244,7 +244,6 @@ public class NewEventDescriptionFragment extends Fragment {
             public void onComplete(@NonNull Task<Void> task) {
                 showProgress(false);
                 if (task.isSuccessful()) {
-
                     databaseManager.addEventCreator(refKey, userId).addOnCompleteListener(new OnCompleteListener<Void>() {
                         @Override
                         public void onComplete(@NonNull Task<Void> task) {

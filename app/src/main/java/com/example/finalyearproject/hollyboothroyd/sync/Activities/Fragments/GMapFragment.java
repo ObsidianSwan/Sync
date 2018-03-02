@@ -385,8 +385,8 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
         TextView eventDate = (TextView) view.findViewById(R.id.popup_date);
         TextView eventTime = (TextView) view.findViewById(R.id.popup_time);
         TextView eventDescription = (TextView) view.findViewById(R.id.popup_description);
-        Button attendButton = (Button) view.findViewById(R.id.popup_attend);
-        TextView attendingMessage = (TextView) view.findViewById(R.id.popup_attending);
+        Button eventButton = (Button) view.findViewById(R.id.popup_event_button);
+        Button eventButton2 = (Button) view.findViewById(R.id.popup_event_button2);
 
         final Event event = mEventMarkerMap.get(marker.getId());
         if (!mEventMarkerMap.isEmpty()) {
@@ -400,26 +400,71 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
         eventTime.setText("Time: " + event.getTime());
         eventDescription.setText(event.getDescription());
 
-        if (UserEvents.EVENTS_ATTENDING_MAP.containsKey(event.getUid())) {
-            // Don't show attend button if the user is already attending the event
-            attendButton.setVisibility(View.GONE);
-            attendingMessage.setVisibility(View.VISIBLE);
-        } else {
-            attendButton.setOnClickListener(new View.OnClickListener() {
+        // The user is both hosting and attending the event
+        if(UserEvents.EVENTS_HOSTING_MAP.containsKey(event.getUid()) &&
+                UserEvents.EVENTS_ATTENDING_MAP.containsKey(event.getUid())){
+            eventButton.setText(R.string.stop_attending_button_text);
+            eventButton2.setText(R.string.delete_event_button_text);
+            eventButton2.setVisibility(View.VISIBLE);
+
+            // Stop attending the event if the user is already attending
+            eventButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    //final Event desiredEvent = event;
-                    mDatabaseManager.attendNewEvent(event).addOnCompleteListener(new OnCompleteListener<Void>() {
-                        @Override
-                        public void onComplete(@NonNull Task<Void> task) {
-                            if (task.isSuccessful()) {
-                                Toast.makeText(getActivity(), "You're attending " + event.getTitle() + "!", Toast.LENGTH_LONG).show();
-                                mDialog.dismiss();
-                            } else {
-                                Toast.makeText(getActivity(), R.string.event_attendence_unsuccessful, Toast.LENGTH_LONG).show();
-                            }
-                        }
-                    });
+                    final String userId = mAccountManager.getCurrentUser().getUid();
+                    stopAttendingEvent(event, userId);
+                }
+            });
+
+            // Delete event if the user is hosting the event
+            eventButton2.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    deleteEvent(event);
+                }
+            });
+
+        } // The user is hosting, but not attending the event
+        else if (UserEvents.EVENTS_HOSTING_MAP.containsKey(event.getUid()) && !UserEvents.EVENTS_ATTENDING_MAP.containsKey(event.getUid())){
+            eventButton2.setText(R.string.delete_event_button_text);
+            eventButton2.setVisibility(View.VISIBLE);
+
+            // Attend event
+            eventButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    attendEvent(event);
+                }
+            });
+
+            // Delete event if the user is hosting the event
+            eventButton2.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    deleteEvent(event);
+                }
+            });
+
+        } // The user is attending, but not hosting the event
+        else if (UserEvents.EVENTS_ATTENDING_MAP.containsKey(event.getUid()) &&
+                !UserEvents.EVENTS_HOSTING_MAP.containsKey(event.getUid())) {
+            final String userId = mAccountManager.getCurrentUser().getUid();
+
+            // Stop attending the event if the user is already attending
+            eventButton.setText(R.string.stop_attending_button_text);
+            eventButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    stopAttendingEvent(event, userId);
+                }
+            });
+        } // The user is not hosting or attending the event
+        else {
+            // Attend event if the user is not attending
+            eventButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    attendEvent(event);
                 }
             });
         }
@@ -435,6 +480,95 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
         mDialog.show();
 
 
+    }
+
+    private void attendEvent(final Event event){
+        mDatabaseManager.addUserAttendingEvent(event.getUid()).addOnCompleteListener(new OnCompleteListener<Void>() {
+            @Override
+            public void onComplete(@NonNull Task<Void> task) {
+                if (task.isSuccessful()) {
+                    mDatabaseManager.addEventAttending(event.getUid()).addOnCompleteListener(new OnCompleteListener<Void>() {
+                        @Override
+                        public void onComplete(@NonNull Task<Void> task) {
+                            if (task.isSuccessful()) {
+                                Toast.makeText(getActivity(), "You're attending " + event.getTitle() + "!", Toast.LENGTH_LONG).show();
+                                mDialog.dismiss();
+                            } else {
+                                Toast.makeText(getActivity(), R.string.event_attendence_unsuccessful, Toast.LENGTH_LONG).show();
+                                // TODO: Remove the added previous db entry
+                            }
+                        }
+                    });
+
+                } else {
+                    Toast.makeText(getActivity(), R.string.event_attendence_unsuccessful, Toast.LENGTH_LONG).show();
+                }
+            }
+        });
+    }
+
+    private void stopAttendingEvent(final Event event, final String userId){
+        mDatabaseManager.deleteUserAttendingEvent(event.getUid()).addOnCompleteListener(new OnCompleteListener<Void>() {
+            @Override
+            public void onComplete(@NonNull Task<Void> task) {
+                if(task.isSuccessful()){
+                    mDatabaseManager.deleteEventAttending(event.getUid(), userId).addOnCompleteListener(new OnCompleteListener<Void>() {
+                        @Override
+                        public void onComplete(@NonNull Task<Void> task) {
+                            if(task.isSuccessful()){
+                                Toast.makeText(getActivity(), "You're no longer attending" + event.getTitle() + "!", Toast.LENGTH_SHORT).show();
+                                mDialog.dismiss();
+                            } else {
+                                Toast.makeText(getActivity(), R.string.event_attendence_deletion_unsuccessful, Toast.LENGTH_SHORT).show();
+                            }
+                        }
+                    });
+                } else{
+                    Toast.makeText(getActivity(), R.string.event_attendence_deletion_unsuccessful, Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
+    }
+
+    private void deleteEvent(final Event event){
+        // Delete attending references in user attending database
+        mDatabaseManager.getUsersAttendingEvent(event.getUid()).addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                for(DataSnapshot snapshot : dataSnapshot.getChildren()){
+                    String attendeeId = snapshot.getKey();
+                    mDatabaseManager.deleteEventAttending(event.getUid(), attendeeId);
+                    // TODO How to check if the deletions all happened successfully
+                }
+                // Stop hosting the event
+                mDatabaseManager.deleteEventHosting(event.getUid()).addOnCompleteListener(new OnCompleteListener<Void>() {
+                    @Override
+                    public void onComplete(@NonNull Task<Void> task) {
+                        if(task.isSuccessful()){
+                            // Delete event in event database
+                            mDatabaseManager.deleteEvent(event.getUid()).addOnCompleteListener(new OnCompleteListener<Void>() {
+                                @Override
+                                public void onComplete(@NonNull Task<Void> task) {
+                                    if(task.isSuccessful()){
+                                        Toast.makeText(getActivity(), R.string.delete_event_successful, Toast.LENGTH_SHORT).show();
+                                        mDialog.dismiss();
+                                    } else {
+                                        Toast.makeText(getActivity(), R.string.delete_event_unsuccessful, Toast.LENGTH_SHORT).show();
+                                    }
+                                }
+                            });
+                        } else {
+                            Toast.makeText(getActivity(), R.string.delete_event_unsuccessful, Toast.LENGTH_SHORT).show();
+                            // TODO LOg
+                        }
+                    }
+                });
+            }
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
     }
 
     private void personPopupCreation(Marker marker) {

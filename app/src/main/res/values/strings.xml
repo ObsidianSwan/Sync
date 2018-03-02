@@ -158,5 +158,10 @@
     <string name="delete_account_button">Delete Account</string>
     <string name="verify_account_deletion_text_button">Are you sure?</string>
     <string name="verify_account_deletion_text_two_button">One last time</string>
+    <string name="stop_attending_button_text">Stop attending</string>
+    <string name="event_attendence_deletion_unsuccessful">Could not stop attending event</string>
+    <string name="delete_event_button_text">Delete event</string>
+    <string name="delete_event_unsuccessful">Couldn\'t delete event</string>
+    <string name="delete_event_successful">Event deleted!</string>
 
 </resources>
