@@ -140,9 +140,21 @@ public class DatabaseManager {
         return mPeopleDatabaseReference.child(mAccountManager.getCurrentUser().getUid()).child(Constants.connectionDatabaseRefName);
     }
 
-    public DatabaseReference getNewConnectionReference(String personId) {
-        return mPeopleDatabaseReference.child(personId).child(Constants.connectionDatabaseRefName).push();
+    public DatabaseReference getNewConnectionReference() {
+        return mConnectionsDatabaseReference.push();
     }
+
+    public Task<Void> addNewConnection(DatabaseReference connectionRef, String userAId, String userBId){
+        connectionRef.child(userAId).setValue(true);
+        return connectionRef.child(userBId).setValue(true);
+    }
+
+    public Task<Void> addConnectionReference(String connectionRefKey, String userAId, String userBId){
+        return mPeopleDatabaseReference.child(userAId).child(Constants.connectionDatabaseRefName).child(userBId).setValue(connectionRefKey);
+    }
+/*    public DatabaseReference getNewConnectionReference(String personId) {
+        return mPeopleDatabaseReference.child(personId).child(Constants.connectionDatabaseRefName).push();
+    }*/
 
     public Task<Void> addUserConnection(DatabaseReference connectionReference, Connection connection){
         return connectionReference.setValue(connection);
@@ -162,16 +174,16 @@ public class DatabaseManager {
         return mPeopleDatabaseReference.child(mAccountManager.getCurrentUser().getUid()).child(Constants.connectionRequestsDatabaseRefName).push();
     }
 
-    public Task<Void> addUserConnectionRequest(DatabaseReference connectionRequestReference, Connection connection){
-        return connectionRequestReference.setValue(connection);
+    public Task<Void> addUserConnectionRequest(String personId){
+        return mPeopleDatabaseReference.child(mAccountManager.getCurrentUser().getUid()).child(Constants.connectionRequestsDatabaseRefName).child(personId).setValue(true);
     }
 
     public Task<Void> deleteCurrentUserConnectionRequest(String connectionId) {
         return mPeopleDatabaseReference.child(mAccountManager.getCurrentUser().getUid()).child(Constants.connectionRequestsDatabaseRefName).child(connectionId).setValue(null);
     }
 
-    public Task<Void> deleteUserConnectionRequest(String connectionId, String personId) {
-        return mPeopleDatabaseReference.child(personId).child(Constants.connectionRequestsDatabaseRefName).child(connectionId).setValue(null);
+    public Task<Void> deleteUserConnectionRequest(String personId) {
+        return mPeopleDatabaseReference.child(personId).child(Constants.connectionRequestsDatabaseRefName).child(mAccountManager.getCurrentUser().getUid()).setValue(null);
     }
 
     // Delete Connection
@@ -186,6 +198,18 @@ public class DatabaseManager {
 
     public DatabaseReference getDeletedUserConnections(){
         return mPeopleDatabaseReference.child(mAccountManager.getCurrentUser().getUid()).child(Constants.connectionRemovalDatabaseRefName);
+    }
+
+    public DatabaseReference getUserConnectionReference(String connectionId){
+        return mPeopleDatabaseReference.child(mAccountManager.getCurrentUser().getUid()).child(Constants.connectionDatabaseRefName).child(connectionId);
+    }
+
+    public Task<Void> deleteConnection(String databaseReference){
+        return mConnectionsDatabaseReference.child(databaseReference).setValue(null);
+    }
+
+    public Task<Void> deleteUserConnection(String userId, String connectionId){
+        return mPeopleDatabaseReference.child(userId).child(Constants.connectionDatabaseRefName).child(connectionId).setValue(null);
     }
 
     public Task<Void> deleteCurrentUserConnection(String connectionId){

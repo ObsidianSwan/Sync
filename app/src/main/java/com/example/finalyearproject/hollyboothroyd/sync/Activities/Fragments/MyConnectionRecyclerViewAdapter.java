@@ -23,7 +23,10 @@ import com.example.finalyearproject.hollyboothroyd.sync.Services.AccountManager;
 import com.example.finalyearproject.hollyboothroyd.sync.Services.DatabaseManager;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.ValueEventListener;
 import com.squareup.picasso.Picasso;
 
 import java.util.List;
@@ -108,32 +111,49 @@ public class MyConnectionRecyclerViewAdapter extends RecyclerView.Adapter<MyConn
         disconnectButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Connection connection = UserConnections.CONNECTION_ITEM_MAP.get(person.getUserId());
-                // Remove the connection from the users database
-                mDatabaseManager.deleteCurrentUserConnection(connection.getConnectionDbRef()).addOnCompleteListener(new OnCompleteListener<Void>() {
+                final Person connection = UserConnections.CONNECTION_ITEM_MAP.get(person.getUserId());
+
+                // Get the connection database reference from the connectionId
+                mDatabaseManager.getUserConnectionReference(connection.getUserId()).addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
-                    public void onComplete(@NonNull Task<Void> task) {
-                        if (task.isSuccessful()) {
-                            // Due to how Firebase queries the data structures, the disconnected user will have to remove the connection
-                            // on their end. To know which connection to delete, the user who disconnected will be stored in the disconnected users database
-                            DatabaseReference deletedConnectionRef = mDatabaseManager.getDeletedConnectionReference(person.getUserId());
-                            String dbRefKey = deletedConnectionRef.getKey();
-                            Connection deletedConnection = new Connection(dbRefKey, mAccountManager.getCurrentUser().getUid());
-                            mDatabaseManager.addDeletedUserConnection(deletedConnectionRef, deletedConnection).addOnCompleteListener(new OnCompleteListener<Void>() {
-                                @Override
-                                public void onComplete(@NonNull Task<Void> task) {
-                                  if(task.isSuccessful()){
-                                      removeConnection(holder.getAdapterPosition());
-                                      Toast.makeText(mContext, "You're no longer connected with " + person.getFirstName(), Toast.LENGTH_SHORT).show();
-                                      mDialog.dismiss();
-                                  } else {
-                                      // TODO:LOG
-                                  }
+                    public void onDataChange(DataSnapshot dataSnapshot) {
+                        String dbRef = dataSnapshot.getValue(String.class);
+                        // Remove the connection from the connection database
+                        mDatabaseManager.deleteConnection(dbRef).addOnCompleteListener(new OnCompleteListener<Void>() {
+                            @Override
+                            public void onComplete(@NonNull Task<Void> task) {
+                                if (task.isSuccessful()) {
+                                    // Remove the connection reference from the current users database
+                                    mDatabaseManager.deleteUserConnection(mAccountManager.getCurrentUser().getUid(), connection.getUserId()).addOnCompleteListener(new OnCompleteListener<Void>() {
+                                        @Override
+                                        public void onComplete(@NonNull Task<Void> task) {
+                                            if(task.isSuccessful()){
+                                                mDatabaseManager.deleteUserConnection(connection.getUserId(), mAccountManager.getCurrentUser().getUid()).addOnCompleteListener(new OnCompleteListener<Void>() {
+                                                    @Override
+                                                    public void onComplete(@NonNull Task<Void> task) {
+                                                        if(task.isSuccessful()){
+                                                            removeConnection(holder.getAdapterPosition());
+                                                            Toast.makeText(mContext, "You're no longer connected with " + person.getFirstName(), Toast.LENGTH_SHORT).show();
+                                                            mDialog.dismiss();
+                                                        } else {
+                                                            // TODO: Log
+                                                        }
+                                                    }
+                                                });
+                                            } else {
+                                                // TODO: Log
+                                            }
+                                        }
+                                    });
+                                } else {
+                                    Toast.makeText(mContext, R.string.cannot_disconnect_toast_text, Toast.LENGTH_SHORT).show();
                                 }
-                            });
-                        } else {
-                            Toast.makeText(mContext, R.string.cannot_disconnect_toast_text, Toast.LENGTH_SHORT).show();
-                        }
+                            }
+                        });
+                    }
+                    @Override
+                    public void onCancelled(DatabaseError databaseError) {
+
                     }
                 });
             }

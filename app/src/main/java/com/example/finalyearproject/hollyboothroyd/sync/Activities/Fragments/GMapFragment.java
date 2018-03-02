@@ -473,66 +473,71 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
             // Don't show connection button if a connection is already pending
             connectButton.setVisibility(View.GONE);
             connectionPendingMessage.setVisibility(View.VISIBLE);
-        } else if (UserNotifications.ITEM_MAP.containsKey(person.getUserId())){
-
+        } else if (UserNotifications.ITEM_MAP.containsKey(person.getUserId())) {
             final NotificationBase notification = UserNotifications.ITEM_MAP.get(person.getUserId());
             connectButton.setText(R.string.accept_connection_request_button_text);
-
             connectButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
                     mDatabaseManager.getUserPeopleDatabaseReference().addListenerForSingleValueEvent(new ValueEventListener() {
                         @Override
                         public void onDataChange(DataSnapshot dataSnapshot) {
-
-                            final Person user = dataSnapshot.getValue(Person.class);
-                            // First add the other user (requestee) to current users (requestor) connection list
-                            DatabaseReference connectionRef = mDatabaseManager.getNewConnectionReference(user.getUserId());
-                            String dbRef = connectionRef.getKey();
-                            Connection connection = new Connection(dbRef, notification.getId());
-
-                            mDatabaseManager.addUserConnection(connectionRef, connection).addOnCompleteListener(new OnCompleteListener<Void>() {
+                            final String currentUserId = mAccountManager.getCurrentUser().getUid();
+                            // Create a new connection item in the connection database
+                            DatabaseReference connectionRef = mDatabaseManager.getNewConnectionReference();
+                            final String dbRef = connectionRef.getKey();
+                            //Connection connection = new Connection(dbRef, notification.getId(), currentUserId);
+                            mDatabaseManager.addNewConnection(connectionRef, notification.getId(), currentUserId).addOnCompleteListener(new OnCompleteListener<Void>() {
                                 @Override
                                 public void onComplete(@NonNull Task<Void> task) {
                                     if (task.isSuccessful()) {
-
-                                        // Then add the current user (requestor) to the other users (requestee) connection list
-                                        DatabaseReference connectionRef = mDatabaseManager.getNewConnectionReference(notification.getId());
-                                        String dbRef = connectionRef.getKey();
-                                        Connection connection = new Connection(dbRef, user.getUserId());
-
-                                        mDatabaseManager.addUserConnection(connectionRef, connection).addOnCompleteListener(new OnCompleteListener<Void>() {
+                                        // Add connection reference key to current users database
+                                        mDatabaseManager.addConnectionReference(dbRef, notification.getId(), currentUserId).addOnCompleteListener(new OnCompleteListener<Void>() {
                                             @Override
                                             public void onComplete(@NonNull Task<Void> task) {
                                                 if (task.isSuccessful()) {
-
-                                                    // Remove the connection request notification from the current users (requestor) database
-                                                    mDatabaseManager.deleteUserConnectionRequestNotification(notification.getDbRefKey()).addOnCompleteListener(new OnCompleteListener<Void>() {
+                                                    // Add connection reference key to other users database
+                                                    mDatabaseManager.addConnectionReference(dbRef, currentUserId, notification.getId()).addOnCompleteListener(new OnCompleteListener<Void>() {
                                                         @Override
                                                         public void onComplete(@NonNull Task<Void> task) {
                                                             if (task.isSuccessful()) {
-
-                                                                // Don't show connection button when the person is a connection
-                                                                connectButton.setVisibility(View.GONE);
-                                                                connectedMessage.setVisibility(View.VISIBLE);
-                                                                Toast.makeText(getContext(), R.string.connection_accepted_toast_text, Toast.LENGTH_SHORT).show();
+                                                                // Delete connection request in the other users database
+                                                                mDatabaseManager.deleteUserConnectionRequest(notification.getId()).addOnCompleteListener(new OnCompleteListener<Void>() {
+                                                                    @Override
+                                                                    public void onComplete(@NonNull Task<Void> task) {
+                                                                        if (task.isSuccessful()) {
+                                                                            // Delete connection notification in the current users database
+                                                                            mDatabaseManager.deleteUserConnectionRequestNotification(notification.getDbRefKey()).addOnCompleteListener(new OnCompleteListener<Void>() {
+                                                                                @Override
+                                                                                public void onComplete(@NonNull Task<Void> task) {
+                                                                                    if (task.isSuccessful()) {
+                                                                                        Toast.makeText(getContext(), R.string.connection_accepted_toast_text, Toast.LENGTH_SHORT).show();
+                                                                                    } else {
+                                                                                        // TODO LOG
+                                                                                    }
+                                                                                }
+                                                                            });
+                                                                        } else {
+                                                                            // TODO: LOG
+                                                                        }
+                                                                    }
+                                                                });
                                                             } else {
-                                                                Toast.makeText(getContext(), R.string.generic_error_text, Toast.LENGTH_SHORT).show();
+                                                                //TODO:Log
                                                             }
                                                         }
                                                     });
                                                 } else {
-                                                    Toast.makeText(getContext(), R.string.generic_error_text, Toast.LENGTH_SHORT).show();
+                                                    //TODO:Log
                                                 }
                                             }
                                         });
                                     } else {
-                                        Toast.makeText(getContext(), R.string.generic_error_text, Toast.LENGTH_SHORT).show();
+                                        //TODO: Log
                                     }
                                 }
                             });
                         }
-
                         @Override
                         public void onCancelled(DatabaseError databaseError) {
                             //TODO:Log
@@ -551,10 +556,8 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
                         @Override
                         public void onComplete(@NonNull Task<Void> task) {
                             if (task.isSuccessful()) {
-                                DatabaseReference connectionRequestRef = mDatabaseManager.getNewConnectionRequestReference();
-                                String refKey = connectionRequestRef.getKey();
-                                Connection connection = new Connection(refKey, person.getUserId());
-                                mDatabaseManager.addUserConnectionRequest(connectionRequestRef, connection).addOnCompleteListener(new OnCompleteListener<Void>() {
+                                // Save reference to the request so the other users the current user has requested is known
+                                mDatabaseManager.addUserConnectionRequest(person.getUserId()).addOnCompleteListener(new OnCompleteListener<Void>() {
                                     @Override
                                     public void onComplete(@NonNull Task<Void> task) {
                                         if (task.isSuccessful()) {
@@ -569,7 +572,6 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
                                 });
                             } else {
                                 Toast.makeText(getActivity(), R.string.connection_request_failed, Toast.LENGTH_SHORT).show();
-
                             }
                         }
                     });
