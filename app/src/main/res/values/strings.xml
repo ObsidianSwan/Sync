@@ -155,5 +155,8 @@
     <string name="accept_connection_request_button_text">Accept connection request</string>
     <string name="cannot_disconnect_toast_text">Cannot disconnect right now. Try again later.</string>
     <string name="disconnect_button">Disconnect</string>
+    <string name="delete_account_button">Delete Account</string>
+    <string name="verify_account_deletion_text_button">Are you sure?</string>
+    <string name="verify_account_deletion_text_two_button">One last time</string>
 
 </resources>

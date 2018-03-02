@@ -11,6 +11,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.NumberPicker;
 import android.widget.Spinner;
 import android.widget.Toast;
@@ -41,6 +42,7 @@ public class SettingsFragment extends Fragment implements AdapterView.OnItemSele
     private NumberPicker mDisRefreshRatePicker;
     private Spinner mPersonPinColorSpinner;
     private Spinner mEventPinColorSpinner;
+    private Button mDeleteAccountButton;
 
     // Needed to prevent the spinner from executing OnItemSelected method body
     private boolean mInitialPersonSpinnerEvent = true;
@@ -98,6 +100,8 @@ public class SettingsFragment extends Fragment implements AdapterView.OnItemSele
         mDisRefreshRatePicker = (NumberPicker) view.findViewById(R.id.settings_dis_refresh_number_picker);
         mPersonPinColorSpinner = (Spinner) view.findViewById(R.id.settings_user_color_spinner);
         mEventPinColorSpinner = (Spinner) view.findViewById(R.id.settings_event_color_spinner);
+        mDeleteAccountButton = (Button) view.findViewById(R.id.delete_account_button);
+
 
         setUpZoomPicker();
         setUpTimeRefreshRatePicker();
@@ -107,6 +111,27 @@ public class SettingsFragment extends Fragment implements AdapterView.OnItemSele
         arrayAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         setupPersonPinColorSpinner(arrayAdapter);
         setupEventPinColorSpinner(arrayAdapter);
+
+        mDeleteAccountButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if(mDeleteAccountButton.getText().equals(R.string.delete_account_button)){
+                    mDeleteAccountButton.setText(R.string.verify_account_deletion_text_button);
+                } else if (mDeleteAccountButton.getText().equals(R.string.verify_account_deletion_text_button)){
+                    mDeleteAccountButton.setText(R.string.verify_account_deletion_text_two_button);
+                } else if (mDeleteAccountButton.getText().equals(R.string.verify_account_deletion_text_two_button)){
+                    // Delete events attending
+
+                    // Delete events hosting
+
+                    // Delete connections
+
+                    // Delete account database
+
+                    // Delete account
+                }
+            }
+        });
 
         return view;
     }
