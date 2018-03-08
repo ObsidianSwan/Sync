@@ -15,7 +15,10 @@ public class Constants {
 
     public static final int locationTimeUpdateIntervalDefault = 1000;
     public static final int locationDistanceUpdateIntervalDefault = 5;
-    public static final int searchRadiusDefault = 5; // TODO: Select proper value
+    public static final int searchRadiusDefault = 60; // TODO: Select proper value
+    public static final float metersPerDegree = 111300f;
+    public static final int obfuscationTrials = 4;
+    public static final double earthRadiusMeters = 6371.00;
 
     public static final String mapZoomLevelName = "mapZoomLevel";
     public static final int mapZoomLevelDefault = 15;

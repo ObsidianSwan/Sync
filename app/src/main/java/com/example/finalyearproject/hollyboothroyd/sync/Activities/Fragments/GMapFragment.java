@@ -27,6 +27,7 @@ import com.example.finalyearproject.hollyboothroyd.sync.Model.Event;
 import com.example.finalyearproject.hollyboothroyd.sync.Model.Notification;
 import com.example.finalyearproject.hollyboothroyd.sync.Model.NotificationBase;
 import com.example.finalyearproject.hollyboothroyd.sync.Model.UserNotifications;
+import com.example.finalyearproject.hollyboothroyd.sync.Services.LocationFilter;
 import com.example.finalyearproject.hollyboothroyd.sync.Utils.NotificationType;
 import com.example.finalyearproject.hollyboothroyd.sync.Model.Person;
 import com.example.finalyearproject.hollyboothroyd.sync.Model.UserConnections;
@@ -299,20 +300,20 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
     // Update user location on the map
     @SuppressLint("MissingPermission")
     private void setUserLocation() {
-        // TODO: Go through location filter
         Location lastKnownLocation = mLocationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
         if (lastKnownLocation == null) {
             Toast.makeText(getActivity(), R.string.could_not_find_location, Toast.LENGTH_LONG).show();
         } else {
             final LatLng userLocation = new LatLng(lastKnownLocation.getLatitude(), lastKnownLocation.getLongitude());
-            mDatabaseManager.updateCurrentUserLocation(userLocation);
+            final LatLng obfuscatedLocation = LocationFilter.nRandObfuscation(userLocation, Constants.searchRadiusDefault);
+            mDatabaseManager.updateCurrentUserLocation(obfuscatedLocation);
             mDatabaseManager.getUserSettings(Constants.mapZoomLevelName).addListenerForSingleValueEvent(new ValueEventListener() {
                 @Override
                 public void onDataChange(DataSnapshot dataSnapshot) {
                     if (dataSnapshot.getValue(Integer.class) != null) {
                         mMapZoomLevelName = dataSnapshot.getValue(Integer.class);
                     }
-                    mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(userLocation, mMapZoomLevelName));
+                    mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(obfuscatedLocation, mMapZoomLevelName));
                 }
 
                 @Override
@@ -583,6 +584,7 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
         mPopupButton = (Button) view.findViewById(R.id.popup_button);
         mConnectionPendingMessage = (TextView) view.findViewById(R.id.popup_connection_pending);
 
+
         final Person person = mPersonMarkerMap.get(marker.getId());
         if (!mPersonMarkerMap.isEmpty()) {
             Picasso.with(getActivity()).load(person.getImageId()).into(personImage);
@@ -659,6 +661,7 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
         mDialog = mDialogBuilder.create();
         mDialog.show();
     }
+          
     private void addConnection(final NotificationBase notification){
         mDatabaseManager.getUserPeopleDatabaseReference().addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
@@ -756,7 +759,8 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
         });
     }
 
-    private void deleteConnection(final Person person) {
+
+    private void deleteConnection(final Person person){
         final Person connection = UserConnections.CONNECTION_ITEM_MAP.get(person.getUserId());
 
         // Get the connection database reference from the connectionId
@@ -773,12 +777,13 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
                             mDatabaseManager.deleteUserConnection(mAccountManager.getCurrentUser().getUid(), connection.getUserId()).addOnCompleteListener(new OnCompleteListener<Void>() {
                                 @Override
                                 public void onComplete(@NonNull Task<Void> task) {
-                                    if (task.isSuccessful()) {
+                                    if(task.isSuccessful()){
+                                        // Remove the connection reference from the connection users database
                                         mDatabaseManager.deleteUserConnection(connection.getUserId(), mAccountManager.getCurrentUser().getUid()).addOnCompleteListener(new OnCompleteListener<Void>() {
                                             @Override
                                             public void onComplete(@NonNull Task<Void> task) {
-                                                if (task.isSuccessful()) {
-                                                    Toast.makeText(getActivity(), "You're no longer connected with " + person.getFirstName(), Toast.LENGTH_SHORT).show();
+                                                if(task.isSuccessful()){
+                                                    Toast.makeText(getContext(), "You're no longer connected with " + person.getFirstName(), Toast.LENGTH_SHORT).show();
                                                     mDialog.dismiss();
                                                 } else {
                                                     // TODO: Log
@@ -791,12 +796,11 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
                                 }
                             });
                         } else {
-                            Toast.makeText(getActivity(), R.string.cannot_disconnect_toast_text, Toast.LENGTH_SHORT).show();
+                            Toast.makeText(getContext(), R.string.cannot_disconnect_toast_text, Toast.LENGTH_SHORT).show();
                         }
                     }
                 });
             }
-
             @Override
             public void onCancelled(DatabaseError databaseError) {
 
