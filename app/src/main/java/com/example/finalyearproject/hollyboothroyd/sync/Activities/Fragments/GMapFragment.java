@@ -29,6 +29,7 @@ import com.example.finalyearproject.hollyboothroyd.sync.Model.Event;
 import com.example.finalyearproject.hollyboothroyd.sync.Model.Notification;
 import com.example.finalyearproject.hollyboothroyd.sync.Model.NotificationBase;
 import com.example.finalyearproject.hollyboothroyd.sync.Model.UserNotifications;
+import com.example.finalyearproject.hollyboothroyd.sync.Services.LocationFilter;
 import com.example.finalyearproject.hollyboothroyd.sync.Utils.NotificationType;
 import com.example.finalyearproject.hollyboothroyd.sync.Model.Person;
 import com.example.finalyearproject.hollyboothroyd.sync.Model.UserConnections;
@@ -299,20 +300,20 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
     // Update user location on the map
     @SuppressLint("MissingPermission")
     private void setUserLocation() {
-        // TODO: Go through location filter
         Location lastKnownLocation = mLocationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
         if (lastKnownLocation == null) {
             Toast.makeText(getActivity(), R.string.could_not_find_location, Toast.LENGTH_LONG).show();
         } else {
             final LatLng userLocation = new LatLng(lastKnownLocation.getLatitude(), lastKnownLocation.getLongitude());
-            mDatabaseManager.updateCurrentUserLocation(userLocation);
+            final LatLng obfuscatedLocation = LocationFilter.nRandObfuscation(userLocation, Constants.searchRadiusDefault);
+            mDatabaseManager.updateCurrentUserLocation(obfuscatedLocation);
             mDatabaseManager.getUserSettings(Constants.mapZoomLevelName).addListenerForSingleValueEvent(new ValueEventListener() {
                 @Override
                 public void onDataChange(DataSnapshot dataSnapshot) {
                     if (dataSnapshot.getValue(Integer.class) != null) {
                         mMapZoomLevelName = dataSnapshot.getValue(Integer.class);
                     }
-                    mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(userLocation, mMapZoomLevelName));
+                    mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(obfuscatedLocation, mMapZoomLevelName));
                 }
 
                 @Override
@@ -581,8 +582,7 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
         TextView personPosition = (TextView) view.findViewById(R.id.popup_position);
         TextView personCompany = (TextView) view.findViewById(R.id.popup_company);
         TextView personIndustry = (TextView) view.findViewById(R.id.popup_industry);
-        final Button connectButton = (Button) view.findViewById(R.id.popup_button);
-        final TextView connectedMessage = (TextView) view.findViewById(R.id.popup_connected);
+        final Button popupButton = (Button) view.findViewById(R.id.popup_button);
         final TextView connectionPendingMessage = (TextView) view.findViewById(R.id.popup_connection_pending);
 
         final Person person = mPersonMarkerMap.get(marker.getId());
@@ -598,19 +598,19 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
 
         if (person.getUserId().equals(String.valueOf(mAccountManager.getCurrentUser().getUid()))) {
             // Don't show connection button for the users marker popup
-            connectButton.setVisibility(View.GONE);
+            popupButton.setVisibility(View.GONE);
         } else if (UserConnections.CONNECTION_ITEM_MAP.containsKey(person.getUserId())) {
             // Don't show connection button if the person is already a connection
-            connectButton.setVisibility(View.GONE);
-            connectedMessage.setVisibility(View.VISIBLE);
+            popupButton.setText(R.string.disconnect_button);
+            deleteConnection(person);
         } else if (UserConnections.CONNECTION_REQUEST_ITEM_MAP.containsKey(person.getUserId())) {
             // Don't show connection button if a connection is already pending
-            connectButton.setVisibility(View.GONE);
+            popupButton.setVisibility(View.GONE);
             connectionPendingMessage.setVisibility(View.VISIBLE);
         } else if (UserNotifications.ITEM_MAP.containsKey(person.getUserId())) {
             final NotificationBase notification = UserNotifications.ITEM_MAP.get(person.getUserId());
-            connectButton.setText(R.string.accept_connection_request_button_text);
-            connectButton.setOnClickListener(new View.OnClickListener() {
+            popupButton.setText(R.string.accept_connection_request_button_text);
+            popupButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
                     mDatabaseManager.getUserPeopleDatabaseReference().addListenerForSingleValueEvent(new ValueEventListener() {
@@ -681,7 +681,7 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
                 }
             });
         } else {
-            connectButton.setOnClickListener(new View.OnClickListener() {
+            popupButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
                     DatabaseReference newNotificationRef = mDatabaseManager.getNewNotifcationReference(person.getUserId());
@@ -697,7 +697,7 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
                                     public void onComplete(@NonNull Task<Void> task) {
                                         if (task.isSuccessful()) {
                                             // Don't show connection button now that the connection request is pending
-                                            connectButton.setVisibility(View.GONE);
+                                            popupButton.setVisibility(View.GONE);
                                             connectionPendingMessage.setVisibility(View.VISIBLE);
                                             Toast.makeText(getActivity(), R.string.connection_request_sent_success, Toast.LENGTH_SHORT).show();
                                         } else {
@@ -724,6 +724,55 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
         mDialogBuilder.setView(view);
         mDialog = mDialogBuilder.create();
         mDialog.show();
+    }
+
+
+    private void deleteConnection(final Person person){
+        final Person connection = UserConnections.CONNECTION_ITEM_MAP.get(person.getUserId());
+
+        // Get the connection database reference from the connectionId
+        mDatabaseManager.getUserConnectionReference(connection.getUserId()).addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                String dbRef = dataSnapshot.getValue(String.class);
+                // Remove the connection from the connection database
+                mDatabaseManager.deleteConnection(dbRef).addOnCompleteListener(new OnCompleteListener<Void>() {
+                    @Override
+                    public void onComplete(@NonNull Task<Void> task) {
+                        if (task.isSuccessful()) {
+                            // Remove the connection reference from the current users database
+                            mDatabaseManager.deleteUserConnection(mAccountManager.getCurrentUser().getUid(), connection.getUserId()).addOnCompleteListener(new OnCompleteListener<Void>() {
+                                @Override
+                                public void onComplete(@NonNull Task<Void> task) {
+                                    if(task.isSuccessful()){
+                                        // Remove the connection reference from the connection users database
+                                        mDatabaseManager.deleteUserConnection(connection.getUserId(), mAccountManager.getCurrentUser().getUid()).addOnCompleteListener(new OnCompleteListener<Void>() {
+                                            @Override
+                                            public void onComplete(@NonNull Task<Void> task) {
+                                                if(task.isSuccessful()){
+                                                    Toast.makeText(getContext(), "You're no longer connected with " + person.getFirstName(), Toast.LENGTH_SHORT).show();
+                                                    mDialog.dismiss();
+                                                } else {
+                                                    // TODO: Log
+                                                }
+                                            }
+                                        });
+                                    } else {
+                                        // TODO: Log
+                                    }
+                                }
+                            });
+                        } else {
+                            Toast.makeText(getContext(), R.string.cannot_disconnect_toast_text, Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                });
+            }
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
     }
 
     @Override
