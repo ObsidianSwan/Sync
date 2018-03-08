@@ -139,7 +139,7 @@ public class DatabaseManager {
         return mPeopleDatabaseReference.child(mAccountManager.getCurrentUser().getUid()).child(Constants.connectionRequestsDatabaseRefName);
     }
 
-    public Task<Void> deleteUserConnectionRequestNotification(String notificationId) {
+    public Task<Void> deleteUserNotification(String notificationId) {
         return mPeopleDatabaseReference.child(mAccountManager.getCurrentUser().getUid()).child(Constants.userNotificationDatabaseRefName).child(notificationId).setValue(null);
     }
 
