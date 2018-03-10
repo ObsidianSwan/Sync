@@ -70,7 +70,7 @@ public class CoreActivity extends AppCompatActivity
         mAccountManager = new AccountManager();
 
         mUserConnections = new UserConnections();
-        mUserEvents = new UserEvents();
+        mUserEvents = new UserEvents(this);
         mUserNotifications = new UserNotifications();
 
         mSupportFragmentManager = getSupportFragmentManager();

@@ -51,11 +51,20 @@ public class LocationFilter {
         return furthestLocation;
     }
 
-    private static double distanceBetweenPoints(LatLng originalLocation, LatLng obfuscatedLocation){
-        double longTheta = Math.toRadians(obfuscatedLocation.longitude - originalLocation.longitude);
-        double latTheta = Math.toRadians(obfuscatedLocation.latitude - originalLocation.latitude);
+    public static boolean eventWithinRange(LatLng originalLocation, LatLng eventLocation){
+        // TODO change for settings page.
+        if(distanceBetweenPoints(originalLocation, eventLocation) < Constants.geofenceRadiusDefault){
+            return true;
+        }
+        return false;
+    }
+
+    // Returns the distance between two LatLng positions in meters using the Haversine formula
+    private static double distanceBetweenPoints(LatLng originalLocation, LatLng secondaryLocation){
+        double longTheta = Math.toRadians(originalLocation.longitude - secondaryLocation.longitude);
+        double latTheta = Math.toRadians(originalLocation.latitude - secondaryLocation.latitude);
         double orgLatRad = Math.toRadians(originalLocation.latitude);
-        double obfLatRad = Math.toRadians(obfuscatedLocation.latitude);
+        double obfLatRad = Math.toRadians(secondaryLocation.latitude);
 
         double a = Math.sin(latTheta/2) * Math.sin(latTheta/2) +
                 Math.cos(orgLatRad) * Math.cos(obfLatRad) *
