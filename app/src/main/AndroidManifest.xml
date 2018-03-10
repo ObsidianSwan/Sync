@@ -19,6 +19,7 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme.NoActionBar">
+        <service android:name=".Services.GeofenceTransitionsIntentService"/>
         <activity android:name=".Activities.MainActivity"
             android:theme="@style/AppTheme.NoActionBar">
             <intent-filter>

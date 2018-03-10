@@ -114,28 +114,12 @@ public class CoreActivity extends AppCompatActivity
                     mCurrentFragment = R.string.logout_tag;
                     break;
             }
-            //TODO: Add SyncUp
-/*                case FRAGMENT_A:
-                    addAreaFragment();
-                    break;
-                case FRAGMENT_B:
-                    addFragmentB();*/
-
         }
 
         setContentView(R.layout.activity_navigation_drawer);
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-
-/*        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
-            }
-        });*/
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
@@ -191,7 +175,7 @@ public class CoreActivity extends AppCompatActivity
 
                         @Override
                         public void onCancelled(DatabaseError databaseError) {
-
+                            // TODO LOG
                         }
                     });
                 }
@@ -199,7 +183,7 @@ public class CoreActivity extends AppCompatActivity
 
             @Override
             public void onCancelled(DatabaseError databaseError) {
-
+                // TODO LOG
             }
         });
 
@@ -319,7 +303,7 @@ public class CoreActivity extends AppCompatActivity
         mAccountManager.getCurrentUser().delete().addOnCompleteListener(new OnCompleteListener<Void>() {
             @Override
             public void onComplete(@NonNull Task<Void> task) {
-                if(task.isSuccessful()){
+                if (task.isSuccessful()) {
                     Toast.makeText(getApplicationContext(), R.string.delete_account_success, Toast.LENGTH_SHORT).show();
                 }
             }

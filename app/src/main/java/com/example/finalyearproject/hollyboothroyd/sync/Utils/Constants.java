@@ -15,10 +15,12 @@ public class Constants {
 
     public static final int locationTimeUpdateIntervalDefault = 1000;
     public static final int locationDistanceUpdateIntervalDefault = 5;
-    public static final int searchRadiusDefault = 60; // TODO: Select proper value
+    public static final int searchRadiusDefault = 60; // Meters
+    public static final int geofenceRadiusDefault = 100; //Meters
     public static final float metersPerDegree = 111300f;
     public static final int obfuscationTrials = 4;
     public static final double earthRadiusMeters = 6371.00;
+    public static final int geofenceCircleColor = 0x90CCCCCC; // Light grey with 90% opacity
 
     public static final String mapZoomLevelName = "mapZoomLevel";
     public static final int mapZoomLevelDefault = 15;
