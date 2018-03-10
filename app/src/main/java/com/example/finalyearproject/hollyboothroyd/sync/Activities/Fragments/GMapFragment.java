@@ -90,6 +90,8 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
     private DatabaseManager mDatabaseManager;
     private AccountManager mAccountManager;
 
+    private LatLng mUserLocation;
+
     private static GeofencingClient mGeofencingClient;
     private List<Geofence> mGeofenceList;
     private static PendingIntent mGeofencePendingIntent;
@@ -365,14 +367,14 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
     }
 
     private void updateUserLocation(double latitude, double longitude, final boolean animateMap) {
-        final LatLng userLocation = new LatLng(latitude, longitude);
-        final LatLng obfuscatedLocation = LocationFilter.nRandObfuscation(userLocation, Constants.searchRadiusDefault);
+        mUserLocation = new LatLng(latitude, longitude);
+        final LatLng obfuscatedLocation = LocationFilter.nRandObfuscation(mUserLocation, Constants.obfuscationRadiusDefault);
 
         // Send obfuscated location to the database for other users to see
         mDatabaseManager.updateCurrentUserLocation(obfuscatedLocation);
 
         // Use actual location for geofence and zoom location
-        setUpGeofence(userLocation);
+        setUpGeofence(mUserLocation);
         mDatabaseManager.getUserSettings(Constants.mapZoomLevelName).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
@@ -380,7 +382,7 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
                     mMapZoomLevelName = dataSnapshot.getValue(Integer.class);
                 }
                 if (animateMap) {
-                    mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(userLocation, mMapZoomLevelName));
+                    mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(mUserLocation, mMapZoomLevelName));
                 }
             }
 
@@ -502,23 +504,27 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
     }
 
     private void getEvents() {
-        //TODO: Replace with local events
         for (Event event : mLocalEventsList) {
-            MarkerOptions markerOptions = new MarkerOptions();
-            markerOptions.icon(BitmapDescriptorFactory.defaultMarker(mEventPinColor));
-            markerOptions.title(event.getTitle());
-            markerOptions.position(new LatLng(event.getLatitude(), event.getLongitude()));
-            markerOptions.snippet("Topic: " + event.getTopic() +
-                    "\nIndustry: " + event.getIndustry() +
-                    "\n\nTime: " + event.getTime() +
-                    "\nDate: " + event.getDate());
+            LatLng eventLocation = new LatLng(event.getLatitude(), event.getLongitude());
+            if(LocationFilter.eventWithinRange(mUserLocation, eventLocation)
+                    || UserEvents.EVENTS_HOSTING_MAP.containsKey(event.getUid())
+                    || UserEvents.EVENTS_ATTENDING_MAP.containsKey(event.getUid())){
+                MarkerOptions markerOptions = new MarkerOptions();
+                markerOptions.icon(BitmapDescriptorFactory.defaultMarker(mEventPinColor));
+                markerOptions.title(event.getTitle());
+                markerOptions.position(eventLocation);
+                markerOptions.snippet("Topic: " + event.getTopic() +
+                        "\nIndustry: " + event.getIndustry() +
+                        "\n\nTime: " + event.getTime() +
+                        "\nDate: " + event.getDate());
 
-            Marker newMarker = mMap.addMarker(markerOptions);
-            newMarker.setTag(Constants.eventMarkerTag);
+                Marker newMarker = mMap.addMarker(markerOptions);
+                newMarker.setTag(Constants.eventMarkerTag);
 
-            // Store person data to a map to use in the mDialog and the CustomInfoWindow
-            mEventMarkerMap.put(newMarker.getId(), event);
-            mCustomInfoWindow.addMarkerImage(newMarker.getId(), event.getImageId());
+                // Store person data to a map to use in the mDialog and the CustomInfoWindow
+                mEventMarkerMap.put(newMarker.getId(), event);
+                mCustomInfoWindow.addMarkerImage(newMarker.getId(), event.getImageId());
+            }
         }
     }
 

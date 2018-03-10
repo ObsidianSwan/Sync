@@ -1,6 +1,13 @@
 package com.example.finalyearproject.hollyboothroyd.sync.Model;
 
+import android.annotation.SuppressLint;
+import android.content.Context;
+import android.location.Location;
+import android.location.LocationManager;
+
 import com.example.finalyearproject.hollyboothroyd.sync.Services.DatabaseManager;
+import com.example.finalyearproject.hollyboothroyd.sync.Services.LocationFilter;
+import com.google.android.gms.maps.model.LatLng;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -11,6 +18,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static android.content.Context.LOCATION_SERVICE;
+
 /**
  * Created by hollyboothroyd on 1/28/2018.
  */
@@ -18,6 +27,7 @@ import java.util.Map;
 public class UserEvents {
 
     private DatabaseManager mDatabaseManager;
+    private LocationManager mLocationManager;
 
     public static final List<Event> ALL_EVENTS = new ArrayList<Event>();
     public static final Map<String, Event> ALL_EVENTS_MAP = new HashMap<String, Event>();
@@ -33,9 +43,14 @@ public class UserEvents {
     private ValueEventListener mEventsHostingListener;
 
     // TODO: Convert into singleton
-    public UserEvents() {
+
+    // It is okay to suppress the missing permissions because UserEvents is only
+    // instantiated after permissions have been granted
+    @SuppressLint("MissingPermission")
+    public UserEvents(Context context) {
 
         mDatabaseManager = new DatabaseManager();
+        mLocationManager = (LocationManager) context.getSystemService(LOCATION_SERVICE);
 
         mAllEventsListener = mDatabaseManager.getAllEventsDatabaseReference().addValueEventListener(new ValueEventListener() {
             @Override
@@ -44,8 +59,15 @@ public class UserEvents {
                 ALL_EVENTS_MAP.clear();
                 for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
                     Event event = snapshot.getValue(Event.class);
-                    ALL_EVENTS.add(event);
-                    ALL_EVENTS_MAP.put(event.getUid(), event);
+                    if (event != null) {
+                        LatLng eventPosition = new LatLng(event.getLatitude(), event.getLongitude());
+                        Location userLastKnowLocation = mLocationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+                        LatLng userPosition = new LatLng(userLastKnowLocation.getLatitude(), userLastKnowLocation.getLongitude());
+                        if (LocationFilter.eventWithinRange(userPosition, eventPosition)) {
+                            ALL_EVENTS.add(event);
+                            ALL_EVENTS_MAP.put(event.getUid(), event);
+                        }
+                    }
                 }
             }
 
@@ -112,7 +134,7 @@ public class UserEvents {
         });
     }
 
-    public void clearListeners(){
+    public void clearListeners() {
         mDatabaseManager.getAllEventsDatabaseReference().removeEventListener(mAllEventsListener);
         mDatabaseManager.getEventsAttendingDatabaseReference().removeEventListener(mEventsAttendingListener);
         mDatabaseManager.getEventsHostingDatabaseReference().removeEventListener(mEventsHostingListener);
