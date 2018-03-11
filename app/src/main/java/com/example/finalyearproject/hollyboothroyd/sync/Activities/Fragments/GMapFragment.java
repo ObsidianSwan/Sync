@@ -26,6 +26,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -112,6 +113,13 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
     private Button mPopupButton;
     private TextView mConnectionPendingMessage;
 
+    private Button mFilterButton;
+    private String mPersonPositionFilter = "";
+    private String mPersonCompanyFilter = "";
+    private String mPersonIndustryFilter = "";
+    private String mEventTopicFilter = "";
+    private String mEventIndustryFilter = "";
+
     private float mPersonPinColor = Constants.personPinColorDefault;
     private float mEventPinColor = Constants.eventPinColorDefault;
     private int mLocationTimeUpdateInterval = Constants.locationTimeUpdateIntervalDefault;
@@ -121,7 +129,17 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.fragment_gmaps, container, false);
+        View view =  inflater.inflate(R.layout.fragment_gmaps, container, false);
+
+        mFilterButton = (Button) view.findViewById(R.id.filter_button);
+        mFilterButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                filterPopupCreation();
+            }
+        });
+
+        return view;
     }
 
     @Override
@@ -267,12 +285,8 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
             }
         });
 
-        LocalBroadcastManager.getInstance(getActivity()).registerReceiver(
-
-                mMessageReceiver, new IntentFilter("geofenceEnterTriggered"));
+        LocalBroadcastManager.getInstance(getActivity()).registerReceiver(mMessageReceiver, new IntentFilter("geofenceEnterTriggered"));
     }
-
-
 
     private BroadcastReceiver mMessageReceiver = new BroadcastReceiver() {
         @Override
@@ -282,8 +296,6 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
         }
 
     };
-
-
 
     private void requestLocationUpdates() {
         // Create location update request with the last known good value or default value.
@@ -470,26 +482,29 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
 
         String currentUserId = mAccountManager.getCurrentUser().getUid();
         for (Person person : mLocalPeopleList) {
-            MarkerOptions markerOptions = new MarkerOptions();
-            markerOptions.icon(BitmapDescriptorFactory.defaultMarker(mPersonPinColor));
-            markerOptions.title(person.getFirstName() + " " + person.getLastName());
-            if (person.getUserId().equals(currentUserId)) {
-                // Set current users pin to actual location and not the obfuscated location
-                Location lastKnownLocation = mLocationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-                markerOptions.position(new LatLng(lastKnownLocation.getLatitude(), lastKnownLocation.getLongitude()));
-            } else {
-                markerOptions.position(new LatLng(person.getLatitude(), person.getLongitude()));
+            if(meetsPeopleFilteringRequirements(person) || person.getUserId().equals(currentUserId)) {
+                MarkerOptions markerOptions = new MarkerOptions();
+                markerOptions.icon(BitmapDescriptorFactory.defaultMarker(mPersonPinColor));
+                markerOptions.title(person.getFirstName() + " " + person.getLastName());
+                if (person.getUserId().equals(currentUserId)) {
+                    // Set current users pin to actual location and not the obfuscated location
+                    Location lastKnownLocation = mLocationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+                    markerOptions.position(new LatLng(lastKnownLocation.getLatitude(), lastKnownLocation.getLongitude()));
+                } else {
+                    markerOptions.position(new LatLng(person.getLatitude(), person.getLongitude()));
+                }
+                markerOptions.snippet("Position: " + person.getPosition() +
+                        "\nCompany: " + person.getCompany());
+
+                Marker newMarker = mMap.addMarker(markerOptions);
+                newMarker.setTag(Constants.personMarkerTag);
+
+                // Store person data to a map to use in the mDialog and the CustomInfoWindow
+                // Save person markers in a map to be able to clear person markers individually or as a group separate from the events markers
+                mPersonMarkerMap.put(newMarker.getId(), person);
+                mPersonMarkerList.add(newMarker);
+                mCustomInfoWindow.addMarkerImage(newMarker.getId(), person.getImageId());
             }
-            markerOptions.snippet("Position: " + person.getPosition() +
-                    "\nCompany: " + person.getCompany());
-
-            Marker newMarker = mMap.addMarker(markerOptions);
-            newMarker.setTag(Constants.personMarkerTag);
-
-            // Store person data to a map to use in the mDialog and the CustomInfoWindow
-            mPersonMarkerMap.put(newMarker.getId(), person);
-            mPersonMarkerList.add(newMarker);
-            mCustomInfoWindow.addMarkerImage(newMarker.getId(), person.getImageId());
         }
     }
 
@@ -503,29 +518,84 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
         }
     }
 
+    private boolean meetsPeopleFilteringRequirements(Person person) {
+        boolean meetsFilteringRequirements = true;
+        // If there are no filtering requirements, then the person automatically meets the requirements
+        if(mPersonPositionFilter.equals("") && mPersonCompanyFilter.equals("") && mPersonIndustryFilter.equals("")){
+            meetsFilteringRequirements = true;
+        } // If the person position filter has been specified and the person matches that position, then the person meets the requirements
+        else if(!mPersonPositionFilter.equals("") && person.getPosition().toLowerCase().equals(mPersonPositionFilter)){
+
+        } // If the person company filter has been specified and the person matches that company, then the person meets the requirements
+        else if (!mPersonCompanyFilter.equals("") && person.getCompany().toLowerCase().equals(mPersonCompanyFilter)){
+            meetsFilteringRequirements = true;
+        }// If the person industry filter has been specified and the person matches that industry, then the person meets the requirements
+        else if (!mPersonIndustryFilter.equals("") && person.getIndustry().toLowerCase().equals(mPersonIndustryFilter)){
+            meetsFilteringRequirements = true;
+        } // If the person position, company, or industry filter has been specified, but the person does not match, then the person does not meet the requirements
+        else {
+            meetsFilteringRequirements = false;
+        }
+        return meetsFilteringRequirements;
+    }
+
     private void getEvents() {
+        clearEventMarkers();
+
         for (Event event : mLocalEventsList) {
             LatLng eventLocation = new LatLng(event.getLatitude(), event.getLongitude());
             if(LocationFilter.eventWithinRange(mUserLocation, eventLocation)
                     || UserEvents.EVENTS_HOSTING_MAP.containsKey(event.getUid())
                     || UserEvents.EVENTS_ATTENDING_MAP.containsKey(event.getUid())){
-                MarkerOptions markerOptions = new MarkerOptions();
-                markerOptions.icon(BitmapDescriptorFactory.defaultMarker(mEventPinColor));
-                markerOptions.title(event.getTitle());
-                markerOptions.position(eventLocation);
-                markerOptions.snippet("Topic: " + event.getTopic() +
-                        "\nIndustry: " + event.getIndustry() +
-                        "\n\nTime: " + event.getTime() +
-                        "\nDate: " + event.getDate());
+                if(meetsEventFilteringRequirements(event)) {
+                    MarkerOptions markerOptions = new MarkerOptions();
+                    markerOptions.icon(BitmapDescriptorFactory.defaultMarker(mEventPinColor));
+                    markerOptions.title(event.getTitle());
+                    markerOptions.position(eventLocation);
+                    markerOptions.snippet("Topic: " + event.getTopic() +
+                            "\nIndustry: " + event.getIndustry() +
+                            "\n\nTime: " + event.getTime() +
+                            "\nDate: " + event.getDate());
 
-                Marker newMarker = mMap.addMarker(markerOptions);
-                newMarker.setTag(Constants.eventMarkerTag);
+                    Marker newMarker = mMap.addMarker(markerOptions);
+                    newMarker.setTag(Constants.eventMarkerTag);
 
-                // Store person data to a map to use in the mDialog and the CustomInfoWindow
-                mEventMarkerMap.put(newMarker.getId(), event);
-                mCustomInfoWindow.addMarkerImage(newMarker.getId(), event.getImageId());
+                    // Store event data to a map to use in the mDialog and the CustomInfoWindow
+                    // Save event markers in a map to be able to clear event markers individually or as a group separate from the people markers
+                    mEventMarkerMap.put(newMarker.getId(), event);
+                    mEventMarkerList.add(newMarker);
+                    mCustomInfoWindow.addMarkerImage(newMarker.getId(), event.getImageId());
+                }
             }
         }
+    }
+
+    private void clearEventMarkers() {
+        if (mEventMarkerList != null && mEventMarkerMap != null) {
+            mEventMarkerMap.clear();
+            for (Marker marker : mEventMarkerList) {
+                marker.remove();
+            }
+            mEventMarkerList.clear();
+        }
+    }
+
+    private boolean meetsEventFilteringRequirements(Event event) {
+        boolean meetsFilteringRequirements = true;
+        // If there are no filtering requirements, then the event automatically meets the requirements
+        if(mEventTopicFilter.equals("") && mEventIndustryFilter.equals("")){
+            meetsFilteringRequirements = true;
+        } // If the event topic filter has been specified and the event matches that topic, then the event meets the requirements
+        else if(!mEventTopicFilter.equals("") && event.getTopic().toLowerCase().equals(mEventTopicFilter)){
+
+        } // If the event industry filter has been specified and the event matches that industry, then the event meets the requirements
+        else if (!mEventIndustryFilter.equals("") && event.getIndustry().toLowerCase().equals(mEventIndustryFilter)){
+            meetsFilteringRequirements = true;
+        } // If the event topic or industry filter has been specified, but the event does not match, then the event does not meet the requirements
+        else {
+            meetsFilteringRequirements = false;
+        }
+        return meetsFilteringRequirements;
     }
 
     @Override
@@ -643,8 +713,6 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
         mDialogBuilder.setView(view);
         mDialog = mDialogBuilder.create();
         mDialog.show();
-
-
     }
 
     private void attendEvent(final Event event) {
@@ -972,6 +1040,52 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
 
             }
         });
+    }
+
+    private void filterPopupCreation() {
+        View view = getActivity().getLayoutInflater().inflate(R.layout.filter_popup, null);
+        mDialogBuilder = new AlertDialog.Builder(getActivity());
+
+        Button dismissPopupButton = (Button) view.findViewById(R.id.dismiss_popup_button);
+        final EditText personPosition = (EditText) view.findViewById(R.id.filter_person_position_entry);
+        final EditText personCompany = (EditText) view.findViewById(R.id.filter_person_company_entry);
+        final EditText personIndustry = (EditText) view.findViewById(R.id.filter_person_industry_entry);
+        final EditText eventTopic = (EditText) view.findViewById(R.id.filter_event_topic_entry);
+        final EditText eventIndustry = (EditText) view.findViewById(R.id.filter_event_industry_entry);
+        Button filterButton = (Button) view.findViewById(R.id.filter_button);
+
+        filterButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mPersonPositionFilter = personPosition.getText().toString().toLowerCase().trim();
+                mPersonCompanyFilter = personCompany.getText().toString().toLowerCase().trim();
+                mPersonIndustryFilter = personIndustry.getText().toString().toLowerCase().trim();
+                mEventTopicFilter = eventTopic.getText().toString().toLowerCase().trim();
+                mEventIndustryFilter = eventIndustry.getText().toString().toLowerCase().trim();
+
+                if(mPersonPositionFilter.equals("") ||  mPersonCompanyFilter.equals("") || mPersonIndustryFilter.equals("")){
+                    getPeople();
+                }
+                if(mEventTopicFilter.equals("") ||  mEventIndustryFilter.equals("")){
+                    getEvents();
+                }
+
+                mDialog.dismiss();
+            }
+        });
+
+        dismissPopupButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mDialog.dismiss();
+            }
+        });
+
+        mDialogBuilder.setView(view);
+        mDialog = mDialogBuilder.create();
+        mDialog.show();
+
+
     }
 
     @Override

@@ -166,4 +166,9 @@
     <string name="notification_view_profile_button_text">View profile</string>
     <string name="notification_remove_button_text">Remove</string>
     <string name="delete_account_success">Account deleted</string>
+    <string name="filter_button">Filter</string>
+    <string name="filter_industry_text">Industry</string>
+    <string name="filter_topic_text">Topic</string>
+    <string name="filter_company_text">Company</string>
+    <string name="filter_position_text">Position</string>
 </resources>
