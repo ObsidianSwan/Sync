@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <Button
+        android:id="@+id/dismiss_popup_button"
+        android:layout_width="@dimen/dismiss_button_small"
+        android:layout_height="@dimen/dismiss_button_small"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentTop="true"
+        android:layout_margin="@dimen/popup_margin"
+        android:background="@android:drawable/ic_menu_close_clear_cancel" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/fragment_top_item_margin"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/filter_person_heading"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:text="By Person: "
+                android:textAppearance="@style/TextAppearance.AppCompat.Medium" />
+
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="@dimen/entry_side_margin"
+                android:layout_marginStart="@dimen/entry_side_margin"
+                android:layout_marginTop="@dimen/entry_top_margin">
+
+                <TextView
+                    android:id="@+id/filter_person_position_text"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentStart="true"
+                    android:layout_centerVertical="true"
+                    android:labelFor="@+id/filter_position_entry"
+                    android:text="@string/filter_position_text"
+                    android:textAppearance="@style/TextAppearance.AppCompat.Medium" />
+
+                <EditText
+                    android:id="@+id/filter_person_position_entry"
+                    android:layout_width="250dp"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentEnd="true"
+                    android:inputType="text" />
+
+            </RelativeLayout>
+
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="@dimen/entry_side_margin"
+                android:layout_marginStart="@dimen/entry_side_margin"
+                android:layout_marginTop="@dimen/entry_top_margin"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/filter_person_company_text"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentStart="true"
+                    android:layout_centerVertical="true"
+                    android:labelFor="@+id/filter_company_entry"
+                    android:text="@string/filter_company_text"
+                    android:textAppearance="@style/TextAppearance.AppCompat.Medium" />
+
+                <EditText
+                    android:id="@+id/filter_person_company_entry"
+                    android:layout_width="250dp"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentEnd="true"
+                    android:inputType="text" />
+
+            </RelativeLayout>
+
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="@dimen/entry_side_margin"
+                android:layout_marginStart="@dimen/entry_side_margin"
+                android:layout_marginTop="@dimen/entry_top_margin"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/filter_person_industry_text"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentStart="true"
+                    android:layout_centerVertical="true"
+                    android:labelFor="@+id/filter_industry_entry"
+                    android:text="@string/filter_industry_text"
+                    android:textAppearance="@style/TextAppearance.AppCompat.Medium" />
+
+                <EditText
+                    android:id="@+id/filter_person_industry_entry"
+                    android:layout_width="250dp"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentEnd="true"
+                    android:inputType="text" />
+
+            </RelativeLayout>
+
+            <TextView
+                android:id="@+id/filter_event_heading"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_marginTop="@dimen/entry_top_margin"
+                android:text="By Event: "
+                android:textAppearance="@style/TextAppearance.AppCompat.Medium" />
+
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="@dimen/entry_side_margin"
+                android:layout_marginStart="@dimen/entry_side_margin"
+                android:layout_marginTop="@dimen/entry_top_margin">
+
+                <TextView
+                    android:id="@+id/filter_event_topic_text"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentStart="true"
+                    android:layout_centerVertical="true"
+                    android:labelFor="@+id/filter_position_entry"
+                    android:text="@string/filter_topic_text"
+                    android:textAppearance="@style/TextAppearance.AppCompat.Medium" />
+
+                <EditText
+                    android:id="@+id/filter_event_topic_entry"
+                    android:layout_width="250dp"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentEnd="true"
+                    android:inputType="text" />
+
+            </RelativeLayout>
+
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="@dimen/entry_side_margin"
+                android:layout_marginStart="@dimen/entry_side_margin"
+                android:layout_marginTop="@dimen/entry_top_margin"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/filter_event_industry_text"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentStart="true"
+                    android:layout_centerVertical="true"
+                    android:labelFor="@+id/filter_company_entry"
+                    android:text="@string/filter_industry_text"
+                    android:textAppearance="@style/TextAppearance.AppCompat.Medium" />
+
+                <EditText
+                    android:id="@+id/filter_event_industry_entry"
+                    android:layout_width="250dp"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentEnd="true"
+                    android:inputType="text" />
+            </RelativeLayout>
+
+            <Button
+                android:id="@+id/filter_button"
+                android:layout_width="@dimen/button_width"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:text="@string/filter_button"
+                android:layout_margin="@dimen/button_margin" />
+        </LinearLayout>
+</RelativeLayout>
