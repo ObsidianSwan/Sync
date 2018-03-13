@@ -171,4 +171,10 @@
     <string name="filter_topic_text">Topic</string>
     <string name="filter_company_text">Company</string>
     <string name="filter_position_text">Position</string>
+
+    <string name="event_pin_setting_change_successful_text">Event pin color change successful</string>
+    <string name="person_pin_setting_change_successful">Person pin color change successful</string>
+    <string name="distance_refresh_setting_change">Distance refresh rate change successful</string>
+    <string name="time_refresh_setting_change_succesful">Time refresh rate successfully changed</string>
+    <string name="zoom_level_setting_change_successful">Zoom level changed successfully</string>
 </resources>

@@ -169,4 +169,12 @@
         android:layout_gravity="center"
         android:layout_margin="@dimen/button_margin"
         android:text="@string/delete_account_button" />
+
+    <Button
+        android:id="@+id/commit_settings_button"
+        android:layout_width="@dimen/button_width"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:layout_margin="@dimen/button_margin"
+        android:text="@string/commit_button" />
 </LinearLayout>
