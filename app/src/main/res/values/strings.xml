@@ -166,4 +166,9 @@
     <string name="notification_view_profile_button_text">View profile</string>
     <string name="notification_remove_button_text">Remove</string>
     <string name="delete_account_success">Account deleted</string>
+    <string name="event_pin_setting_change_successful_text">Event pin color change successful</string>
+    <string name="person_pin_setting_change_successful">Person pin color change successful</string>
+    <string name="distance_refresh_setting_change">Distance refresh rate change successful</string>
+    <string name="time_refresh_setting_change_succesful">Time refresh rate successfully changed</string>
+    <string name="zoom_level_setting_change_successful">Zoom level changed successfully</string>
 </resources>

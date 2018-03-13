@@ -34,7 +34,9 @@ import com.google.firebase.database.ValueEventListener;
 
 import java.util.HashMap;
 
-public class SettingsFragment extends Fragment implements AdapterView.OnItemSelectedListener {
+// implements AdapterView.OnItemSelectedListener
+
+public class SettingsFragment extends Fragment {
 
     private OnFragmentInteractionListener mListener;
 
@@ -49,6 +51,14 @@ public class SettingsFragment extends Fragment implements AdapterView.OnItemSele
     private Spinner mPersonPinColorSpinner;
     private Spinner mEventPinColorSpinner;
     private Button mDeleteAccountButton;
+    private Button mCommitChangesButton;
+
+
+    private int mZoomValue;
+    private int mTimeRefreshRateValue;
+    private int mDisRefreshRateValue;
+    private String mPersonPinColorValue;
+    private String mEventPinColorValue;
 
     // Needed to prevent the spinner from executing OnItemSelected method body
     private boolean mInitialPersonSpinnerEvent = true;
@@ -80,7 +90,6 @@ public class SettingsFragment extends Fragment implements AdapterView.OnItemSele
         mAccountManager = new AccountManager();
 
         // Populate pinColorMap
-        //TODO: Constants
         pinColorMap.put("Azure", BitmapDescriptorFactory.HUE_AZURE);
         pinColorMap.put("Blue", BitmapDescriptorFactory.HUE_BLUE);
         pinColorMap.put("Cyan", BitmapDescriptorFactory.HUE_CYAN);
@@ -108,6 +117,7 @@ public class SettingsFragment extends Fragment implements AdapterView.OnItemSele
         mPersonPinColorSpinner = (Spinner) view.findViewById(R.id.settings_user_color_spinner);
         mEventPinColorSpinner = (Spinner) view.findViewById(R.id.settings_event_color_spinner);
         mDeleteAccountButton = (Button) view.findViewById(R.id.delete_account_button);
+        mCommitChangesButton = (Button) view.findViewById(R.id.commit_settings_button);
 
 
         setUpZoomPicker();
@@ -119,31 +129,106 @@ public class SettingsFragment extends Fragment implements AdapterView.OnItemSele
         setupPersonPinColorSpinner(arrayAdapter);
         setupEventPinColorSpinner(arrayAdapter);
 
+        mCommitChangesButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                if (mZoomValue != mZoomPicker.getValue()) {
+                    mDatabaseManager.setUserSettings(Constants.mapZoomLevelName, mZoomPicker.getValue()).addOnCompleteListener(new OnCompleteListener<Void>() {
+                        @Override
+                        public void onComplete(@NonNull Task<Void> task) {
+                            if(task.isSuccessful()){
+                                Toast.makeText(getActivity(), R.string.zoom_level_setting_change_successful, Toast.LENGTH_SHORT).show();
+                            } else{
+                                Toast.makeText(getActivity(), R.string.setting_change_unsuccessful_text, Toast.LENGTH_SHORT).show();
+                                // TODO log
+                            }
+                        }
+                    });
+                }
+                if (mTimeRefreshRateValue != mTimeRefreshRatePicker.getValue()) {
+                    mDatabaseManager.setUserSettings(Constants.locationTimeUpdateIntervalName, mTimeRefreshRatePicker.getValue()).addOnCompleteListener(new OnCompleteListener<Void>() {
+                        @Override
+                        public void onComplete(@NonNull Task<Void> task) {
+                            if(task.isSuccessful()){
+                                Toast.makeText(getActivity(), R.string.time_refresh_setting_change_succesful, Toast.LENGTH_SHORT).show();
+                            } else{
+                                Toast.makeText(getActivity(), R.string.setting_change_unsuccessful_text, Toast.LENGTH_SHORT).show();
+                                // TODO log
+                            }
+                        }
+                    });
+                }
+                if (mDisRefreshRateValue != mDisRefreshRatePicker.getValue()) {
+                    mDatabaseManager.setUserSettings(Constants.locationDistanceUpdateIntervalName, mDisRefreshRatePicker.getValue()).addOnCompleteListener(new OnCompleteListener<Void>() {
+                        @Override
+                        public void onComplete(@NonNull Task<Void> task) {
+                            if(task.isSuccessful()){
+                                Toast.makeText(getActivity(), R.string.distance_refresh_setting_change, Toast.LENGTH_SHORT).show();
+                            } else{
+                                Toast.makeText(getActivity(), R.string.setting_change_unsuccessful_text, Toast.LENGTH_SHORT).show();
+                                // TODO log
+                            }
+                        }
+                    });
+                }
+                if (!mPersonPinColorValue.equals(mPersonPinColorSpinner.getSelectedItem().toString())) {
+                    float color = pinColorMap.get(mPersonPinColorSpinner.getSelectedItem().toString());
+                    mDatabaseManager.setUserSettings(Constants.personPinColorName, color).addOnCompleteListener(new OnCompleteListener<Void>() {
+                        @Override
+                        public void onComplete(@NonNull Task<Void> task) {
+                            if(task.isSuccessful()){
+                                Toast.makeText(getActivity(), R.string.person_pin_setting_change_successful, Toast.LENGTH_SHORT).show();
+                            } else{
+                                Toast.makeText(getActivity(), R.string.setting_change_unsuccessful_text, Toast.LENGTH_SHORT).show();
+                                // TODO log
+                            }
+                        }
+                    });
+                }
+                if (!mEventPinColorValue.equals(mEventPinColorSpinner.getSelectedItem().toString())) {
+                    float color = pinColorMap.get(mEventPinColorSpinner.getSelectedItem().toString());
+                    mDatabaseManager.setUserSettings(Constants.eventPinColorName, color).addOnCompleteListener(new OnCompleteListener<Void>() {
+                        @Override
+                        public void onComplete(@NonNull Task<Void> task) {
+                           if(task.isSuccessful()){
+                               Toast.makeText(getActivity(), R.string.event_pin_setting_change_successful_text, Toast.LENGTH_SHORT).show();
+                           } else{
+                               Toast.makeText(getActivity(), R.string.setting_change_unsuccessful_text, Toast.LENGTH_SHORT).show();
+                               // TODO log
+                           }
+                        }
+                    });
+                }
+            }
+        });
+
+
         mDeleteAccountButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(mDeleteAccountButton.getText().toString().equals(getString(R.string.delete_account_button))){
+                if (mDeleteAccountButton.getText().toString().equals(getString(R.string.delete_account_button))) {
                     mDeleteAccountButton.setText(R.string.verify_account_deletion_text_button);
-                } else if (mDeleteAccountButton.getText().toString().equals(getString(R.string.verify_account_deletion_text_button))){
+                } else if (mDeleteAccountButton.getText().toString().equals(getString(R.string.verify_account_deletion_text_button))) {
                     mDeleteAccountButton.setText(R.string.verify_account_deletion_text_two_button);
-                } else if (mDeleteAccountButton.getText().toString().equals(getString(R.string.verify_account_deletion_text_two_button))){
+                } else if (mDeleteAccountButton.getText().toString().equals(getString(R.string.verify_account_deletion_text_two_button))) {
                     // Stop attending events
-                    for(Event event : UserEvents.EVENTS_ATTENDING){
+                    for (Event event : UserEvents.EVENTS_ATTENDING) {
                         stopAttendingEvent(event.getUid());
                     }
                     // Delete events hosting
-                    for(Event event : UserEvents.EVENTS_HOSTING){
+                    for (Event event : UserEvents.EVENTS_HOSTING) {
                         deleteEvent(event.getUid());
                     }
                     // Delete connections
-                    for(Person connection : UserConnections.CONNECTION_ITEMS){
+                    for (Person connection : UserConnections.CONNECTION_ITEMS) {
                         deleteConnection(connection.getUserId());
                     }
                     // Delete account database
                     mDatabaseManager.deletePerson().addOnCompleteListener(new OnCompleteListener<Void>() {
                         @Override
                         public void onComplete(@NonNull Task<Void> task) {
-                            if(task.isSuccessful()){
+                            if (task.isSuccessful()) {
                                 // Delete account in Core Activity so the appropriate clean up can occur
                                 if (mListener != null) {
                                     mListener.onSettingsInteraction();
@@ -158,27 +243,27 @@ public class SettingsFragment extends Fragment implements AdapterView.OnItemSele
         return view;
     }
 
-    private void stopAttendingEvent(final String eventId){
+    private void stopAttendingEvent(final String eventId) {
         final String userId = mAccountManager.getCurrentUser().getUid();
         mDatabaseManager.deleteUserAttendingEvent(eventId).addOnCompleteListener(new OnCompleteListener<Void>() {
             @Override
             public void onComplete(@NonNull Task<Void> task) {
-                if(task.isSuccessful()){
+                if (task.isSuccessful()) {
                     mDatabaseManager.deleteEventAttending(eventId, userId);
                     // TODO check deletion happened
-                } else{
+                } else {
                     // TODO log
                 }
             }
         });
     }
 
-    private void deleteEvent(final String eventId){
+    private void deleteEvent(final String eventId) {
         // Delete attending references in user attending database
         mDatabaseManager.getUsersAttendingEvent(eventId).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                for(DataSnapshot snapshot : dataSnapshot.getChildren()){
+                for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
                     String attendeeId = snapshot.getKey();
                     mDatabaseManager.deleteEventAttending(eventId, attendeeId);
                     // TODO How to check if the deletions all happened successfully
@@ -187,7 +272,7 @@ public class SettingsFragment extends Fragment implements AdapterView.OnItemSele
                 mDatabaseManager.deleteEventHosting(eventId).addOnCompleteListener(new OnCompleteListener<Void>() {
                     @Override
                     public void onComplete(@NonNull Task<Void> task) {
-                        if(task.isSuccessful()){
+                        if (task.isSuccessful()) {
                             // Delete event in event database
                             mDatabaseManager.deleteEvent(eventId);
                             // TODO how to check if deletion happened successfully
@@ -197,6 +282,7 @@ public class SettingsFragment extends Fragment implements AdapterView.OnItemSele
                     }
                 });
             }
+
             @Override
             public void onCancelled(DatabaseError databaseError) {
 
@@ -204,7 +290,7 @@ public class SettingsFragment extends Fragment implements AdapterView.OnItemSele
         });
     }
 
-    private void deleteConnection(final String connectionId){
+    private void deleteConnection(final String connectionId) {
         // Get the connection database reference from the connectionId
         mDatabaseManager.getUserConnectionReference(connectionId).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
@@ -219,7 +305,7 @@ public class SettingsFragment extends Fragment implements AdapterView.OnItemSele
                             mDatabaseManager.deleteUserConnection(mAccountManager.getCurrentUser().getUid(), connectionId).addOnCompleteListener(new OnCompleteListener<Void>() {
                                 @Override
                                 public void onComplete(@NonNull Task<Void> task) {
-                                    if(task.isSuccessful()){
+                                    if (task.isSuccessful()) {
                                         // Remove the connection reference from the connection users database
                                         mDatabaseManager.deleteUserConnection(connectionId, mAccountManager.getCurrentUser().getUid());
                                         // TODO check success
@@ -234,6 +320,7 @@ public class SettingsFragment extends Fragment implements AdapterView.OnItemSele
                     }
                 });
             }
+
             @Override
             public void onCancelled(DatabaseError databaseError) {
 
@@ -249,11 +336,11 @@ public class SettingsFragment extends Fragment implements AdapterView.OnItemSele
         mDatabaseManager.getUserSettings(Constants.mapZoomLevelName).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                int value = 0;
-                if(dataSnapshot.getValue(Integer.class) != null){
-                    value = dataSnapshot.getValue(Integer.class);
+                mZoomValue = 0;
+                if (dataSnapshot.getValue(Integer.class) != null) {
+                    mZoomValue = dataSnapshot.getValue(Integer.class);
                 }
-                mZoomPicker.setValue(value);
+                mZoomPicker.setValue(mZoomValue);
             }
 
             @Override
@@ -262,7 +349,7 @@ public class SettingsFragment extends Fragment implements AdapterView.OnItemSele
             }
         });
 
-        mZoomPicker.setOnValueChangedListener(new NumberPicker.OnValueChangeListener() {
+/*        mZoomPicker.setOnValueChangedListener(new NumberPicker.OnValueChangeListener() {
             @Override
             public void onValueChange(NumberPicker picker, int oldVal, int newVal) {
                 mDatabaseManager.setUserSettings(Constants.mapZoomLevelName, newVal).addOnCompleteListener(new OnCompleteListener<Void>() {
@@ -277,7 +364,7 @@ public class SettingsFragment extends Fragment implements AdapterView.OnItemSele
                     }
                 });
             }
-        });
+        });*/
     }
 
     private void setUpTimeRefreshRatePicker() {
@@ -287,11 +374,11 @@ public class SettingsFragment extends Fragment implements AdapterView.OnItemSele
         mDatabaseManager.getUserSettings(Constants.locationTimeUpdateIntervalName).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                int value = 0;
-                if(dataSnapshot.getValue(Integer.class) != null){
-                    value = dataSnapshot.getValue(Integer.class);
+                mTimeRefreshRateValue = 0;
+                if (dataSnapshot.getValue(Integer.class) != null) {
+                    mTimeRefreshRateValue = dataSnapshot.getValue(Integer.class);
                 }
-                mTimeRefreshRatePicker.setValue(value);
+                mTimeRefreshRatePicker.setValue(mTimeRefreshRateValue);
             }
 
             @Override
@@ -300,7 +387,7 @@ public class SettingsFragment extends Fragment implements AdapterView.OnItemSele
             }
         });
 
-        mTimeRefreshRatePicker.setOnValueChangedListener(new NumberPicker.OnValueChangeListener() {
+/*        mTimeRefreshRatePicker.setOnValueChangedListener(new NumberPicker.OnValueChangeListener() {
             @Override
             public void onValueChange(NumberPicker picker, int oldVal, int newVal) {
                 mDatabaseManager.setUserSettings(Constants.locationTimeUpdateIntervalName, newVal).addOnCompleteListener(new OnCompleteListener<Void>() {
@@ -315,7 +402,7 @@ public class SettingsFragment extends Fragment implements AdapterView.OnItemSele
                     }
                 });
             }
-        });
+        });*/
     }
 
     private void setUpDisRefreshRatePicker() {
@@ -325,11 +412,11 @@ public class SettingsFragment extends Fragment implements AdapterView.OnItemSele
         mDatabaseManager.getUserSettings(Constants.locationDistanceUpdateIntervalName).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                int value = 0;
-                if(dataSnapshot.getValue(Integer.class) != null){
-                    value = dataSnapshot.getValue(Integer.class);
+                mDisRefreshRateValue = 0;
+                if (dataSnapshot.getValue(Integer.class) != null) {
+                    mDisRefreshRateValue = dataSnapshot.getValue(Integer.class);
                 }
-                mDisRefreshRatePicker.setValue(value);
+                mDisRefreshRatePicker.setValue(mDisRefreshRateValue);
             }
 
             @Override
@@ -338,7 +425,7 @@ public class SettingsFragment extends Fragment implements AdapterView.OnItemSele
             }
         });
 
-        mDisRefreshRatePicker.setOnValueChangedListener(new NumberPicker.OnValueChangeListener() {
+/*        mDisRefreshRatePicker.setOnValueChangedListener(new NumberPicker.OnValueChangeListener() {
             @Override
             public void onValueChange(NumberPicker picker, int oldVal, int newVal) {
                 mDatabaseManager.setUserSettings(Constants.locationDistanceUpdateIntervalName, newVal).addOnCompleteListener(new OnCompleteListener<Void>() {
@@ -353,7 +440,7 @@ public class SettingsFragment extends Fragment implements AdapterView.OnItemSele
                     }
                 });
             }
-        });
+        });*/
     }
 
     private void setupPersonPinColorSpinner(final ArrayAdapter arrayAdapter) {
@@ -362,11 +449,13 @@ public class SettingsFragment extends Fragment implements AdapterView.OnItemSele
         mDatabaseManager.getUserSettings(Constants.personPinColorName).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                int pinColor = dataSnapshot.getValue(Integer.class);
-                String key = Util.getMapKey(pinColorMap, pinColor);
-                if (key != null) {
-                    int position = arrayAdapter.getPosition(key);
-                    mPersonPinColorSpinner.setSelection(position, false);
+                if(dataSnapshot.getValue(Integer.class) != null) {
+                    int pinColor = dataSnapshot.getValue(Integer.class);
+                    mPersonPinColorValue = Util.getMapKey(pinColorMap, pinColor);
+                    if (mPersonPinColorValue != null) {
+                        int position = arrayAdapter.getPosition(mPersonPinColorValue);
+                        mPersonPinColorSpinner.setSelection(position, false);
+                    }
                 }
             }
 
@@ -375,7 +464,7 @@ public class SettingsFragment extends Fragment implements AdapterView.OnItemSele
                 // TODO:Log
             }
         });
-        mPersonPinColorSpinner.setOnItemSelectedListener(this);
+        //mPersonPinColorSpinner.setOnItemSelectedListener(this);
     }
 
     private void setupEventPinColorSpinner(final ArrayAdapter arrayAdapter) {
@@ -384,11 +473,13 @@ public class SettingsFragment extends Fragment implements AdapterView.OnItemSele
         mDatabaseManager.getUserSettings(Constants.eventPinColorName).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                int pinColor = dataSnapshot.getValue(Integer.class);
-                String key = Util.getMapKey(pinColorMap, pinColor);
-                if (key != null) {
-                    int position = arrayAdapter.getPosition(key);
-                    mEventPinColorSpinner.setSelection(position, false);
+                if(dataSnapshot.getValue(Integer.class) != null) {
+                    int pinColor = dataSnapshot.getValue(Integer.class);
+                    mEventPinColorValue = Util.getMapKey(pinColorMap, pinColor);
+                    if (mEventPinColorValue != null) {
+                        int position = arrayAdapter.getPosition(mEventPinColorValue);
+                        mEventPinColorSpinner.setSelection(position, false);
+                    }
                 }
             }
 
@@ -397,7 +488,7 @@ public class SettingsFragment extends Fragment implements AdapterView.OnItemSele
                 // TODO:Log
             }
         });
-        mEventPinColorSpinner.setOnItemSelectedListener(this);
+        //mEventPinColorSpinner.setOnItemSelectedListener(this);
     }
 
     @Override
@@ -417,7 +508,7 @@ public class SettingsFragment extends Fragment implements AdapterView.OnItemSele
         mListener = null;
     }
 
-    @Override
+   /* @Override
     public void onItemSelected(AdapterView<?> parent, View view, final int position, final long id) {
         Spinner spinner = (Spinner) parent;
         float color = pinColorMap.get(spinner.getItemAtPosition(position));
@@ -456,12 +547,12 @@ public class SettingsFragment extends Fragment implements AdapterView.OnItemSele
             }
             mInitialEventSpinnerEvent = false;
         }
-    }
+    }*/
 
-    @Override
+    /*@Override
     public void onNothingSelected(AdapterView<?> parent) {
 
-    }
+    }*/
 
     /**
      * This interface must be implemented by activities that contain this
