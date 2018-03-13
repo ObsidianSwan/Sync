@@ -1,5 +1,31 @@
 package com.example.finalyearproject.hollyboothroyd.sync.Utils;
 
+import android.app.Activity;
+import android.app.AlertDialog;
+import android.app.Dialog;
+import android.content.Context;
+import android.support.annotation.NonNull;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.widget.Button;
+import android.widget.ImageView;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import com.example.finalyearproject.hollyboothroyd.sync.Model.Event;
+import com.example.finalyearproject.hollyboothroyd.sync.Model.UserEvents;
+import com.example.finalyearproject.hollyboothroyd.sync.R;
+import com.example.finalyearproject.hollyboothroyd.sync.Services.AccountManager;
+import com.example.finalyearproject.hollyboothroyd.sync.Services.DatabaseManager;
+import com.google.android.gms.maps.model.Marker;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.ValueEventListener;
+import com.squareup.picasso.Picasso;
+
 import java.util.Date;
 import java.util.HashMap;
 import java.util.concurrent.TimeUnit;
@@ -9,6 +35,9 @@ import java.util.concurrent.TimeUnit;
  */
 
 public class Util {
+    //AccountManager mAccountManager = new AccountManager();
+    private static AlertDialog mDialog;
+
     public static String getMapKey(HashMap map, float value) {
         for (Object entry : map.keySet()) {
             if (map.get(entry).equals(value)) {
