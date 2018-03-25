@@ -300,6 +300,7 @@ public class CoreActivity extends AppCompatActivity
         mUserConnections.clearConnections();
         mUserConnections.clearListeners();
 
+        // TODO delete account bug
         mAccountManager.getCurrentUser().delete().addOnCompleteListener(new OnCompleteListener<Void>() {
             @Override
             public void onComplete(@NonNull Task<Void> task) {

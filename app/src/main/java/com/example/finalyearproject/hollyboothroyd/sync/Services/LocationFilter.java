@@ -21,11 +21,15 @@ public class LocationFilter {
         double random1 = random.nextDouble();
         double random2 = random.nextDouble();
 
-        double w = radiusInDegrees * Math.sqrt(random1);
-        double t = 2 * Math.PI * random2;
+        // Calculate a new random radius that is lower than the specified radius
+        double newRadius = radiusInDegrees * Math.sqrt(random1);
 
-        double x = w * Math.cos(t);
-        double y = w * Math.sin(t);
+        // Calculate a new random angle that is between 0 and 2pi radians
+        double newAngle = 2 * Math.PI * random2;
+
+        // Find the x and y points given the radius and angle
+        double x = newRadius * Math.cos(newAngle);
+        double y = newRadius * Math.sin(newAngle);
 
         // Adjust the x-coordinate for the shrinking of the east-west distances
         double adjustedX = x / Math.cos(Math.toRadians(originalLocation.latitude));
@@ -64,14 +68,18 @@ public class LocationFilter {
         double longTheta = Math.toRadians(originalLocation.longitude - secondaryLocation.longitude);
         double latTheta = Math.toRadians(originalLocation.latitude - secondaryLocation.latitude);
         double orgLatRad = Math.toRadians(originalLocation.latitude);
-        double obfLatRad = Math.toRadians(secondaryLocation.latitude);
+        double secLatRad = Math.toRadians(secondaryLocation.latitude);
 
-        double a = Math.sin(latTheta/2) * Math.sin(latTheta/2) +
-                Math.cos(orgLatRad) * Math.cos(obfLatRad) *
+        // Calculate the central angle
+        double angle = Math.sin(latTheta/2) * Math.sin(latTheta/2) +
+                Math.cos(orgLatRad) * Math.cos(secLatRad) *
                         Math.sin(longTheta/2) * Math.sin(longTheta/2);
-        double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-        float dist = (float) (Constants.earthRadiusMeters * c);
 
-        return dist;
+        // Begin conversion from the central angle degrees to distance meters
+        // by applying the inverse haversine
+        double c = 2 * Math.atan2(Math.sqrt(angle), Math.sqrt(1-angle));
+
+        // Return the float distance in meters between two points
+        return (float) (Constants.earthRadiusMeters * c);
     }
 }

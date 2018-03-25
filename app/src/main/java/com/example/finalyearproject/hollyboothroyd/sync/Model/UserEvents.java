@@ -4,9 +4,12 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.location.Location;
 import android.location.LocationManager;
+import android.widget.Toast;
 
+import com.example.finalyearproject.hollyboothroyd.sync.R;
 import com.example.finalyearproject.hollyboothroyd.sync.Services.DatabaseManager;
 import com.example.finalyearproject.hollyboothroyd.sync.Services.LocationFilter;
+import com.example.finalyearproject.hollyboothroyd.sync.Utils.Util;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -47,7 +50,7 @@ public class UserEvents {
     // It is okay to suppress the missing permissions because UserEvents is only
     // instantiated after permissions have been granted
     @SuppressLint("MissingPermission")
-    public UserEvents(Context context) {
+    public UserEvents(final Context context) {
 
         mDatabaseManager = new DatabaseManager();
         mLocationManager = (LocationManager) context.getSystemService(LOCATION_SERVICE);
@@ -61,11 +64,16 @@ public class UserEvents {
                     Event event = snapshot.getValue(Event.class);
                     if (event != null) {
                         LatLng eventPosition = new LatLng(event.getLatitude(), event.getLongitude());
-                        Location userLastKnowLocation = mLocationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-                        LatLng userPosition = new LatLng(userLastKnowLocation.getLatitude(), userLastKnowLocation.getLongitude());
-                        if (LocationFilter.eventWithinRange(userPosition, eventPosition)) {
-                            ALL_EVENTS.add(event);
-                            ALL_EVENTS_MAP.put(event.getUid(), event);
+                        Location userLastKnowLocation = Util.getLastKnownLocation(mLocationManager);
+                        // If the users last location can be found, populate the map with local events
+                        if(userLastKnowLocation != null) {
+                            LatLng userPosition = new LatLng(userLastKnowLocation.getLatitude(), userLastKnowLocation.getLongitude());
+                            if (LocationFilter.eventWithinRange(userPosition, eventPosition)) {
+                                ALL_EVENTS.add(event);
+                                ALL_EVENTS_MAP.put(event.getUid(), event);
+                            }
+                        } else {
+                            Toast.makeText(context, R.string.could_not_find_location, Toast.LENGTH_SHORT).show();
                         }
                     }
                 }

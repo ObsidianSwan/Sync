@@ -7,7 +7,6 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.location.Location;
 import android.location.LocationListener;
@@ -16,9 +15,7 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.NavigationView;
-import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
-import android.support.v4.content.ContextCompat;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -46,6 +43,7 @@ import com.example.finalyearproject.hollyboothroyd.sync.Services.LocationFilter;
 import com.example.finalyearproject.hollyboothroyd.sync.UI.CustomInfoWindow;
 import com.example.finalyearproject.hollyboothroyd.sync.Utils.Constants;
 import com.example.finalyearproject.hollyboothroyd.sync.Utils.NotificationType;
+import com.example.finalyearproject.hollyboothroyd.sync.Utils.Util;
 import com.google.android.gms.location.Geofence;
 import com.google.android.gms.location.GeofencingClient;
 import com.google.android.gms.location.GeofencingRequest;
@@ -93,16 +91,18 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
 
     private LatLng mUserLocation;
 
-    private static GeofencingClient mGeofencingClient;
+    private GeofencingClient mGeofencingClient;
     private List<Geofence> mGeofenceList;
     private static PendingIntent mGeofencePendingIntent;
     private Circle mGeofenceCircle;
 
+    private HashMap<String, Person> mPeopleMap;
     private List<Person> mLocalPeopleList;
+    private HashMap<String, Person> mLocalPeopleMap;
     private List<Marker> mPersonMarkerList;
     private HashMap<String, Person> mPersonMarkerMap;
 
-    private List<Event> mLocalEventsList;
+    private List<Event> mEventsList;
     private List<Marker> mEventMarkerList;
     private HashMap<String, Event> mEventMarkerMap;
 
@@ -129,25 +129,7 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, Bundle savedInstanceState) {
-        View view =  inflater.inflate(R.layout.fragment_gmaps, container, false);
-
-        mFilterButton = (Button) view.findViewById(R.id.filter_button);
-        mFilterButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                filterPopupCreation();
-            }
-        });
-
-        return view;
-    }
-
-    @Override
-    public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
-        super.onViewCreated(view, savedInstanceState);
-
-        SupportMapFragment mapFragment = (SupportMapFragment) getChildFragmentManager().findFragmentById(R.id.map);
-        mapFragment.getMapAsync(this);
+        View view = inflater.inflate(R.layout.fragment_gmaps, container, false);
 
         mDatabaseManager = new DatabaseManager();
         mAccountManager = new AccountManager();
@@ -155,11 +137,18 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
         mGeofencingClient = LocationServices.getGeofencingClient(getActivity());
         mGeofenceList = new ArrayList<>();
 
+        // All users
+        mPeopleMap = new HashMap<>();
+
+        // Users within the local area
+        mLocalPeopleMap = new HashMap<>();
         mLocalPeopleList = new ArrayList<>();
+
+        // Markers of the local users 
         mPersonMarkerList = new ArrayList<>();
         mPersonMarkerMap = new HashMap<>();
 
-        mLocalEventsList = new ArrayList<>();
+        mEventsList = new ArrayList<>();
         mEventMarkerList = new ArrayList<>();
         mEventMarkerMap = new HashMap<>();
 
@@ -194,19 +183,24 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
 
             }
         });
+
+        mFilterButton = (Button) view.findViewById(R.id.filter_button);
+        mFilterButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                filterPopupCreation();
+            }
+        });
+
+        return view;
     }
 
     @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
-                                           @NonNull int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+    public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
 
-        if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-            if (ContextCompat.checkSelfPermission(getActivity(), android.Manifest.permission.ACCESS_FINE_LOCATION)
-                    == PackageManager.PERMISSION_GRANTED) {
-                requestLocationUpdates();
-            }
-        }
+        SupportMapFragment mapFragment = (SupportMapFragment) getChildFragmentManager().findFragmentById(R.id.map);
+        mapFragment.getMapAsync(this);
     }
 
     @Override
@@ -228,36 +222,36 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
             }
 
             @Override
-            public void onStatusChanged(String provider, int status, Bundle extras) { }
+            public void onStatusChanged(String provider, int status, Bundle extras) {
+            }
 
             @Override
-            public void onProviderEnabled(String provider) { }
+            public void onProviderEnabled(String provider) {
+            }
 
             @Override
-            public void onProviderDisabled(String provider) { }
+            public void onProviderDisabled(String provider) {
+            }
         };
-
-        if (ActivityCompat.checkSelfPermission(getActivity(), android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(getActivity(), android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            // Request Location permissions
-            ActivityCompat.requestPermissions(getActivity(), new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION, android.Manifest.permission.ACCESS_COARSE_LOCATION}, 2);
-
-            setUserLocation();
-        } else {
-            // Location permission previously granted
-            requestLocationUpdates();
-            setUserLocation();
-        }
 
         DatabaseReference peopleDatabaseReference = mDatabaseManager.getPeopleDatabaseReference();
         peopleDatabaseReference.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
+                mPeopleMap.clear();
+                mLocalPeopleList.clear();
+                mLocalPeopleMap.clear();
+                removeGeofences();
                 for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
                     Person person = snapshot.getValue(Person.class);
-                    //TODO: Check this updates if someone changes their photo. And removes people when they delete account
-                    mLocalPeopleList.add(person);
+                    if (person != null && !mPeopleMap.containsKey(person.getUserId())) {
+                        // Create a geofence around the person, so if the user enters the persons
+                        // geofence, the system is notified to put the person on the map
+                        setUpGeofence(new LatLng(person.getLatitude(), person.getLongitude()), person.getUserId());
+                        mPeopleMap.put(person.getUserId(), person);
+                    }
                 }
-                getPeople();
+
             }
 
             @Override
@@ -266,15 +260,21 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
             }
         });
 
-        DatabaseReference eventDatabaseReference = mDatabaseManager.getAllEventsDatabaseReference();
+        // Location permission previously granted
+        requestLocationUpdates();
+        setUserLocation();
+
         //TODO: Clear listeners
+
+        DatabaseReference eventDatabaseReference = mDatabaseManager.getAllEventsDatabaseReference();
         eventDatabaseReference.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
-                    Event event = snapshot.getValue(Event.class);
-                    //TODO: Check this updates if someone changes their photo. And removes people when they delete account
-                    mLocalEventsList.add(event);
+                    if(snapshot != null) {
+                        Event event = snapshot.getValue(Event.class);
+                        mEventsList.add(event);
+                    }
                 }
                 getEvents();
             }
@@ -293,6 +293,13 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
         public void onReceive(Context context, Intent intent) {
             String userId = intent.getStringExtra("userId");
 
+            // TODO bug. Users already on the map will not have their position updated.
+            if (mPeopleMap.containsKey(userId) && !mLocalPeopleMap.containsKey(userId)) {
+                Person localPerson = mPeopleMap.get(userId);
+                mLocalPeopleList.add(localPerson);
+                mLocalPeopleMap.put(userId, localPerson);
+            }
+            getPeople();
         }
 
     };
@@ -348,7 +355,7 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
         GeofencingRequest.Builder builder = new GeofencingRequest.Builder();
         // Set trigger type to INITIAL_TRIGGER_DWELL to reduce 'alert spam' if users briefly enter or
         // exit the geofence
-        builder.setInitialTrigger(GeofencingRequest.INITIAL_TRIGGER_DWELL);
+        builder.setInitialTrigger(GeofencingRequest.INITIAL_TRIGGER_ENTER);
         builder.addGeofences(mGeofenceList);
         return builder.build();
     }
@@ -370,9 +377,9 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
     // Update user location on the map
     @SuppressLint("MissingPermission")
     private void setUserLocation() {
-        Location lastKnownLocation = mLocationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+        Location lastKnownLocation = Util.getLastKnownLocation(mLocationManager);
         if (lastKnownLocation == null) {
-            Toast.makeText(getActivity(), R.string.could_not_find_location, Toast.LENGTH_LONG).show();
+            Toast.makeText(getActivity(), R.string.could_not_find_location, Toast.LENGTH_SHORT).show();
         } else {
             updateUserLocation(lastKnownLocation.getLatitude(), lastKnownLocation.getLongitude(), true);
         }
@@ -385,34 +392,49 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
         // Send obfuscated location to the database for other users to see
         mDatabaseManager.updateCurrentUserLocation(obfuscatedLocation);
 
-        // Use actual location for geofence and zoom location
-        setUpGeofence(mUserLocation);
-        mDatabaseManager.getUserSettings(Constants.mapZoomLevelName).addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                if (dataSnapshot.getValue(Integer.class) != null) {
-                    mMapZoomLevelName = dataSnapshot.getValue(Integer.class);
-                }
-                if (animateMap) {
+        // Remove any existing geofence circle indicators
+        if (mGeofenceCircle != null) {
+            mGeofenceCircle.remove();
+        }
+
+        // Insert geofence circle
+        CircleOptions circleOptions = new CircleOptions()
+                .center(mUserLocation)
+                .radius(Constants.geofenceRadiusDefault)
+                .fillColor(Constants.geofenceCircleColor)
+                .strokeColor(Color.GRAY);
+        mGeofenceCircle = mMap.addCircle(circleOptions);
+
+        if (animateMap) {
+            mDatabaseManager.getUserSettings(Constants.mapZoomLevelName).addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(DataSnapshot dataSnapshot) {
+                    if (dataSnapshot.getValue(Integer.class) != null) {
+                        mMapZoomLevelName = dataSnapshot.getValue(Integer.class);
+                    }
+/*                if (mPeopleMap.containsKey(mAccountManager.getCurrentUser().getUid())) {
+                    createPersonMarker(mPeopleMap.get(mAccountManager.getCurrentUser().getUid()));
+                } else {
+                    int i = 0;
+                    i++;
+                }*/
+
                     mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(mUserLocation, mMapZoomLevelName));
                 }
-            }
 
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-                //TODO: Log?
-            }
-        });
+                @Override
+                public void onCancelled(DatabaseError databaseError) {
+                    //TODO: Log?
+                }
+            });
+        }
     }
 
     @SuppressLint("MissingPermission")
-    private void setUpGeofence(LatLng userLocation) {
-        // Remove any existing geofences
-        removeGeofences();
-
+    private void setUpGeofence(LatLng userLocation, String userId) {
         // Create new geofence for the current users location
         mGeofenceList.add(new Geofence.Builder()
-                .setRequestId(mAccountManager.getCurrentUser().getUid())
+                .setRequestId(userId)
                 .setCircularRegion(
                         userLocation.latitude,
                         userLocation.longitude,
@@ -424,35 +446,30 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
                 .build());
 
         // Add the geofence to the client
-        mGeofencingClient.addGeofences(getGeofencingRequest(), getGeofencePendingIntent())
-                .addOnSuccessListener(getActivity(), new OnSuccessListener<Void>() {
-                    @Override
-                    public void onSuccess(Void aVoid) {
-                        // Geofences added
-                        // TODO:Log
-                    }
-                })
-                .addOnFailureListener(getActivity(), new OnFailureListener() {
-                    @Override
-                    public void onFailure(@NonNull Exception e) {
-                        // Failed to add geofences
-                        // TODO:log
-                    }
-                });
-
-        CircleOptions circleOptions = new CircleOptions()
-                .center(new LatLng(userLocation.latitude, userLocation.longitude))
-                .radius(Constants.geofenceRadiusDefault)
-                .fillColor(Constants.geofenceCircleColor)
-                .strokeColor(Color.GRAY);
-        mGeofenceCircle = mMap.addCircle(circleOptions);
+        if (getActivity() != null) {
+            mGeofencingClient.addGeofences(getGeofencingRequest(), getGeofencePendingIntent())
+                    .addOnSuccessListener(getActivity(), new OnSuccessListener<Void>() {
+                        @Override
+                        public void onSuccess(Void aVoid) {
+                            // Geofences added
+                            // TODO:Log
+                        }
+                    })
+                    .addOnFailureListener(getActivity(), new OnFailureListener() {
+                        @Override
+                        public void onFailure(@NonNull Exception e) {
+                            // Failed to add geofences
+                            // TODO:log
+                        }
+                    });
+        }
     }
 
     //TODO !!!! Clean up when the user logs out
     private void removeGeofences() {
         if (mGeofenceList != null) {
             mGeofenceList.clear();
-            if (mGeofencePendingIntent != null) {
+            if (mGeofencePendingIntent != null && mGeofencingClient != null && getActivity() != null) {
                 mGeofencingClient.removeGeofences(mGeofencePendingIntent)
                         .addOnSuccessListener(getActivity(), new OnSuccessListener<Void>() {
                             @Override
@@ -470,47 +487,51 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
                         });
             }
         }
-        if (mGeofenceCircle != null) {
-            mGeofenceCircle.remove();
-        }
     }
 
-    @SuppressLint("MissingPermission")
     private void getPeople() {
-        //TODO: Replace with local users
+        // Clear the map
         clearPeopleMarkers();
 
-        String currentUserId = mAccountManager.getCurrentUser().getUid();
+        // Populate the map with local people who meet the filtering requirements
         for (Person person : mLocalPeopleList) {
-            if(meetsPeopleFilteringRequirements(person) || person.getUserId().equals(currentUserId)) {
-                MarkerOptions markerOptions = new MarkerOptions();
-                markerOptions.icon(BitmapDescriptorFactory.defaultMarker(mPersonPinColor));
-                markerOptions.title(person.getFirstName() + " " + person.getLastName());
-                if (person.getUserId().equals(currentUserId)) {
-                    // Set current users pin to actual location and not the obfuscated location
-                    Location lastKnownLocation = mLocationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-                    markerOptions.position(new LatLng(lastKnownLocation.getLatitude(), lastKnownLocation.getLongitude()));
-                } else {
-                    markerOptions.position(new LatLng(person.getLatitude(), person.getLongitude()));
-                }
-                markerOptions.snippet("Position: " + person.getPosition() +
-                        "\nCompany: " + person.getCompany());
-
-                Marker newMarker = mMap.addMarker(markerOptions);
-                newMarker.setTag(Constants.personMarkerTag);
-
-                // Store person data to a map to use in the mDialog and the CustomInfoWindow
-                // Save person markers in a map to be able to clear person markers individually or as a group separate from the events markers
-                mPersonMarkerMap.put(newMarker.getId(), person);
-                mPersonMarkerList.add(newMarker);
-                mCustomInfoWindow.addMarkerImage(newMarker.getId(), person.getImageId());
+            if (meetsPeopleFilteringRequirements(person)) {
+                createPersonMarker(person);
             }
         }
     }
 
+    @SuppressLint("MissingPermission")
+    private void createPersonMarker(Person person) {
+        String currentUserId = mAccountManager.getCurrentUser().getUid();
+        MarkerOptions markerOptions = new MarkerOptions();
+        markerOptions.icon(BitmapDescriptorFactory.defaultMarker(mPersonPinColor));
+        markerOptions.title(person.getFirstName() + " " + person.getLastName());
+        if (person.getUserId().equals(currentUserId)) {
+            // Set current users pin to actual location and not the obfuscated location
+            Location lastKnownLocation = Util.getLastKnownLocation(mLocationManager);
+            markerOptions.position(new LatLng(lastKnownLocation.getLatitude(), lastKnownLocation.getLongitude()));
+        } else {
+            markerOptions.position(new LatLng(person.getLatitude(), person.getLongitude()));
+        }
+        markerOptions.snippet("Position: " + person.getPosition() +
+                "\nCompany: " + person.getCompany());
+
+        Marker newMarker = mMap.addMarker(markerOptions);
+        newMarker.setTag(Constants.personMarkerTag);
+
+        // Store person data to a map to use in the mDialog and the CustomInfoWindow
+        // Save person markers in a map to be able to clear person markers individually or as a group separate from the events markers
+        mPersonMarkerMap.put(newMarker.getId(), person);
+        mPersonMarkerList.add(newMarker);
+        mCustomInfoWindow.addMarkerImage(newMarker.getId(), person.getImageId());
+    }
+
     private void clearPeopleMarkers() {
-        if (mPersonMarkerList != null && mPersonMarkerMap != null) {
+        if (mPersonMarkerMap != null) {
             mPersonMarkerMap.clear();
+        }
+        if (mPersonMarkerList != null) {
             for (Marker marker : mPersonMarkerList) {
                 marker.remove();
             }
@@ -521,16 +542,16 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
     private boolean meetsPeopleFilteringRequirements(Person person) {
         boolean meetsFilteringRequirements = true;
         // If there are no filtering requirements, then the person automatically meets the requirements
-        if(mPersonPositionFilter.equals("") && mPersonCompanyFilter.equals("") && mPersonIndustryFilter.equals("")){
+        if (mPersonPositionFilter.equals("") && mPersonCompanyFilter.equals("") && mPersonIndustryFilter.equals("")) {
             meetsFilteringRequirements = true;
         } // If the person position filter has been specified and the person matches that position, then the person meets the requirements
-        else if(!mPersonPositionFilter.equals("") && person.getPosition().toLowerCase().equals(mPersonPositionFilter)){
+        else if (!mPersonPositionFilter.equals("") && person.getPosition().toLowerCase().equals(mPersonPositionFilter)) {
 
         } // If the person company filter has been specified and the person matches that company, then the person meets the requirements
-        else if (!mPersonCompanyFilter.equals("") && person.getCompany().toLowerCase().equals(mPersonCompanyFilter)){
+        else if (!mPersonCompanyFilter.equals("") && person.getCompany().toLowerCase().equals(mPersonCompanyFilter)) {
             meetsFilteringRequirements = true;
         }// If the person industry filter has been specified and the person matches that industry, then the person meets the requirements
-        else if (!mPersonIndustryFilter.equals("") && person.getIndustry().toLowerCase().equals(mPersonIndustryFilter)){
+        else if (!mPersonIndustryFilter.equals("") && person.getIndustry().toLowerCase().equals(mPersonIndustryFilter)) {
             meetsFilteringRequirements = true;
         } // If the person position, company, or industry filter has been specified, but the person does not match, then the person does not meet the requirements
         else {
@@ -539,15 +560,24 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
         return meetsFilteringRequirements;
     }
 
+    // TODO: Call this when the current users location changes.
+
     private void getEvents() {
         clearEventMarkers();
 
-        for (Event event : mLocalEventsList) {
+        for (Event event : mEventsList) {
             LatLng eventLocation = new LatLng(event.getLatitude(), event.getLongitude());
-            if(LocationFilter.eventWithinRange(mUserLocation, eventLocation)
+
+            // Check the event is located within the local area
+            // or always show the event if the user is hosting or attending the event regardless of area
+            if (LocationFilter.eventWithinRange(mUserLocation, eventLocation)
                     || UserEvents.EVENTS_HOSTING_MAP.containsKey(event.getUid())
-                    || UserEvents.EVENTS_ATTENDING_MAP.containsKey(event.getUid())){
-                if(meetsEventFilteringRequirements(event)) {
+                    || UserEvents.EVENTS_ATTENDING_MAP.containsKey(event.getUid())) {
+
+                // Check the event abides by the filtering rules established by the user
+                if (meetsEventFilteringRequirements(event)) {
+
+                    // Set up the marker options
                     MarkerOptions markerOptions = new MarkerOptions();
                     markerOptions.icon(BitmapDescriptorFactory.defaultMarker(mEventPinColor));
                     markerOptions.title(event.getTitle());
@@ -557,11 +587,13 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
                             "\n\nTime: " + event.getTime() +
                             "\nDate: " + event.getDate());
 
+                    // Add the marker to the map and set it's tag to indicate it is an event marker
                     Marker newMarker = mMap.addMarker(markerOptions);
                     newMarker.setTag(Constants.eventMarkerTag);
 
                     // Store event data to a map to use in the mDialog and the CustomInfoWindow
-                    // Save event markers in a map to be able to clear event markers individually or as a group separate from the people markers
+                    // Save event markers in a map to be able to clear event markers individually
+                    // or as a group separate from the people markers
                     mEventMarkerMap.put(newMarker.getId(), event);
                     mEventMarkerList.add(newMarker);
                     mCustomInfoWindow.addMarkerImage(newMarker.getId(), event.getImageId());
@@ -583,13 +615,13 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
     private boolean meetsEventFilteringRequirements(Event event) {
         boolean meetsFilteringRequirements = true;
         // If there are no filtering requirements, then the event automatically meets the requirements
-        if(mEventTopicFilter.equals("") && mEventIndustryFilter.equals("")){
+        if (mEventTopicFilter.equals("") && mEventIndustryFilter.equals("")) {
             meetsFilteringRequirements = true;
         } // If the event topic filter has been specified and the event matches that topic, then the event meets the requirements
-        else if(!mEventTopicFilter.equals("") && event.getTopic().toLowerCase().equals(mEventTopicFilter)){
+        else if (!mEventTopicFilter.equals("") && event.getTopic().toLowerCase().equals(mEventTopicFilter)) {
 
         } // If the event industry filter has been specified and the event matches that industry, then the event meets the requirements
-        else if (!mEventIndustryFilter.equals("") && event.getIndustry().toLowerCase().equals(mEventIndustryFilter)){
+        else if (!mEventIndustryFilter.equals("") && event.getIndustry().toLowerCase().equals(mEventIndustryFilter)) {
             meetsFilteringRequirements = true;
         } // If the event topic or industry filter has been specified, but the event does not match, then the event does not meet the requirements
         else {
@@ -1063,10 +1095,10 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
                 mEventTopicFilter = eventTopic.getText().toString().toLowerCase().trim();
                 mEventIndustryFilter = eventIndustry.getText().toString().toLowerCase().trim();
 
-                if(mPersonPositionFilter.equals("") ||  mPersonCompanyFilter.equals("") || mPersonIndustryFilter.equals("")){
+                if (mPersonPositionFilter.equals("") || mPersonCompanyFilter.equals("") || mPersonIndustryFilter.equals("")) {
                     getPeople();
                 }
-                if(mEventTopicFilter.equals("") ||  mEventIndustryFilter.equals("")){
+                if (mEventTopicFilter.equals("") || mEventIndustryFilter.equals("")) {
                     getEvents();
                 }
 
