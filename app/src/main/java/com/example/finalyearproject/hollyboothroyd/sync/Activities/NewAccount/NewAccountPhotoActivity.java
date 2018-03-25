@@ -59,6 +59,8 @@ public class NewAccountPhotoActivity extends AppCompatActivity {
         put(Constants.locationDistanceUpdateIntervalName, Constants.locationDistanceUpdateIntervalDefault);
         put(Constants.locationTimeUpdateIntervalName, Constants.locationTimeUpdateIntervalDefault);
         put(Constants.mapZoomLevelName, Constants.mapZoomLevelDefault);
+        put(Constants.searchRadiusName, Constants.obfuscationRadiusDefault);
+        put(Constants.privacyIntensityName, Constants.privacyIntensityDefault);
     }};
 
     @Override

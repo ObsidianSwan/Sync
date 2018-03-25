@@ -102,7 +102,6 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
     private List<Marker> mPersonMarkerList;
     private HashMap<String, Person> mPersonMarkerMap;
 
-    private List<Event> mEventsList;
     private List<Marker> mEventMarkerList;
     private HashMap<String, Event> mEventMarkerMap;
 
@@ -125,6 +124,8 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
     private int mLocationTimeUpdateInterval = Constants.locationTimeUpdateIntervalDefault;
     private int mLocationDistanceUpdateIntervalName = Constants.locationDistanceUpdateIntervalDefault;
     private int mMapZoomLevelName = Constants.mapZoomLevelDefault;
+    private int mSearchRadius = Constants.geofenceRadiusDefault;
+    private int mPrivacyIntensity = Constants.privacyIntensityDefault;
 
     @Nullable
     @Override
@@ -148,7 +149,6 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
         mPersonMarkerList = new ArrayList<>();
         mPersonMarkerMap = new HashMap<>();
 
-        mEventsList = new ArrayList<>();
         mEventMarkerList = new ArrayList<>();
         mEventMarkerMap = new HashMap<>();
 
@@ -176,6 +176,38 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
                     value = dataSnapshot.getValue(Float.class);
                 }
                 mEventPinColor = value;
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
+
+        mDatabaseManager.getUserSettings(Constants.privacyIntensityName).addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                int value = Constants.privacyIntensityDefault;
+                if (dataSnapshot.getValue(Integer.class) != null) {
+                    value = dataSnapshot.getValue(Integer.class);
+                }
+                mPrivacyIntensity = value;
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
+
+        mDatabaseManager.getUserSettings(Constants.searchRadiusName).addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                int value = Constants.geofenceRadiusDefault;
+                if (dataSnapshot.getValue(Integer.class) != null) {
+                    value = dataSnapshot.getValue(Integer.class);
+                }
+                mSearchRadius = value;
             }
 
             @Override
@@ -265,25 +297,6 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
         setUserLocation();
 
         //TODO: Clear listeners
-
-        DatabaseReference eventDatabaseReference = mDatabaseManager.getAllEventsDatabaseReference();
-        eventDatabaseReference.addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
-                    if(snapshot != null) {
-                        Event event = snapshot.getValue(Event.class);
-                        mEventsList.add(event);
-                    }
-                }
-                getEvents();
-            }
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-                // TODO LOG
-            }
-        });
 
         LocalBroadcastManager.getInstance(getActivity()).registerReceiver(mMessageReceiver, new IntentFilter("geofenceEnterTriggered"));
     }
@@ -387,7 +400,24 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
 
     private void updateUserLocation(double latitude, double longitude, final boolean animateMap) {
         mUserLocation = new LatLng(latitude, longitude);
-        final LatLng obfuscatedLocation = LocationFilter.nRandObfuscation(mUserLocation, Constants.obfuscationRadiusDefault);
+        final LatLng obfuscatedLocation;
+        switch (mPrivacyIntensity) {
+            case (0):  // None
+                obfuscatedLocation = mUserLocation;
+                break;
+            case (1):  // Basic
+                obfuscatedLocation = LocationFilter.randObfuscation(mUserLocation, mSearchRadius);
+                break;
+            case (2):  // Intermediate
+                obfuscatedLocation = LocationFilter.nRandObfuscation(mUserLocation, mSearchRadius);
+                break;
+            case (3):  // Advanced
+                obfuscatedLocation = LocationFilter.thetaRandObfuscation(mUserLocation, mSearchRadius);
+                break;
+            default:  // Default to intermediate
+                obfuscatedLocation = LocationFilter.nRandObfuscation(mUserLocation, mSearchRadius);
+                break;
+        }
 
         // Send obfuscated location to the database for other users to see
         mDatabaseManager.updateCurrentUserLocation(obfuscatedLocation);
@@ -400,7 +430,7 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
         // Insert geofence circle
         CircleOptions circleOptions = new CircleOptions()
                 .center(mUserLocation)
-                .radius(Constants.geofenceRadiusDefault)
+                .radius(mSearchRadius)
                 .fillColor(Constants.geofenceCircleColor)
                 .strokeColor(Color.GRAY);
         mGeofenceCircle = mMap.addCircle(circleOptions);
@@ -412,12 +442,6 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
                     if (dataSnapshot.getValue(Integer.class) != null) {
                         mMapZoomLevelName = dataSnapshot.getValue(Integer.class);
                     }
-/*                if (mPeopleMap.containsKey(mAccountManager.getCurrentUser().getUid())) {
-                    createPersonMarker(mPeopleMap.get(mAccountManager.getCurrentUser().getUid()));
-                } else {
-                    int i = 0;
-                    i++;
-                }*/
 
                     mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(mUserLocation, mMapZoomLevelName));
                 }
@@ -438,7 +462,7 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
                 .setCircularRegion(
                         userLocation.latitude,
                         userLocation.longitude,
-                        Constants.geofenceRadiusDefault
+                        mSearchRadius
                 )
                 .setExpirationDuration(Geofence.NEVER_EXPIRE)
                 .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_ENTER |
@@ -565,40 +589,45 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
     private void getEvents() {
         clearEventMarkers();
 
-        for (Event event : mEventsList) {
-            LatLng eventLocation = new LatLng(event.getLatitude(), event.getLongitude());
+        for (Event event : UserEvents.ALL_EVENTS) {
+            createEventMarker(event);
+        }
 
-            // Check the event is located within the local area
-            // or always show the event if the user is hosting or attending the event regardless of area
-            if (LocationFilter.eventWithinRange(mUserLocation, eventLocation)
-                    || UserEvents.EVENTS_HOSTING_MAP.containsKey(event.getUid())
-                    || UserEvents.EVENTS_ATTENDING_MAP.containsKey(event.getUid())) {
+        for(Event event : UserEvents.EVENTS_ATTENDING) {
+            createEventMarker(event);
+        }
 
-                // Check the event abides by the filtering rules established by the user
-                if (meetsEventFilteringRequirements(event)) {
+        for(Event event : UserEvents.EVENTS_HOSTING) {
+            createEventMarker(event);
+        }
+    }
 
-                    // Set up the marker options
-                    MarkerOptions markerOptions = new MarkerOptions();
-                    markerOptions.icon(BitmapDescriptorFactory.defaultMarker(mEventPinColor));
-                    markerOptions.title(event.getTitle());
-                    markerOptions.position(eventLocation);
-                    markerOptions.snippet("Topic: " + event.getTopic() +
-                            "\nIndustry: " + event.getIndustry() +
-                            "\n\nTime: " + event.getTime() +
-                            "\nDate: " + event.getDate());
+    private void createEventMarker(Event event) {
+        LatLng eventLocation = new LatLng(event.getLatitude(), event.getLongitude());
 
-                    // Add the marker to the map and set it's tag to indicate it is an event marker
-                    Marker newMarker = mMap.addMarker(markerOptions);
-                    newMarker.setTag(Constants.eventMarkerTag);
+        // Check the event abides by the filtering rules established by the user
+        if (meetsEventFilteringRequirements(event)) {
 
-                    // Store event data to a map to use in the mDialog and the CustomInfoWindow
-                    // Save event markers in a map to be able to clear event markers individually
-                    // or as a group separate from the people markers
-                    mEventMarkerMap.put(newMarker.getId(), event);
-                    mEventMarkerList.add(newMarker);
-                    mCustomInfoWindow.addMarkerImage(newMarker.getId(), event.getImageId());
-                }
-            }
+            // Set up the marker options
+            MarkerOptions markerOptions = new MarkerOptions();
+            markerOptions.icon(BitmapDescriptorFactory.defaultMarker(mEventPinColor));
+            markerOptions.title(event.getTitle());
+            markerOptions.position(eventLocation);
+            markerOptions.snippet("Topic: " + event.getTopic() +
+                    "\nIndustry: " + event.getIndustry() +
+                    "\n\nTime: " + event.getTime() +
+                    "\nDate: " + event.getDate());
+
+            // Add the marker to the map and set it's tag to indicate it is an event marker
+            Marker newMarker = mMap.addMarker(markerOptions);
+            newMarker.setTag(Constants.eventMarkerTag);
+
+            // Store event data to a map to use in the mDialog and the CustomInfoWindow
+            // Save event markers in a map to be able to clear event markers individually
+            // or as a group separate from the people markers
+            mEventMarkerMap.put(newMarker.getId(), event);
+            mEventMarkerList.add(newMarker);
+            mCustomInfoWindow.addMarkerImage(newMarker.getId(), event.getImageId());
         }
     }
 

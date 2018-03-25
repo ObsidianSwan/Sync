@@ -42,7 +42,16 @@ public class Util {
     //AccountManager mAccountManager = new AccountManager();
     private static AlertDialog mDialog;
 
-    public static String getMapKey(HashMap map, float value) {
+    public static String getMapKeyFloat(HashMap map, float value) {
+        for (Object entry : map.keySet()) {
+            if (map.get(entry).equals(value)) {
+                return (String) entry;
+            }
+        }
+        return null;
+    }
+
+    public static String getMapKeyInt(HashMap map, int value) {
         for (Object entry : map.keySet()) {
             if (map.get(entry).equals(value)) {
                 return (String) entry;
