@@ -9,6 +9,7 @@ import android.widget.Toast;
 import com.example.finalyearproject.hollyboothroyd.sync.R;
 import com.example.finalyearproject.hollyboothroyd.sync.Services.DatabaseManager;
 import com.example.finalyearproject.hollyboothroyd.sync.Services.LocationFilter;
+import com.example.finalyearproject.hollyboothroyd.sync.Utils.Constants;
 import com.example.finalyearproject.hollyboothroyd.sync.Utils.Util;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.firebase.database.DataSnapshot;
@@ -45,6 +46,8 @@ public class UserEvents {
     private ValueEventListener mEventsAttendingListener;
     private ValueEventListener mEventsHostingListener;
 
+    private int mSearchRadius = Constants.geofenceRadiusDefault;
+
     // TODO: Convert into singleton
 
     // It is okay to suppress the missing permissions because UserEvents is only
@@ -55,28 +58,71 @@ public class UserEvents {
         mDatabaseManager = new DatabaseManager();
         mLocationManager = (LocationManager) context.getSystemService(LOCATION_SERVICE);
 
-        mAllEventsListener = mDatabaseManager.getAllEventsDatabaseReference().addValueEventListener(new ValueEventListener() {
+        mDatabaseManager.getUserSettings(Constants.searchRadiusName).addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                ALL_EVENTS.clear();
-                ALL_EVENTS_MAP.clear();
-                for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
-                    Event event = snapshot.getValue(Event.class);
-                    if (event != null) {
-                        LatLng eventPosition = new LatLng(event.getLatitude(), event.getLongitude());
-                        Location userLastKnowLocation = Util.getLastKnownLocation(mLocationManager);
-                        // If the users last location can be found, populate the map with local events
-                        if(userLastKnowLocation != null) {
-                            LatLng userPosition = new LatLng(userLastKnowLocation.getLatitude(), userLastKnowLocation.getLongitude());
-                            if (LocationFilter.eventWithinRange(userPosition, eventPosition)) {
-                                ALL_EVENTS.add(event);
-                                ALL_EVENTS_MAP.put(event.getUid(), event);
+                mSearchRadius = Constants.geofenceRadiusDefault;
+                if (dataSnapshot.getValue(Integer.class) != null) {
+                    mSearchRadius = dataSnapshot.getValue(Integer.class);
+                }
+
+                mAllEventsListener = mDatabaseManager.getAllEventsDatabaseReference().addValueEventListener(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(DataSnapshot dataSnapshot) {
+                        ALL_EVENTS.clear();
+                        ALL_EVENTS_MAP.clear();
+                        for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
+                            Event event = snapshot.getValue(Event.class);
+                            if (event != null) {
+                                LatLng eventPosition = new LatLng(event.getLatitude(), event.getLongitude());
+                                Location userLastKnowLocation = Util.getLastKnownLocation(mLocationManager);
+                                // If the users last location can be found, populate the map with local events
+                                if(userLastKnowLocation != null) {
+                                    LatLng userPosition = new LatLng(userLastKnowLocation.getLatitude(), userLastKnowLocation.getLongitude());
+                                    if (LocationFilter.eventWithinRange(userPosition, eventPosition, mSearchRadius)) {
+                                        ALL_EVENTS.add(event);
+                                        ALL_EVENTS_MAP.put(event.getUid(), event);
+                                    }
+                                } else {
+                                    Toast.makeText(context, R.string.could_not_find_location, Toast.LENGTH_SHORT).show();
+                                }
                             }
-                        } else {
-                            Toast.makeText(context, R.string.could_not_find_location, Toast.LENGTH_SHORT).show();
                         }
                     }
-                }
+
+                    @Override
+                    public void onCancelled(DatabaseError databaseError) {
+
+                    }
+                });
+
+                mEventsAttendingListener = mDatabaseManager.getEventsAttendingDatabaseReference().addValueEventListener(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(DataSnapshot dataSnapshot) {
+                        EVENTS_ATTENDING.clear();
+                        EVENTS_ATTENDING_MAP.clear();
+                        for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
+                            mDatabaseManager.getEvent(snapshot.getKey()).addListenerForSingleValueEvent(new ValueEventListener() {
+                                @Override
+                                public void onDataChange(DataSnapshot dataSnapshot) {
+                                    Event event = dataSnapshot.getValue(Event.class);
+                                    EVENTS_ATTENDING.add(event);
+                                    EVENTS_ATTENDING_MAP.put(event.getUid(), event);
+                                }
+
+                                @Override
+                                public void onCancelled(DatabaseError databaseError) {
+
+                                }
+                            });
+                        }
+                    }
+
+                    @Override
+                    public void onCancelled(DatabaseError databaseError) {
+
+                    }
+                });
             }
 
             @Override
@@ -85,33 +131,7 @@ public class UserEvents {
             }
         });
 
-        mEventsAttendingListener = mDatabaseManager.getEventsAttendingDatabaseReference().addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                EVENTS_ATTENDING.clear();
-                EVENTS_ATTENDING_MAP.clear();
-                for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
-                    mDatabaseManager.getEvent(snapshot.getKey()).addListenerForSingleValueEvent(new ValueEventListener() {
-                        @Override
-                        public void onDataChange(DataSnapshot dataSnapshot) {
-                            Event event = dataSnapshot.getValue(Event.class);
-                            EVENTS_ATTENDING.add(event);
-                            EVENTS_ATTENDING_MAP.put(event.getUid(), event);
-                        }
 
-                        @Override
-                        public void onCancelled(DatabaseError databaseError) {
-
-                        }
-                    });
-                }
-            }
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-
-            }
-        });
 
         mEventsHostingListener = mDatabaseManager.getEventsHostingDatabaseReference().addValueEventListener(new ValueEventListener() {
             @Override

@@ -11,7 +11,7 @@ import java.util.Random;
 
 public class LocationFilter {
 
-    private static LatLng randObfuscation(LatLng originalLocation, int radius){
+    public static LatLng randObfuscation(LatLng originalLocation, int radius){
         Random random = new Random();
 
         // Convert radius from meters to degrees
@@ -27,18 +27,7 @@ public class LocationFilter {
         // Calculate a new random angle that is between 0 and 2pi radians
         double newAngle = 2 * Math.PI * random2;
 
-        // Find the x and y points given the radius and angle
-        double x = newRadius * Math.cos(newAngle);
-        double y = newRadius * Math.sin(newAngle);
-
-        // Adjust the x-coordinate for the shrinking of the east-west distances
-        double adjustedX = x / Math.cos(Math.toRadians(originalLocation.latitude));
-
-        // Calculate the new point
-        double newX = adjustedX + originalLocation.longitude;
-        double newY = y + originalLocation.latitude;
-
-        return new LatLng(newY, newX);
+        return convertPolarToCartesianPoints(originalLocation, newRadius, newAngle);
     }
 
     public static LatLng nRandObfuscation(LatLng originalLocation, int radius){
@@ -55,9 +44,67 @@ public class LocationFilter {
         return furthestLocation;
     }
 
-    public static boolean eventWithinRange(LatLng originalLocation, LatLng eventLocation){
+    public static LatLng thetaRandObfuscation(LatLng originalLocation, int radius){
+        Random random = new Random();
+
+        // Generate two independent uniform values
+        double random1 = random.nextDouble();
+        double random2 = random.nextDouble();
+
+        // Calculate two new random angles that are between 0 and 2pi radians
+        double newAngle1 = 2 * Math.PI * random1;
+        double newAngle2 = 2 * Math.PI * random2;
+
+        LatLng furthestLocation = originalLocation;
+        double largestDistance = 0;
+
+        for(int i = 0; i < Constants.obfuscationTrials; i++){
+            LatLng randLocation = thetaRandImpl(originalLocation, radius, Math.min(newAngle1, newAngle2), Math.max(newAngle1, newAngle2));
+            double distance = distanceBetweenPoints(originalLocation, randLocation);
+            if(distance > largestDistance){
+                largestDistance = distance;
+                furthestLocation = randLocation;
+            }
+        }
+        return furthestLocation;
+    }
+
+    private static LatLng thetaRandImpl(LatLng originalLocation, int radius, double lowerAngleBound, double upperAngleBound){
+        Random random = new Random();
+
+        // Convert radius from meters to degrees
+        double radiusInDegrees = radius/ Constants.metersPerDegree;
+
+        // Generate an independent uniform value
+        double random1 = random.nextDouble();
+
+        // Calculate a new random radius that is lower than the specified radius
+        double newRadius = radiusInDegrees * Math.sqrt(random1);
+
+        // Calculate a new random angle that is between the upper and lower bounds in radians
+        double newAngle = random.nextDouble() * (upperAngleBound - lowerAngleBound) + lowerAngleBound;
+
+        return convertPolarToCartesianPoints(originalLocation, newRadius, newAngle);
+    }
+
+    private static LatLng convertPolarToCartesianPoints(LatLng originalLocation, double radius, double angle){
+        // Find the x and y points given the radius and angle
+        double x = radius * Math.cos(angle);
+        double y = radius * Math.sin(angle);
+
+        // Adjust the x-coordinate for the shrinking of the east-west distances
+        double adjustedX = x / Math.cos(Math.toRadians(originalLocation.latitude));
+
+        // Calculate the new point
+        double newX = adjustedX + originalLocation.longitude;
+        double newY = y + originalLocation.latitude;
+
+        return new LatLng(newY, newX);
+    }
+
+    public static boolean eventWithinRange(LatLng originalLocation, LatLng eventLocation, int searchRadius){
         // TODO change for settings page.
-        if(distanceBetweenPoints(originalLocation, eventLocation) < Constants.geofenceRadiusDefault){
+        if(distanceBetweenPoints(originalLocation, eventLocation) < searchRadius){
             return true;
         }
         return false;

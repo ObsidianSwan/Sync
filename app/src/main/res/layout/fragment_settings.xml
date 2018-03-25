@@ -1,4 +1,4 @@
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
@@ -10,171 +10,227 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="@dimen/fragment_top_item_margin"
         android:orientation="vertical">
 
-        <TextView
-            android:id="@+id/settings_map_heading"
-            android:layout_width="wrap_content"
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/fragment_top_item_margin"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/settings_map_heading"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:text="@string/settings_map_header"
+                android:textAppearance="@style/TextAppearance.AppCompat.Medium" />
+
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="@dimen/entry_side_margin"
+                android:layout_marginStart="@dimen/entry_side_margin"
+                android:layout_marginTop="@dimen/entry_top_margin">
+
+                <TextView
+                    android:id="@+id/settings_zoom_text"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentStart="true"
+                    android:layout_centerVertical="true"
+                    android:text="@string/settings_zoom_text"
+                    android:textAppearance="@style/TextAppearance.AppCompat.Medium" />
+
+                <NumberPicker
+                    android:id="@+id/settings_map_zoom_number_picker"
+                    android:layout_width="@dimen/number_picker_dim"
+                    android:layout_height="@dimen/number_picker_dim"
+                    android:layout_alignParentEnd="true" />
+
+            </RelativeLayout>
+
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="@dimen/entry_side_margin"
+                android:layout_marginStart="@dimen/entry_side_margin"
+                android:layout_marginTop="@dimen/entry_top_margin"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/settings_user_pin_color_text"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentStart="true"
+                    android:layout_centerVertical="true"
+                    android:text="@string/settings_user_pin_color_text"
+                    android:textAppearance="@style/TextAppearance.AppCompat.Medium" />
+
+                <Spinner
+                    android:id="@+id/settings_user_color_spinner"
+                    android:layout_width="@dimen/spinner_width"
+                    android:layout_height="@dimen/spinner_height"
+                    android:layout_alignParentEnd="true" />
+
+            </RelativeLayout>
+
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="@dimen/entry_side_margin"
+                android:layout_marginStart="@dimen/entry_side_margin"
+                android:layout_marginTop="@dimen/entry_top_margin"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/settings_event_pin_color_text"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentStart="true"
+                    android:layout_centerVertical="true"
+                    android:text="@string/settings_event_pin_color_text"
+                    android:textAppearance="@style/TextAppearance.AppCompat.Medium" />
+
+                <Spinner
+                    android:id="@+id/settings_event_color_spinner"
+                    android:layout_width="@dimen/spinner_width"
+                    android:layout_height="@dimen/spinner_height"
+                    android:layout_alignParentEnd="true" />
+
+            </RelativeLayout>
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/header_top_margin"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/settings_loc_privacy_heading"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:text="Location details"
+                android:textAppearance="@style/TextAppearance.AppCompat.Medium" />
+
+            <RelativeLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="@dimen/entry_side_margin"
+                android:layout_marginStart="@dimen/entry_side_margin"
+                android:layout_marginTop="@dimen/entry_top_margin"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/settings_obfuscation_type_text"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentStart="true"
+                    android:layout_centerVertical="true"
+                    android:text="Privacy intensity"
+                    android:textAppearance="@style/TextAppearance.AppCompat.Medium" />
+
+                <Spinner
+                    android:id="@+id/settings_privacy_intensity_spinner"
+                    android:layout_width="@dimen/spinner_width"
+                    android:layout_height="@dimen/spinner_height"
+                    android:layout_alignParentEnd="true" />
+
+            </RelativeLayout>
+
+            <RelativeLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="@dimen/entry_side_margin"
+                android:layout_marginStart="@dimen/entry_side_margin"
+                android:layout_marginTop="@dimen/entry_top_margin"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/settings_loc_search_text"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentStart="true"
+                    android:layout_centerVertical="true"
+                    android:text="Search distance"
+                    android:textAppearance="@style/TextAppearance.AppCompat.Medium" />
+
+                <NumberPicker
+                    android:id="@+id/settings_search_distance_picker"
+                    android:layout_width="@dimen/number_picker_dim"
+                    android:layout_height="@dimen/number_picker_dim"
+                    android:layout_alignParentEnd="true" />
+
+            </RelativeLayout>
+
+            <RelativeLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="@dimen/entry_side_margin"
+                android:layout_marginStart="@dimen/entry_side_margin"
+                android:layout_marginTop="@dimen/entry_top_margin"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/settings_loc_time_refresh_text"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentStart="true"
+                    android:layout_centerVertical="true"
+                    android:text="Refresh rate: Time (min)"
+                    android:textAppearance="@style/TextAppearance.AppCompat.Medium" />
+
+                <NumberPicker
+                    android:id="@+id/settings_time_refresh_number_picker"
+                    android:layout_width="@dimen/number_picker_dim"
+                    android:layout_height="@dimen/number_picker_dim"
+                    android:layout_alignParentEnd="true" />
+
+            </RelativeLayout>
+
+            <RelativeLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="@dimen/entry_side_margin"
+                android:layout_marginStart="@dimen/entry_side_margin"
+                android:layout_marginTop="@dimen/entry_top_margin"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/settings_loc_dis_refresh_text"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentStart="true"
+                    android:layout_centerVertical="true"
+                    android:text="Refresh rate: Distance (meters)"
+                    android:textAppearance="@style/TextAppearance.AppCompat.Medium" />
+
+                <NumberPicker
+                    android:id="@+id/settings_dis_refresh_number_picker"
+                    android:layout_width="@dimen/number_picker_dim"
+                    android:layout_height="@dimen/number_picker_dim"
+                    android:layout_alignParentEnd="true" />
+
+            </RelativeLayout>
+        </LinearLayout>
+
+        <Button
+            android:id="@+id/delete_account_button"
+            android:layout_width="@dimen/button_width"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
-            android:text="@string/settings_map_header"
-            android:textAppearance="@style/TextAppearance.AppCompat.Medium" />
+            android:layout_margin="@dimen/button_margin"
+            android:text="@string/delete_account_button" />
 
-        <RelativeLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginEnd="@dimen/entry_side_margin"
-            android:layout_marginStart="@dimen/entry_side_margin"
-            android:layout_marginTop="@dimen/entry_top_margin">
-
-            <TextView
-                android:id="@+id/settings_zoom_text"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_alignParentStart="true"
-                android:layout_centerVertical="true"
-                android:text="@string/settings_zoom_text"
-                android:textAppearance="@style/TextAppearance.AppCompat.Medium" />
-
-            <NumberPicker
-                android:id="@+id/settings_map_zoom_number_picker"
-                android:layout_width="@dimen/number_picker_dim"
-                android:layout_height="@dimen/number_picker_dim"
-                android:layout_alignParentEnd="true" />
-
-        </RelativeLayout>
-
-        <RelativeLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginEnd="@dimen/entry_side_margin"
-            android:layout_marginStart="@dimen/entry_side_margin"
-            android:layout_marginTop="@dimen/entry_top_margin"
-            android:orientation="horizontal">
-
-            <TextView
-                android:id="@+id/settings_user_pin_color_text"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_alignParentStart="true"
-                android:layout_centerVertical="true"
-                android:text="@string/settings_user_pin_color_text"
-                android:textAppearance="@style/TextAppearance.AppCompat.Medium" />
-
-            <Spinner
-                android:id="@+id/settings_user_color_spinner"
-                android:layout_width="@dimen/spinner_width"
-                android:layout_height="@dimen/spinner_height"
-                android:layout_alignParentEnd="true" />
-
-        </RelativeLayout>
-
-        <RelativeLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginEnd="@dimen/entry_side_margin"
-            android:layout_marginStart="@dimen/entry_side_margin"
-            android:layout_marginTop="@dimen/entry_top_margin"
-            android:orientation="horizontal">
-
-            <TextView
-                android:id="@+id/settings_event_pin_color_text"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_alignParentStart="true"
-                android:layout_centerVertical="true"
-                android:text="@string/settings_event_pin_color_text"
-                android:textAppearance="@style/TextAppearance.AppCompat.Medium" />
-
-            <Spinner
-                android:id="@+id/settings_event_color_spinner"
-                android:layout_width="@dimen/spinner_width"
-                android:layout_height="@dimen/spinner_height"
-                android:layout_alignParentEnd="true" />
-
-        </RelativeLayout>
-
-    </LinearLayout>
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="@dimen/header_top_margin"
-        android:orientation="vertical">
-
-        <TextView
-            android:id="@+id/settings_loc_refresh_heading"
-            android:layout_width="wrap_content"
+        <Button
+            android:id="@+id/commit_settings_button"
+            android:layout_width="@dimen/button_width"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
-            android:text="@string/settings_loc_refresh_text"
-            android:textAppearance="@style/TextAppearance.AppCompat.Medium" />
-
-        <RelativeLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginEnd="@dimen/entry_side_margin"
-            android:layout_marginStart="@dimen/entry_side_margin"
-            android:layout_marginTop="@dimen/entry_top_margin"
-            android:orientation="horizontal">
-
-            <TextView
-                android:id="@+id/settings_loc_time_refresh_text"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_alignParentStart="true"
-                android:layout_centerVertical="true"
-                android:text="@string/settings_time_refresh_text"
-                android:textAppearance="@style/TextAppearance.AppCompat.Medium" />
-
-            <NumberPicker
-                android:id="@+id/settings_time_refresh_number_picker"
-                android:layout_width="@dimen/number_picker_dim"
-                android:layout_height="@dimen/number_picker_dim"
-                android:layout_alignParentEnd="true" />
-
-        </RelativeLayout>
-
-        <RelativeLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginEnd="@dimen/entry_side_margin"
-            android:layout_marginStart="@dimen/entry_side_margin"
-            android:layout_marginTop="@dimen/entry_top_margin"
-            android:orientation="horizontal">
-
-            <TextView
-                android:id="@+id/settings_loc_dis_refresh_text"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_alignParentStart="true"
-                android:layout_centerVertical="true"
-                android:text="@string/settings_dis_refresh_text"
-                android:textAppearance="@style/TextAppearance.AppCompat.Medium" />
-
-            <NumberPicker
-                android:id="@+id/settings_dis_refresh_number_picker"
-                android:layout_width="@dimen/number_picker_dim"
-                android:layout_height="@dimen/number_picker_dim"
-                android:layout_alignParentEnd="true" />
-
-        </RelativeLayout>
+            android:layout_margin="@dimen/button_margin"
+            android:text="@string/commit_button" />
     </LinearLayout>
-
-    <Button
-        android:id="@+id/delete_account_button"
-        android:layout_width="@dimen/button_width"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:layout_margin="@dimen/button_margin"
-        android:text="@string/delete_account_button" />
-
-    <Button
-        android:id="@+id/commit_settings_button"
-        android:layout_width="@dimen/button_width"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:layout_margin="@dimen/button_margin"
-        android:text="@string/commit_button" />
-</LinearLayout>
+</ScrollView>

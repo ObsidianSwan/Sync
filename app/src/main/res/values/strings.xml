@@ -84,6 +84,13 @@
         <item>Yellow</item>
     </string-array>
 
+    <string-array name="privacy_intensity_array">
+        <item>None</item>
+        <item>Basic</item>
+        <item>Intermediate</item>
+        <item>Advanced</item>
+    </string-array>
+
     // Toast messages
     <string name="could_not_find_location">Could not find your location.\nMake sure location features are turned on</string>
     <string name="connection_successful">Connection made!</string>

@@ -1,15 +1,12 @@
 package com.example.finalyearproject.hollyboothroyd.sync.Activities.Fragments;
 
 import android.content.Context;
-import android.content.SharedPreferences;
-import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.NumberPicker;
@@ -41,6 +38,7 @@ public class SettingsFragment extends Fragment {
     private OnFragmentInteractionListener mListener;
 
     private final HashMap<String, Float> pinColorMap = new HashMap<String, Float>();
+    private final HashMap<String, Integer> privacyIntensityMap = new HashMap<String, Integer>();
 
     private DatabaseManager mDatabaseManager;
     private AccountManager mAccountManager;
@@ -48,8 +46,10 @@ public class SettingsFragment extends Fragment {
     private NumberPicker mZoomPicker;
     private NumberPicker mTimeRefreshRatePicker;
     private NumberPicker mDisRefreshRatePicker;
+    private NumberPicker mSearchRadiusPicker;
     private Spinner mPersonPinColorSpinner;
     private Spinner mEventPinColorSpinner;
+    private Spinner mPrivacyIntensitySpinner;
     private Button mDeleteAccountButton;
     private Button mCommitChangesButton;
 
@@ -57,13 +57,10 @@ public class SettingsFragment extends Fragment {
     private int mZoomValue;
     private int mTimeRefreshRateValue;
     private int mDisRefreshRateValue;
+    private int mSearchRadiusValue;
+    private String mPrivacyIntensityValue;
     private String mPersonPinColorValue;
     private String mEventPinColorValue;
-
-    // Needed to prevent the spinner from executing OnItemSelected method body
-    private boolean mInitialPersonSpinnerEvent = true;
-    private boolean mInitialEventSpinnerEvent = true;
-
 
     public SettingsFragment() {
         // Required empty public constructor
@@ -101,6 +98,12 @@ public class SettingsFragment extends Fragment {
         pinColorMap.put("Violet", BitmapDescriptorFactory.HUE_VIOLET);
         pinColorMap.put("Yellow", BitmapDescriptorFactory.HUE_YELLOW);
 
+        // Populate privacyIntensityMap
+        privacyIntensityMap.put("None", 0);
+        privacyIntensityMap.put("Basic", 1);
+        privacyIntensityMap.put("Intermediate", 2);
+        privacyIntensityMap.put("Advanced", 3);
+
     }
 
     @Override
@@ -114,20 +117,26 @@ public class SettingsFragment extends Fragment {
         mZoomPicker = (NumberPicker) view.findViewById(R.id.settings_map_zoom_number_picker);
         mTimeRefreshRatePicker = (NumberPicker) view.findViewById(R.id.settings_time_refresh_number_picker);
         mDisRefreshRatePicker = (NumberPicker) view.findViewById(R.id.settings_dis_refresh_number_picker);
+        mSearchRadiusPicker = (NumberPicker) view.findViewById(R.id.settings_search_distance_picker);
         mPersonPinColorSpinner = (Spinner) view.findViewById(R.id.settings_user_color_spinner);
         mEventPinColorSpinner = (Spinner) view.findViewById(R.id.settings_event_color_spinner);
+        mPrivacyIntensitySpinner = (Spinner) view.findViewById(R.id.settings_privacy_intensity_spinner);
         mDeleteAccountButton = (Button) view.findViewById(R.id.delete_account_button);
         mCommitChangesButton = (Button) view.findViewById(R.id.commit_settings_button);
-
 
         setUpZoomPicker();
         setUpTimeRefreshRatePicker();
         setUpDisRefreshRatePicker();
+        setUpSearchRadiusPicker();
 
-        final ArrayAdapter<CharSequence> arrayAdapter = ArrayAdapter.createFromResource(getActivity(), R.array.pin_color_array, android.R.layout.simple_spinner_item);
-        arrayAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        setupPersonPinColorSpinner(arrayAdapter);
-        setupEventPinColorSpinner(arrayAdapter);
+        final ArrayAdapter<CharSequence> pinArrayAdapter = ArrayAdapter.createFromResource(getActivity(), R.array.pin_color_array, android.R.layout.simple_spinner_item);
+        pinArrayAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        setupPersonPinColorSpinner(pinArrayAdapter);
+        setupEventPinColorSpinner(pinArrayAdapter);
+
+        final ArrayAdapter<CharSequence> privacyArrayAdapter = ArrayAdapter.createFromResource(getActivity(), R.array.privacy_intensity_array, android.R.layout.simple_spinner_item);
+        privacyArrayAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        setupPrivacyIntensitySpinner(privacyArrayAdapter);
 
         mCommitChangesButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -138,6 +147,7 @@ public class SettingsFragment extends Fragment {
                         @Override
                         public void onComplete(@NonNull Task<Void> task) {
                             if(task.isSuccessful()){
+                                mZoomValue = mZoomPicker.getValue();
                                 Toast.makeText(getActivity(), R.string.zoom_level_setting_change_successful, Toast.LENGTH_SHORT).show();
                             } else{
                                 Toast.makeText(getActivity(), R.string.setting_change_unsuccessful_text, Toast.LENGTH_SHORT).show();
@@ -151,6 +161,7 @@ public class SettingsFragment extends Fragment {
                         @Override
                         public void onComplete(@NonNull Task<Void> task) {
                             if(task.isSuccessful()){
+                                mTimeRefreshRateValue = mTimeRefreshRatePicker.getValue();
                                 Toast.makeText(getActivity(), R.string.time_refresh_setting_change_succesful, Toast.LENGTH_SHORT).show();
                             } else{
                                 Toast.makeText(getActivity(), R.string.setting_change_unsuccessful_text, Toast.LENGTH_SHORT).show();
@@ -172,12 +183,27 @@ public class SettingsFragment extends Fragment {
                         }
                     });
                 }
+                if (mSearchRadiusValue != mSearchRadiusPicker.getValue()) {
+                    mDatabaseManager.setUserSettings(Constants.searchRadiusName, mSearchRadiusPicker.getValue()).addOnCompleteListener(new OnCompleteListener<Void>() {
+                        @Override
+                        public void onComplete(@NonNull Task<Void> task) {
+                            if(task.isSuccessful()){
+                                mSearchRadiusValue = mSearchRadiusPicker.getValue();
+                                Toast.makeText(getActivity(), "Search radius successfully changed", Toast.LENGTH_SHORT).show();
+                            } else{
+                                Toast.makeText(getActivity(), R.string.setting_change_unsuccessful_text, Toast.LENGTH_SHORT).show();
+                                // TODO log
+                            }
+                        }
+                    });
+                }
                 if (!mPersonPinColorValue.equals(mPersonPinColorSpinner.getSelectedItem().toString())) {
                     float color = pinColorMap.get(mPersonPinColorSpinner.getSelectedItem().toString());
                     mDatabaseManager.setUserSettings(Constants.personPinColorName, color).addOnCompleteListener(new OnCompleteListener<Void>() {
                         @Override
                         public void onComplete(@NonNull Task<Void> task) {
                             if(task.isSuccessful()){
+                                mPersonPinColorValue = mPersonPinColorSpinner.getSelectedItem().toString();
                                 Toast.makeText(getActivity(), R.string.person_pin_setting_change_successful, Toast.LENGTH_SHORT).show();
                             } else{
                                 Toast.makeText(getActivity(), R.string.setting_change_unsuccessful_text, Toast.LENGTH_SHORT).show();
@@ -192,11 +218,27 @@ public class SettingsFragment extends Fragment {
                         @Override
                         public void onComplete(@NonNull Task<Void> task) {
                            if(task.isSuccessful()){
+                               mEventPinColorValue = mEventPinColorSpinner.getSelectedItem().toString();
                                Toast.makeText(getActivity(), R.string.event_pin_setting_change_successful_text, Toast.LENGTH_SHORT).show();
                            } else{
                                Toast.makeText(getActivity(), R.string.setting_change_unsuccessful_text, Toast.LENGTH_SHORT).show();
                                // TODO log
                            }
+                        }
+                    });
+                }
+                if (!mPrivacyIntensityValue.equals(mPrivacyIntensitySpinner.getSelectedItem().toString())) {
+                    int intensity = privacyIntensityMap.get(mPrivacyIntensitySpinner.getSelectedItem().toString());
+                    mDatabaseManager.setUserSettings(Constants.privacyIntensityName, intensity).addOnCompleteListener(new OnCompleteListener<Void>() {
+                        @Override
+                        public void onComplete(@NonNull Task<Void> task) {
+                            if(task.isSuccessful()){
+                                mPrivacyIntensityValue = mPrivacyIntensitySpinner.getSelectedItem().toString();
+                                Toast.makeText(getActivity(), "Privacy intensity successfully changed", Toast.LENGTH_SHORT).show();
+                            } else{
+                                Toast.makeText(getActivity(), R.string.setting_change_unsuccessful_text, Toast.LENGTH_SHORT).show();
+                                // TODO log
+                            }
                         }
                     });
                 }
@@ -348,23 +390,6 @@ public class SettingsFragment extends Fragment {
                 // TODO:Log
             }
         });
-
-/*        mZoomPicker.setOnValueChangedListener(new NumberPicker.OnValueChangeListener() {
-            @Override
-            public void onValueChange(NumberPicker picker, int oldVal, int newVal) {
-                mDatabaseManager.setUserSettings(Constants.mapZoomLevelName, newVal).addOnCompleteListener(new OnCompleteListener<Void>() {
-                    @Override
-                    public void onComplete(@NonNull Task<Void> task) {
-                        if (task.isSuccessful()) {
-                            Toast.makeText(getActivity(), R.string.setting_change_successful_text, Toast.LENGTH_SHORT).show();
-                        } else {
-                            // TODO: add logging
-                            Toast.makeText(getActivity(), R.string.setting_change_unsuccessful_text, Toast.LENGTH_SHORT).show();
-                        }
-                    }
-                });
-            }
-        });*/
     }
 
     private void setUpTimeRefreshRatePicker() {
@@ -386,23 +411,6 @@ public class SettingsFragment extends Fragment {
                 // TODO:Log
             }
         });
-
-/*        mTimeRefreshRatePicker.setOnValueChangedListener(new NumberPicker.OnValueChangeListener() {
-            @Override
-            public void onValueChange(NumberPicker picker, int oldVal, int newVal) {
-                mDatabaseManager.setUserSettings(Constants.locationTimeUpdateIntervalName, newVal).addOnCompleteListener(new OnCompleteListener<Void>() {
-                    @Override
-                    public void onComplete(@NonNull Task<Void> task) {
-                        if (task.isSuccessful()) {
-                            Toast.makeText(getActivity(), R.string.setting_change_successful_text, Toast.LENGTH_SHORT).show();
-                        } else {
-                            // TODO: add logging
-                            Toast.makeText(getActivity(), R.string.setting_change_unsuccessful_text, Toast.LENGTH_SHORT).show();
-                        }
-                    }
-                });
-            }
-        });*/
     }
 
     private void setUpDisRefreshRatePicker() {
@@ -424,23 +432,27 @@ public class SettingsFragment extends Fragment {
                 // TODO:Log
             }
         });
+    }
 
-/*        mDisRefreshRatePicker.setOnValueChangedListener(new NumberPicker.OnValueChangeListener() {
+    private void setUpSearchRadiusPicker() {
+        mSearchRadiusPicker.setMinValue(Constants.searchRadiusPickerMinValue);
+        mSearchRadiusPicker.setMaxValue(Constants.searchRadiusPickerMaxValue);
+        // During initialization, set the spinner to select the users saved settings
+        mDatabaseManager.getUserSettings(Constants.searchRadiusName).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
-            public void onValueChange(NumberPicker picker, int oldVal, int newVal) {
-                mDatabaseManager.setUserSettings(Constants.locationDistanceUpdateIntervalName, newVal).addOnCompleteListener(new OnCompleteListener<Void>() {
-                    @Override
-                    public void onComplete(@NonNull Task<Void> task) {
-                        if (task.isSuccessful()) {
-                            Toast.makeText(getActivity(), R.string.setting_change_successful_text, Toast.LENGTH_SHORT).show();
-                        } else {
-                            // TODO: add logging
-                            Toast.makeText(getActivity(), R.string.setting_change_unsuccessful_text, Toast.LENGTH_SHORT).show();
-                        }
-                    }
-                });
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                mSearchRadiusValue = Constants.obfuscationRadiusDefault;
+                if (dataSnapshot.getValue(Integer.class) != null) {
+                    mSearchRadiusValue = dataSnapshot.getValue(Integer.class);
+                }
+                mSearchRadiusPicker.setValue(mSearchRadiusValue);
             }
-        });*/
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                // TODO:Log
+            }
+        });
     }
 
     private void setupPersonPinColorSpinner(final ArrayAdapter arrayAdapter) {
@@ -451,7 +463,7 @@ public class SettingsFragment extends Fragment {
             public void onDataChange(DataSnapshot dataSnapshot) {
                 if(dataSnapshot.getValue(Integer.class) != null) {
                     int pinColor = dataSnapshot.getValue(Integer.class);
-                    mPersonPinColorValue = Util.getMapKey(pinColorMap, pinColor);
+                    mPersonPinColorValue = Util.getMapKeyFloat(pinColorMap, pinColor);
                     if (mPersonPinColorValue != null) {
                         int position = arrayAdapter.getPosition(mPersonPinColorValue);
                         mPersonPinColorSpinner.setSelection(position, false);
@@ -464,7 +476,6 @@ public class SettingsFragment extends Fragment {
                 // TODO:Log
             }
         });
-        //mPersonPinColorSpinner.setOnItemSelectedListener(this);
     }
 
     private void setupEventPinColorSpinner(final ArrayAdapter arrayAdapter) {
@@ -475,7 +486,7 @@ public class SettingsFragment extends Fragment {
             public void onDataChange(DataSnapshot dataSnapshot) {
                 if(dataSnapshot.getValue(Integer.class) != null) {
                     int pinColor = dataSnapshot.getValue(Integer.class);
-                    mEventPinColorValue = Util.getMapKey(pinColorMap, pinColor);
+                    mEventPinColorValue = Util.getMapKeyFloat(pinColorMap, pinColor);
                     if (mEventPinColorValue != null) {
                         int position = arrayAdapter.getPosition(mEventPinColorValue);
                         mEventPinColorSpinner.setSelection(position, false);
@@ -488,7 +499,29 @@ public class SettingsFragment extends Fragment {
                 // TODO:Log
             }
         });
-        //mEventPinColorSpinner.setOnItemSelectedListener(this);
+    }
+
+    private void setupPrivacyIntensitySpinner(final ArrayAdapter arrayAdapter) {
+        mPrivacyIntensitySpinner.setAdapter(arrayAdapter);
+        // During initialization, set the spinner to select the users saved settings
+        mDatabaseManager.getUserSettings(Constants.privacyIntensityName).addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                if(dataSnapshot.getValue(Integer.class) != null) {
+                    int privacyIntensity = dataSnapshot.getValue(Integer.class);
+                    mPrivacyIntensityValue = Util.getMapKeyInt(privacyIntensityMap, privacyIntensity);
+                    if (mPrivacyIntensityValue != null) {
+                        int position = arrayAdapter.getPosition(mPrivacyIntensityValue);
+                        mPrivacyIntensitySpinner.setSelection(position, false);
+                    }
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                // TODO:Log
+            }
+        });
     }
 
     @Override
@@ -507,52 +540,6 @@ public class SettingsFragment extends Fragment {
         super.onDetach();
         mListener = null;
     }
-
-   /* @Override
-    public void onItemSelected(AdapterView<?> parent, View view, final int position, final long id) {
-        Spinner spinner = (Spinner) parent;
-        float color = pinColorMap.get(spinner.getItemAtPosition(position));
-        if (spinner.getId() == R.id.settings_user_color_spinner) {
-            // Flag stops the user settings to be set during initialization and creating a toast message.
-            // This is necessary due to a bug in OnItemSelected. This event is called during initialization without any user interaction
-            if (!mInitialPersonSpinnerEvent) {
-                mDatabaseManager.setUserSettings(Constants.personPinColorName, color).addOnCompleteListener(new OnCompleteListener<Void>() {
-                    @Override
-                    public void onComplete(@NonNull Task<Void> task) {
-                        if (task.isSuccessful()) {
-                            Toast.makeText(getActivity(), R.string.setting_change_successful_text, Toast.LENGTH_SHORT).show();
-                        } else {
-                            // TODO: add logging
-                            Toast.makeText(getActivity(), R.string.setting_change_unsuccessful_text, Toast.LENGTH_SHORT).show();
-                        }
-                    }
-                });
-            }
-            mInitialPersonSpinnerEvent = false;
-        } else if (spinner.getId() == R.id.settings_event_color_spinner) {
-            // Flag stops the user settings to be set during initialization and creating a toast message.
-            // This is necessary due to a bug in OnItemSelected. This event is called during initialization without any user interaction
-            if (!mInitialEventSpinnerEvent) {
-                mDatabaseManager.setUserSettings(Constants.eventPinColorName, color).addOnCompleteListener(new OnCompleteListener<Void>() {
-                    @Override
-                    public void onComplete(@NonNull Task<Void> task) {
-                        if (task.isSuccessful()) {
-                            Toast.makeText(getActivity(), R.string.setting_change_successful_text, Toast.LENGTH_SHORT).show();
-                        } else {
-                            // TODO: add logging
-                            Toast.makeText(getActivity(), R.string.setting_change_unsuccessful_text, Toast.LENGTH_SHORT).show();
-                        }
-                    }
-                });
-            }
-            mInitialEventSpinnerEvent = false;
-        }
-    }*/
-
-    /*@Override
-    public void onNothingSelected(AdapterView<?> parent) {
-
-    }*/
 
     /**
      * This interface must be implemented by activities that contain this

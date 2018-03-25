@@ -12,11 +12,13 @@ public class Constants {
     public static final String locationTimeUpdateIntervalName = "locationTimeUpdateInterval";
     public static final String locationDistanceUpdateIntervalName = "locationDistanceUpdateInterval";
     public static final String searchRadiusName = "searchRadius";
+    public static final String privacyIntensityName = "privacyIntensity";
 
     public static final int locationTimeUpdateIntervalDefault = 1000;
     public static final int locationDistanceUpdateIntervalDefault = 5;
     public static final int obfuscationRadiusDefault = 60; // Meters
     public static final int geofenceRadiusDefault = 150; //Meters
+    public static final int privacyIntensityDefault = 2; //Intermediate: N-Rand
     public static final float metersPerDegree = 111300f;
     public static final int obfuscationTrials = 4;
     public static final double earthRadiusMeters = 6371000.00;
@@ -27,6 +29,9 @@ public class Constants {
 
     public static final String personMarkerTag = "Person";
     public static final String eventMarkerTag = "Event";
+
+    // Location Privacy Names
+
 
     // Personalization
     public static final String personPinColorName = "personPinColor";
@@ -44,6 +49,9 @@ public class Constants {
 
     public static final int disRefreshRatePickerMinValue = 5;
     public static final int disRefreshRatePickerMaxValue = 500;
+
+    public static final int searchRadiusPickerMinValue = 50;
+    public static final int searchRadiusPickerMaxValue = 800;
 
     // Database/storage references
     public static final String peopleDatabaseRefName = "people";
