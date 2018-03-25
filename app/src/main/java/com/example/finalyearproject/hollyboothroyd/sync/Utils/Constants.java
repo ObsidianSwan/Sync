@@ -16,7 +16,7 @@ public class Constants {
     public static final int locationTimeUpdateIntervalDefault = 1000;
     public static final int locationDistanceUpdateIntervalDefault = 5;
     public static final int obfuscationRadiusDefault = 60; // Meters
-    public static final int geofenceRadiusDefault = 100; //Meters
+    public static final int geofenceRadiusDefault = 150; //Meters
     public static final float metersPerDegree = 111300f;
     public static final int obfuscationTrials = 4;
     public static final double earthRadiusMeters = 6371000.00;

@@ -85,7 +85,7 @@
     </string-array>
 
     // Toast messages
-    <string name="could_not_find_location">Could not find your location.\\nMake sure location features are turned on</string>
+    <string name="could_not_find_location">Could not find your location.\nMake sure location features are turned on</string>
     <string name="connection_successful">Connection made!</string>
     <string name="connection_unsuccessful">Connection request unsuccessful</string>
     <string name="generic_sign_up_failed">Signed up failed</string>

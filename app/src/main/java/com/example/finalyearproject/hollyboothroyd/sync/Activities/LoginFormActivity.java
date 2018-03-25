@@ -4,9 +4,12 @@ import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.annotation.TargetApi;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
 import android.view.View;
@@ -73,7 +76,12 @@ public class LoginFormActivity extends AppCompatActivity {
                             if (task.isSuccessful()) {
                                 // Sign in was successful
                                 Toast.makeText(LoginFormActivity.this, "Signed in", Toast.LENGTH_LONG).show();
-                                startActivity(new Intent(LoginFormActivity.this, CoreActivity.class));
+                                if (ActivityCompat.checkSelfPermission(LoginFormActivity.this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(LoginFormActivity.this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                                    // Request Location permissions
+                                    ActivityCompat.requestPermissions(LoginFormActivity.this, new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION, android.Manifest.permission.ACCESS_COARSE_LOCATION}, 2);
+                                } else {
+                                    startActivity(new Intent(LoginFormActivity.this, CoreActivity.class));
+                                }
                             } else {
                                 // Sign in was not successful
                                 Toast.makeText(LoginFormActivity.this, "Signed in failed", Toast.LENGTH_LONG).show();
@@ -86,6 +94,19 @@ public class LoginFormActivity extends AppCompatActivity {
 
         mLoginFormView = findViewById(R.id.login_form);
         mProgressView = findViewById(R.id.login_progress);
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
+                                           @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+
+        if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            if (ContextCompat.checkSelfPermission(LoginFormActivity.this, android.Manifest.permission.ACCESS_FINE_LOCATION)
+                    == PackageManager.PERMISSION_GRANTED) {
+                startActivity(new Intent(LoginFormActivity.this, CoreActivity.class));
+            }
+        }
     }
 
     private boolean areCredentialsValid(String email, String password) {

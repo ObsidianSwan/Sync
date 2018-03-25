@@ -4,9 +4,12 @@ import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.annotation.TargetApi;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Build;
 import android.support.annotation.NonNull;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -16,6 +19,7 @@ import android.widget.ImageButton;
 import android.widget.Toast;
 
 import com.example.finalyearproject.hollyboothroyd.sync.Activities.CoreActivity;
+import com.example.finalyearproject.hollyboothroyd.sync.Activities.LoginFormActivity;
 import com.example.finalyearproject.hollyboothroyd.sync.Model.Person;
 import com.example.finalyearproject.hollyboothroyd.sync.R;
 import com.example.finalyearproject.hollyboothroyd.sync.Services.AccountManager;
@@ -155,13 +159,16 @@ public class NewAccountPhotoActivity extends AppCompatActivity {
                                                     showProgress(false);
                                                     if(task.isSuccessful())
                                                     {
-                                                        Toast.makeText(NewAccountPhotoActivity.this, R.string.sign_up_successful, Toast.LENGTH_LONG).show();
-                                                        startActivity(new Intent(NewAccountPhotoActivity.this, CoreActivity.class));
+                                                        if (ActivityCompat.checkSelfPermission(NewAccountPhotoActivity.this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(NewAccountPhotoActivity.this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                                                            // Request Location permissions
+                                                            ActivityCompat.requestPermissions(NewAccountPhotoActivity.this, new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION, android.Manifest.permission.ACCESS_COARSE_LOCATION}, 2);
+                                                        }
+                                                        Toast.makeText(NewAccountPhotoActivity.this, R.string.sign_up_successful, Toast.LENGTH_SHORT).show();
                                                     }
                                                     else
                                                     {
                                                         //TODO: add logging tags. Debugging. Better retry
-                                                        Toast.makeText(NewAccountPhotoActivity.this, R.string.generic_sign_up_failed, Toast.LENGTH_LONG).show();
+                                                        Toast.makeText(NewAccountPhotoActivity.this, R.string.generic_sign_up_failed, Toast.LENGTH_SHORT).show();
                                                         showProgress(false);
                                                     }
                                                 }
@@ -173,14 +180,14 @@ public class NewAccountPhotoActivity extends AppCompatActivity {
                                         public void onFailure(@NonNull Exception exception) {
                                             // Adding the user's image was not successful
                                             //TODO: add logging tags. Debugging. Better retry
-                                            Toast.makeText(NewAccountPhotoActivity.this, R.string.generic_sign_up_failed, Toast.LENGTH_LONG).show();
+                                            Toast.makeText(NewAccountPhotoActivity.this, R.string.generic_sign_up_failed, Toast.LENGTH_SHORT).show();
                                             showProgress(false);
                                         }
                                     });
                                 } else {
                                     // Sign in was not successful
                                     //TODO: add logging tags. Debugging. Better retry
-                                    Toast.makeText(NewAccountPhotoActivity.this, R.string.generic_sign_up_failed, Toast.LENGTH_LONG).show();
+                                    Toast.makeText(NewAccountPhotoActivity.this, R.string.generic_sign_up_failed, Toast.LENGTH_SHORT).show();
                                     showProgress(false);
                                 }
                             }
@@ -188,11 +195,24 @@ public class NewAccountPhotoActivity extends AppCompatActivity {
                     } else {
                         //New user failed to be added
                         //TODO: add logging tags. Debugging. Better retry
-                        Toast.makeText(NewAccountPhotoActivity.this, R.string.generic_sign_up_failed, Toast.LENGTH_LONG).show();
+                        Toast.makeText(NewAccountPhotoActivity.this, R.string.generic_sign_up_failed, Toast.LENGTH_SHORT).show();
                         showProgress(false);
                     }
                 }
             });
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
+                                           @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+
+        if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            if (ContextCompat.checkSelfPermission(NewAccountPhotoActivity.this, android.Manifest.permission.ACCESS_FINE_LOCATION)
+                    == PackageManager.PERMISSION_GRANTED) {
+                startActivity(new Intent(NewAccountPhotoActivity.this, CoreActivity.class));
+            }
+        }
     }
 
     /**
