@@ -27,20 +27,33 @@ public class LocationFilter {
         // Calculate a new random angle that is between 0 and 2pi radians
         double newAngle = 2 * Math.PI * random2;
 
+        // Convert the polar coordinates to cartesian coordinates and return
         return convertPolarToCartesianPoints(originalLocation, newRadius, newAngle);
     }
 
     public static LatLng nRandObfuscation(LatLng originalLocation, int radius){
         LatLng furthestLocation = originalLocation;
         double largestDistance = 0;
+
+        // For the desired obfuscation trials (4) calculate the rand obfuscated point
         for(int i = 0; i < Constants.obfuscationTrials; i++){
+
+            // Calculate the rand obfuscated point
             LatLng randLocation = randObfuscation(originalLocation, radius);
+
+            // Calculate the distance between the original and obfuscated point
             double distance = distanceBetweenPoints(originalLocation, randLocation);
+
+            // Check if the obfuscated point is the furthest point
             if(distance > largestDistance){
+
+                // Save the largest distance and furthest point
                 largestDistance = distance;
                 furthestLocation = randLocation;
             }
         }
+
+        // Return the furthest point
         return furthestLocation;
     }
 
@@ -58,14 +71,23 @@ public class LocationFilter {
         LatLng furthestLocation = originalLocation;
         double largestDistance = 0;
 
+        // For the desired obfuscation trials (4) calculate the theta-rand obfuscated point
         for(int i = 0; i < Constants.obfuscationTrials; i++){
+
+            // Calculate the theta-rand obfuscated point
             LatLng randLocation = thetaRandImpl(originalLocation, radius, Math.min(newAngle1, newAngle2), Math.max(newAngle1, newAngle2));
+
+            // Check if the obfuscated point is the furthest point
             double distance = distanceBetweenPoints(originalLocation, randLocation);
             if(distance > largestDistance){
+
+                // Save the largest distance and furthest point
                 largestDistance = distance;
                 furthestLocation = randLocation;
             }
         }
+
+        // Return the furthest point
         return furthestLocation;
     }
 
@@ -84,6 +106,7 @@ public class LocationFilter {
         // Calculate a new random angle that is between the upper and lower bounds in radians
         double newAngle = random.nextDouble() * (upperAngleBound - lowerAngleBound) + lowerAngleBound;
 
+        // Convert the polar coordinates to cartesian coordinates and return
         return convertPolarToCartesianPoints(originalLocation, newRadius, newAngle);
     }
 

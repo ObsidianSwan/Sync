@@ -216,10 +216,10 @@ public class CoreActivity extends AppCompatActivity
     // If it is then return true
     private boolean isMenuFragmentShowing() {
         // Check if the fragment is not null first or the app will crash. If the fragment is not null, check if it is visible
-        // TODO: add edit profile and syncup
+        // TODO: add syncup
         if (mCurrentFragment == R.string.view_connections_tag || mCurrentFragment == R.string.view_events_tag ||
                 mCurrentFragment == R.string.create_event_basic_info_tag || mCurrentFragment == R.string.settings_tag ||
-                mCurrentFragment == R.string.logout_tag) {
+                mCurrentFragment == R.string.logout_tag || mCurrentFragment == R.string.edit_profile_tag) {
             return true;
         }
         return false;
@@ -256,7 +256,8 @@ public class CoreActivity extends AppCompatActivity
             mSupportFragmentManager.beginTransaction().replace(R.id.content_frame, new ConnectionFragment(), getString(R.string.view_connections_tag)).commit();
             mCurrentFragment = R.string.view_connections_tag;
         } else if (id == R.id.nav_sync_up) {
-
+            startActivity(new Intent(CoreActivity.this, NFCActivity.class));
+            mCurrentFragment = 0;
         } else if (id == R.id.nav_view_events) {
             mSupportFragmentManager.beginTransaction().replace(R.id.content_frame, new ViewEventsFragment(), getString(R.string.view_events_tag)).commit();
             mCurrentFragment = R.string.view_events_tag;
