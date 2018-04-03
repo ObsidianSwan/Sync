@@ -184,4 +184,5 @@
     <string name="distance_refresh_setting_change">Distance refresh rate change successful</string>
     <string name="time_refresh_setting_change_succesful">Time refresh rate successfully changed</string>
     <string name="zoom_level_setting_change_successful">Zoom level changed successfully</string>
+    <string name="title_activity_nfc">NFCActivity</string>
 </resources>
