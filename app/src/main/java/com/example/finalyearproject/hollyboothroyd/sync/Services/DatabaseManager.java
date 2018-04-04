@@ -125,8 +125,8 @@ public class DatabaseManager {
         return connectionRef.child(userBId).setValue(true);
     }
 
-    public Task<Void> addConnectionReference(String connectionRefKey, String userAId, String userBId){
-        return mPeopleDatabaseReference.child(userAId).child(Constants.connectionDatabaseRefName).child(userBId).setValue(connectionRefKey);
+    public Task<Void> addConnection(String userAId, String userBId){
+        return mPeopleDatabaseReference.child(userAId).child(Constants.connectionDatabaseRefName).child(userBId).setValue(true);
     }
 
     // Connection Requests
@@ -157,7 +157,7 @@ public class DatabaseManager {
         return mConnectionsDatabaseReference.child(databaseReference).setValue(null);
     }
 
-    public Task<Void> deleteUserConnection(String userId, String connectionId){
+    public Task<Void> deleteConnection(String userId, String connectionId){
         return mPeopleDatabaseReference.child(userId).child(Constants.connectionDatabaseRefName).child(connectionId).setValue(null);
     }
 

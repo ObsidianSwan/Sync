@@ -333,39 +333,23 @@ public class SettingsFragment extends Fragment {
     }
 
     private void deleteConnection(final String connectionId) {
-        // Get the connection database reference from the connectionId
-        mDatabaseManager.getUserConnectionReference(connectionId).addListenerForSingleValueEvent(new ValueEventListener() {
+        final String currentUserId = mAccountManager.getCurrentUser().getUid();
+
+        // Remove the connection reference from the current users database
+        mDatabaseManager.deleteConnection(currentUserId, connectionId).addOnCompleteListener(new OnCompleteListener<Void>() {
             @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                String dbRef = dataSnapshot.getValue(String.class);
-                // Remove the connection from the connection database
-                mDatabaseManager.deleteConnection(dbRef).addOnCompleteListener(new OnCompleteListener<Void>() {
-                    @Override
-                    public void onComplete(@NonNull Task<Void> task) {
-                        if (task.isSuccessful()) {
-                            // Remove the connection reference from the current users database
-                            mDatabaseManager.deleteUserConnection(mAccountManager.getCurrentUser().getUid(), connectionId).addOnCompleteListener(new OnCompleteListener<Void>() {
-                                @Override
-                                public void onComplete(@NonNull Task<Void> task) {
-                                    if (task.isSuccessful()) {
-                                        // Remove the connection reference from the connection users database
-                                        mDatabaseManager.deleteUserConnection(connectionId, mAccountManager.getCurrentUser().getUid());
-                                        // TODO check success
-                                    } else {
-                                        // TODO: Log
-                                    }
-                                }
-                            });
-                        } else {
-                            // TODO: Log
+            public void onComplete(@NonNull Task<Void> task) {
+                if (task.isSuccessful()) {
+                    // Remove the connection reference from the connection users database
+                    mDatabaseManager.deleteConnection(connectionId, currentUserId).addOnCompleteListener(new OnCompleteListener<Void>() {
+                        @Override
+                        public void onComplete(@NonNull Task<Void> task) {
+                            // TODO Check success?
                         }
-                    }
-                });
-            }
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-
+                    });
+                } else {
+                    // TODO: Log
+                }
             }
         });
     }
