@@ -246,58 +246,56 @@ public class MyNotificationRecyclerViewAdapter extends RecyclerView.Adapter<MyNo
     }
 
     private void addConnection(final NotificationBase notification) {
-        final String currentUserId = mAccountManager.getCurrentUser().getUid();
-        // Create a new connection item in the connection database
-        DatabaseReference connectionRef = mDatabaseManager.getNewConnectionReference();
-        final String dbRef = connectionRef.getKey();
-        mDatabaseManager.addNewConnection(connectionRef, notification.getId(), currentUserId).addOnCompleteListener(new OnCompleteListener<Void>() {
+        mDatabaseManager.getUserPeopleDatabaseReference().addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
-            public void onComplete(@NonNull Task<Void> task) {
-                if (task.isSuccessful()) {
-                    // Add connection reference key to current users database
-                    mDatabaseManager.addConnectionReference(dbRef, notification.getId(), currentUserId).addOnCompleteListener(new OnCompleteListener<Void>() {
-                        @Override
-                        public void onComplete(@NonNull Task<Void> task) {
-                            if (task.isSuccessful()) {
-                                // Add connection reference key to other users database
-                                mDatabaseManager.addConnectionReference(dbRef, currentUserId, notification.getId()).addOnCompleteListener(new OnCompleteListener<Void>() {
-                                    @Override
-                                    public void onComplete(@NonNull Task<Void> task) {
-                                        if (task.isSuccessful()) {
-                                            // Delete connection request in the other users database
-                                            mDatabaseManager.deleteUserConnectionRequest(notification.getId()).addOnCompleteListener(new OnCompleteListener<Void>() {
-                                                @Override
-                                                public void onComplete(@NonNull Task<Void> task) {
-                                                    if (task.isSuccessful()) {
-                                                        // Delete connection notification in the current users database
-                                                        mDatabaseManager.deleteUserNotification(notification.getDbRefKey()).addOnCompleteListener(new OnCompleteListener<Void>() {
-                                                            @Override
-                                                            public void onComplete(@NonNull Task<Void> task) {
-                                                                if (task.isSuccessful()) {
-                                                                    Toast.makeText(mContext, R.string.connection_accepted_toast_text, Toast.LENGTH_SHORT).show();
-                                                                } else {
-                                                                    // TODO LOG
-                                                                }
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                final String currentUserId = mAccountManager.getCurrentUser().getUid();
+                // Add connection to current users database
+                mDatabaseManager.addConnection(notification.getId(), currentUserId).addOnCompleteListener(new OnCompleteListener<Void>() {
+                    @Override
+                    public void onComplete(@NonNull Task<Void> task) {
+                        if (task.isSuccessful()) {
+                            // Add connection to other users database
+                            mDatabaseManager.addConnection(currentUserId, notification.getId()).addOnCompleteListener(new OnCompleteListener<Void>() {
+                                @Override
+                                public void onComplete(@NonNull Task<Void> task) {
+                                    if (task.isSuccessful()) {
+                                        // Delete connection request in the other users database
+                                        mDatabaseManager.deleteUserConnectionRequest(notification.getId()).addOnCompleteListener(new OnCompleteListener<Void>() {
+                                            @Override
+                                            public void onComplete(@NonNull Task<Void> task) {
+                                                if (task.isSuccessful()) {
+                                                    // Delete connection notification in the current users database
+                                                    mDatabaseManager.deleteUserNotification(notification.getDbRefKey()).addOnCompleteListener(new OnCompleteListener<Void>() {
+                                                        @Override
+                                                        public void onComplete(@NonNull Task<Void> task) {
+                                                            if (task.isSuccessful()) {
+                                                                Toast.makeText(mContext, R.string.connection_accepted_toast_text, Toast.LENGTH_SHORT).show();
+                                                            } else {
+                                                                // TODO LOG
                                                             }
-                                                        });
-                                                    } else {
-                                                        // TODO: LOG
-                                                    }
+                                                        }
+                                                    });
+                                                } else {
+                                                    // TODO: LOG
                                                 }
-                                            });
-                                        } else {
-                                            //TODO:Log
-                                        }
+                                            }
+                                        });
+                                    } else {
+                                        //TODO:Log
                                     }
-                                });
-                            } else {
-                                //TODO:Log
-                            }
+                                }
+                            });
+                        } else {
+                            //TODO:Log
                         }
-                    });
-                } else {
-                    //TODO: Log
-                }
+                    }
+                });
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                //TODO:Log
             }
         });
     }
@@ -333,41 +331,76 @@ public class MyNotificationRecyclerViewAdapter extends RecyclerView.Adapter<MyNo
     }
 
     private void deleteConnection(final Person person) {
-        final Person connection = UserConnections.CONNECTION_ITEM_MAP.get(person.getUserId());
+        final String currentUserId = mAccountManager.getCurrentUser().getUid();
 
-        // Get the connection database reference from the connectionId
-        mDatabaseManager.getUserConnectionReference(connection.getUserId()).addListenerForSingleValueEvent(new ValueEventListener() {
+        // Remove the connection reference from the current users database
+        mDatabaseManager.deleteConnection(currentUserId, person.getUserId()).addOnCompleteListener(new OnCompleteListener<Void>() {
+            @Override
+            public void onComplete(@NonNull Task<Void> task) {
+                if (task.isSuccessful()) {
+                    // Remove the connection reference from the connection users database
+                    mDatabaseManager.deleteConnection(person.getUserId(), currentUserId).addOnCompleteListener(new OnCompleteListener<Void>() {
+                        @Override
+                        public void onComplete(@NonNull Task<Void> task) {
+                            if (task.isSuccessful()) {
+                                Toast.makeText(mContext, "You're no longer connected with " + person.getFirstName(), Toast.LENGTH_SHORT).show();
+                                mDialog.dismiss();
+                            } else {
+                                // TODO: Log
+                            }
+                        }
+                    });
+                } else {
+                    // TODO: Log
+                }
+            }
+        });
+    }
+
+    private void acceptConnectionRequest(final NotificationBase notification, final ViewHolder holder) {
+        mDatabaseManager.getUserPeopleDatabaseReference().addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                String dbRef = dataSnapshot.getValue(String.class);
-                // Remove the connection from the connection database
-                mDatabaseManager.deleteConnection(dbRef).addOnCompleteListener(new OnCompleteListener<Void>() {
+                final String currentUserId = mAccountManager.getCurrentUser().getUid();
+                // Add connection to current users database
+                mDatabaseManager.addConnection(notification.getId(), currentUserId).addOnCompleteListener(new OnCompleteListener<Void>() {
                     @Override
                     public void onComplete(@NonNull Task<Void> task) {
                         if (task.isSuccessful()) {
-                            // Remove the connection reference from the current users database
-                            mDatabaseManager.deleteUserConnection(mAccountManager.getCurrentUser().getUid(), connection.getUserId()).addOnCompleteListener(new OnCompleteListener<Void>() {
+                            // Add connection to other users database
+                            mDatabaseManager.addConnection(currentUserId, notification.getId()).addOnCompleteListener(new OnCompleteListener<Void>() {
                                 @Override
                                 public void onComplete(@NonNull Task<Void> task) {
                                     if (task.isSuccessful()) {
-                                        mDatabaseManager.deleteUserConnection(connection.getUserId(), mAccountManager.getCurrentUser().getUid()).addOnCompleteListener(new OnCompleteListener<Void>() {
+                                        // Delete connection request in the other users database
+                                        mDatabaseManager.deleteUserConnectionRequest(notification.getId()).addOnCompleteListener(new OnCompleteListener<Void>() {
                                             @Override
                                             public void onComplete(@NonNull Task<Void> task) {
                                                 if (task.isSuccessful()) {
-                                                    Toast.makeText(mContext, "You're no longer connected with " + person.getFirstName(), Toast.LENGTH_SHORT).show();
-                                                    mDialog.dismiss();
+                                                    // Delete connection notification in the current users database
+                                                    mDatabaseManager.deleteUserNotification(notification.getDbRefKey()).addOnCompleteListener(new OnCompleteListener<Void>() {
+                                                        @Override
+                                                        public void onComplete(@NonNull Task<Void> task) {
+                                                            if (task.isSuccessful()) {
+                                                                removeNotification(holder.getAdapterPosition());
+                                                                Toast.makeText(mContext, R.string.connection_accepted_toast_text, Toast.LENGTH_SHORT).show();
+                                                            } else {
+                                                                // TODO LOG
+                                                            }
+                                                        }
+                                                    });
                                                 } else {
-                                                    // TODO: Log
+                                                    // TODO: LOG
                                                 }
                                             }
                                         });
                                     } else {
-                                        // TODO: Log
+                                        //TODO:Log
                                     }
                                 }
                             });
                         } else {
-                            Toast.makeText(mContext, R.string.cannot_disconnect_toast_text, Toast.LENGTH_SHORT).show();
+                            //TODO:Log
                         }
                     }
                 });
@@ -375,69 +408,7 @@ public class MyNotificationRecyclerViewAdapter extends RecyclerView.Adapter<MyNo
 
             @Override
             public void onCancelled(DatabaseError databaseError) {
-
-            }
-        });
-    }
-
-    private void acceptConnectionRequest(final NotificationBase notification, final ViewHolder holder) {
-        // Get the current users profile information
-        final String currentUserId = mAccountManager.getCurrentUser().getUid();
-
-        // Create a new connection item in the connection database
-        DatabaseReference connectionRef = mDatabaseManager.getNewConnectionReference();
-        final String dbRef = connectionRef.getKey();
-        Connection connection = new Connection(dbRef, notification.getId(), currentUserId);
-        mDatabaseManager.addNewConnection(connectionRef, notification.getId(), currentUserId).addOnCompleteListener(new OnCompleteListener<Void>() {
-            @Override
-            public void onComplete(@NonNull Task<Void> task) {
-                if (task.isSuccessful()) {
-                    // Add connection reference key to current users database
-                    mDatabaseManager.addConnectionReference(dbRef, notification.getId(), currentUserId).addOnCompleteListener(new OnCompleteListener<Void>() {
-                        @Override
-                        public void onComplete(@NonNull Task<Void> task) {
-                            if (task.isSuccessful()) {
-                                // Add connection reference key to other users database
-                                mDatabaseManager.addConnectionReference(dbRef, currentUserId, notification.getId()).addOnCompleteListener(new OnCompleteListener<Void>() {
-                                    @Override
-                                    public void onComplete(@NonNull Task<Void> task) {
-                                        if (task.isSuccessful()) {
-                                            // Delete connection request in the other users database
-                                            mDatabaseManager.deleteUserConnectionRequest(notification.getId()).addOnCompleteListener(new OnCompleteListener<Void>() {
-                                                @Override
-                                                public void onComplete(@NonNull Task<Void> task) {
-                                                    if (task.isSuccessful()) {
-                                                        // Delete connection notification in the current users database
-                                                        mDatabaseManager.deleteUserNotification(notification.getDbRefKey()).addOnCompleteListener(new OnCompleteListener<Void>() {
-                                                            @Override
-                                                            public void onComplete(@NonNull Task<Void> task) {
-                                                                if (task.isSuccessful()) {
-                                                                    removeNotification(holder.getAdapterPosition());
-                                                                    Toast.makeText(mContext, R.string.connection_accepted_toast_text, Toast.LENGTH_SHORT).show();
-                                                                } else {
-                                                                    // TODO LOG
-                                                                }
-                                                            }
-                                                        });
-                                                    } else {
-                                                        // TODO: LOG
-                                                    }
-                                                }
-                                            });
-
-                                        } else {
-                                            //TODO:Log
-                                        }
-                                    }
-                                });
-                            } else {
-                                //TODO:Log
-                            }
-                        }
-                    });
-                } else {
-                    //TODO: Log
-                }
+                //TODO:Log
             }
         });
     }

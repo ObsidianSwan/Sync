@@ -116,8 +116,7 @@ public class MyConnectionRecyclerViewAdapter extends RecyclerView.Adapter<MyConn
                 deleteConnection(holder, person);
             }
         });
-        dismissPopupButton.setOnClickListener(new View.OnClickListener()
-        {
+        dismissPopupButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 mDialog.dismiss();
@@ -142,53 +141,36 @@ public class MyConnectionRecyclerViewAdapter extends RecyclerView.Adapter<MyConn
         mDialog = mDialogBuilder.create();
         mDialog.show();
     }
-  
-private void deleteConnection(final ViewHolder holder, final Person person){
-        // Get the connection database reference from the connectionId
-        mDatabaseManager.getUserConnectionReference(person.getUserId()).addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                String dbRef = dataSnapshot.getValue(String.class);
-                // Remove the connection from the connection database
-                mDatabaseManager.deleteConnection(dbRef).addOnCompleteListener(new OnCompleteListener<Void>() {
-                    @Override
-                    public void onComplete(@NonNull Task<Void> task) {
-                        if (task.isSuccessful()) {
-                            // Remove the connection reference from the current users database
-                            mDatabaseManager.deleteUserConnection(mAccountManager.getCurrentUser().getUid(), person.getUserId()).addOnCompleteListener(new OnCompleteListener<Void>() {
-                                @Override
-                                public void onComplete(@NonNull Task<Void> task) {
-                                    if(task.isSuccessful()){
-                                        mDatabaseManager.deleteUserConnection(person.getUserId(), mAccountManager.getCurrentUser().getUid()).addOnCompleteListener(new OnCompleteListener<Void>() {
-                                            @Override
-                                            public void onComplete(@NonNull Task<Void> task) {
-                                                if(task.isSuccessful()){
-                                                    removeConnectionItem(holder.getAdapterPosition());
-                                                    Toast.makeText(mContext, "You're no longer connected with " + person.getFirstName(), Toast.LENGTH_SHORT).show();
-                                                    mDialog.dismiss();
-                                                } else {
-                                                    // TODO: Log
-                                                }
-                                            }
-                                        });
-                                    } else {
-                                        // TODO: Log
-                                    }
-                                }
-                            });
-                        } else {
-                            Toast.makeText(mContext, R.string.cannot_disconnect_toast_text, Toast.LENGTH_SHORT).show();
-                        }
-                    }
-                });
-            }
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
 
+    private void deleteConnection(final ViewHolder holder, final Person person) {
+        final String currentUserId = mAccountManager.getCurrentUser().getUid();
+
+        // Remove the connection reference from the current users database
+        mDatabaseManager.deleteConnection(currentUserId, person.getUserId()).addOnCompleteListener(new OnCompleteListener<Void>() {
+            @Override
+            public void onComplete(@NonNull Task<Void> task) {
+                if (task.isSuccessful()) {
+                    // Remove the connection reference from the connection users database
+                    mDatabaseManager.deleteConnection(person.getUserId(), currentUserId).addOnCompleteListener(new OnCompleteListener<Void>() {
+                        @Override
+                        public void onComplete(@NonNull Task<Void> task) {
+                            if (task.isSuccessful()) {
+                                removeConnectionItem(holder.getAdapterPosition());
+                                Toast.makeText(mContext, "You're no longer connected with " + person.getFirstName(), Toast.LENGTH_SHORT).show();
+                                mDialog.dismiss();
+                            } else {
+                                // TODO: Log
+                            }
+                        }
+                    });
+                } else {
+                    // TODO: Log
+                }
             }
         });
+
     }
-    
+
     private void removeConnectionItem(int position) {
         notifyItemRemoved(position);
         notifyItemRangeChanged(position, mValues.size());

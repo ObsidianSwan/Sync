@@ -216,30 +216,34 @@ public class NFCActivity extends AppCompatActivity implements NfcAdapter.CreateN
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 final String currentUserId = mAccountManager.getCurrentUser().getUid();
-                // Create a new connection item in the connection database
-                DatabaseReference connectionRef = mDatabaseManager.getNewConnectionReference();
-                final String dbRef = connectionRef.getKey();
-                mDatabaseManager.addNewConnection(connectionRef, otherUserId, currentUserId).addOnCompleteListener(new OnCompleteListener<Void>() {
+                // Add connection to current users database
+                mDatabaseManager.addConnection(otherUserId, currentUserId).addOnCompleteListener(new OnCompleteListener<Void>() {
                     @Override
                     public void onComplete(@NonNull Task<Void> task) {
                         if (task.isSuccessful()) {
-                            // Add connection reference key to current users database
-                            mDatabaseManager.addConnectionReference(dbRef, otherUserId, currentUserId).addOnCompleteListener(new OnCompleteListener<Void>() {
+                            // Add connection to other users database
+                            mDatabaseManager.addConnection(currentUserId, otherUserId).addOnCompleteListener(new OnCompleteListener<Void>() {
                                 @Override
                                 public void onComplete(@NonNull Task<Void> task) {
                                     if (task.isSuccessful()) {
-                                        // Add connection reference key to other users database
-                                        mDatabaseManager.addConnectionReference(dbRef, currentUserId, otherUserId).addOnCompleteListener(new OnCompleteListener<Void>() {
+                                        // Delete connection request in the other users database
+                                        mDatabaseManager.deleteUserConnectionRequest(otherUserId).addOnCompleteListener(new OnCompleteListener<Void>() {
                                             @Override
                                             public void onComplete(@NonNull Task<Void> task) {
                                                 if (task.isSuccessful()) {
-                                                    if (task.isSuccessful()) {
-                                                        Toast.makeText(NFCActivity.this, R.string.connection_accepted_toast_text, Toast.LENGTH_SHORT).show();
-                                                    } else {
-                                                        // TODO LOG
-                                                    }
+                                                    // Delete connection notification in the current users database
+                                                    mDatabaseManager.deleteUserNotification(otherUserId).addOnCompleteListener(new OnCompleteListener<Void>() {
+                                                        @Override
+                                                        public void onComplete(@NonNull Task<Void> task) {
+                                                            if (task.isSuccessful()) {
+                                                                Toast.makeText(NFCActivity.this, R.string.connection_accepted_toast_text, Toast.LENGTH_SHORT).show();
+                                                            } else {
+                                                                // TODO LOG
+                                                            }
+                                                        }
+                                                    });
                                                 } else {
-                                                    //TODO:Log
+                                                    // TODO: LOG
                                                 }
                                             }
                                         });
@@ -249,7 +253,7 @@ public class NFCActivity extends AppCompatActivity implements NfcAdapter.CreateN
                                 }
                             });
                         } else {
-                            //TODO: Log
+                            //TODO:Log
                         }
                     }
                 });
