@@ -7,19 +7,17 @@ import java.util.HashMap;
  */
 
 public class Person {
-    // TODO: mVariable
-    private String firstName;
-    private String lastName;
-    private String position;
-    private String company;
-    private String industry;
-    private String imageId;
+    private String mFirstName;
+    private String mLastName;
+    private String mPosition;
+    private String mCompany;
+    private String mIndustry;
+    private String mImageId;
+    private String mUserId;
+    private double mLongitude;
+    private double mLatitude;
 
-    private String userId;
-    private double longitude;
-    private double latitude;
-
-    private HashMap<String, Integer> userSettings;
+    private HashMap<String, Integer> mUserSettings;
 
     // Used during person list population
     public Person() {
@@ -28,90 +26,77 @@ public class Person {
     // Used during account creation. Location permissions requested after login.
     public Person(String firstName, String lastName, String position, String company,
                   String industry, String imageId, String userId, HashMap<String, Integer> defaultUserSettings) {
-        this.firstName = firstName;
-        this.lastName = lastName;
-        this.position = position;
-        this.company = company;
-        this.industry = industry;
-        this.imageId = imageId;
-        this.userId = userId;
-        this.userSettings = defaultUserSettings;
+        this.mFirstName = firstName;
+        this.mLastName = lastName;
+        this.mPosition = position;
+        this.mCompany = company;
+        this.mIndustry = industry;
+        this.mImageId = imageId;
+        this.mUserId = userId;
+        this.mUserSettings = defaultUserSettings;
     }
 
-/*    public Person(String firstName, String lastName, String position, String company,
-                  String industry, String imageId, String userId, double longitude, double latitude) {
-        this.firstName = firstName;
-        this.lastName = lastName;
-        this.position = position;
-        this.company = company;
-        this.industry = industry;
-        this.imageId = imageId;
-        this.userId = userId;
-        this.longitude = longitude;
-        this.latitude = latitude;
-    }*/
-
     public String getFirstName() {
-        return firstName;
+        return mFirstName;
     }
 
     public void setFirstName(String firstName) {
-        this.firstName = firstName;
+        this.mFirstName = firstName;
     }
 
     public String getLastName() {
-        return lastName;
+        return mLastName;
     }
 
     public void setLastName(String lastName) {
-        this.lastName = lastName;
+        this.mLastName = lastName;
     }
 
     public String getPosition() {
-        return position;
+        return mPosition;
     }
 
     public void setPosition(String position) {
-        this.position = position;
+        this.mPosition = position;
     }
 
     public String getCompany() {
-        return company;
+        return mCompany;
     }
 
     public void setCompany(String company) {
-        this.company = company;
+        this.mCompany = company;
     }
 
     public String getIndustry() {
-        return industry;
+        return mIndustry;
     }
 
     public void setIndustry(String industry) {
-        this.industry = industry;
+        this.mIndustry = industry;
     }
 
     public String getImageId() {
-        return imageId;
+        return mImageId;
     }
 
     public void setImageId(String imageId) {
-        this.imageId = imageId;
+        this.mImageId = imageId;
     }
 
-    public String getUserId() { return userId; }
+    public String getUserId() { return mUserId; }
 
-    public void setUserId(String userId) { this.userId = userId; }
+    public void setUserId(String userId) { this.mUserId = userId; }
 
-    public double getLongitude() { return longitude; }
+    public double getLongitude() { return mLongitude; }
 
-    public void setLongitude(double longitude) { this.longitude = longitude; }
+    public void setLongitude(double longitude) { this.mLongitude = longitude; }
 
-    public double getLatitude() { return latitude; }
+    public double getLatitude() { return mLatitude; }
 
-    public void setLatitude(double latitude) { this.latitude = latitude; }
+    public void setLatitude(double latitude) { this.mLatitude = latitude; }
 
-    public HashMap<String, Integer> getUserSettings() { return userSettings; }
+    public HashMap<String, Integer> getUserSettings() { return mUserSettings; }
 
-    public void setUserSettings(HashMap<String, Integer> userSettings) { this.userSettings = userSettings; }
+    public void setUserSettings(HashMap<String, Integer> userSettings) { this.mUserSettings = userSettings; }
 }

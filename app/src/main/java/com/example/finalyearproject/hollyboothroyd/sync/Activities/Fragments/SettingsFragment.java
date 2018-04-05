@@ -4,6 +4,7 @@ import android.content.Context;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -34,6 +35,8 @@ import java.util.HashMap;
 // implements AdapterView.OnItemSelectedListener
 
 public class SettingsFragment extends Fragment {
+
+    private static final String TAG = "SettingsFragment";
 
     private OnFragmentInteractionListener mListener;
 
@@ -146,12 +149,13 @@ public class SettingsFragment extends Fragment {
                     mDatabaseManager.setUserSettings(Constants.mapZoomLevelName, mZoomPicker.getValue()).addOnCompleteListener(new OnCompleteListener<Void>() {
                         @Override
                         public void onComplete(@NonNull Task<Void> task) {
-                            if(task.isSuccessful()){
+                            if (task.isSuccessful()) {
                                 mZoomValue = mZoomPicker.getValue();
                                 Toast.makeText(getActivity(), R.string.zoom_level_setting_change_successful, Toast.LENGTH_SHORT).show();
-                            } else{
+                                Log.i(TAG, getString(R.string.zoom_level_setting_change_successful));
+                            } else {
                                 Toast.makeText(getActivity(), R.string.setting_change_unsuccessful_text, Toast.LENGTH_SHORT).show();
-                                // TODO log
+                                Log.e(TAG, getString(R.string.setting_change_unsuccessful_text));
                             }
                         }
                     });
@@ -160,12 +164,13 @@ public class SettingsFragment extends Fragment {
                     mDatabaseManager.setUserSettings(Constants.locationTimeUpdateIntervalName, mTimeRefreshRatePicker.getValue()).addOnCompleteListener(new OnCompleteListener<Void>() {
                         @Override
                         public void onComplete(@NonNull Task<Void> task) {
-                            if(task.isSuccessful()){
+                            if (task.isSuccessful()) {
                                 mTimeRefreshRateValue = mTimeRefreshRatePicker.getValue();
                                 Toast.makeText(getActivity(), R.string.time_refresh_setting_change_succesful, Toast.LENGTH_SHORT).show();
-                            } else{
+                                Log.i(TAG, getString(R.string.time_refresh_setting_change_succesful));
+                            } else {
                                 Toast.makeText(getActivity(), R.string.setting_change_unsuccessful_text, Toast.LENGTH_SHORT).show();
-                                // TODO log
+                                Log.e(TAG, getString(R.string.setting_change_unsuccessful_text));
                             }
                         }
                     });
@@ -174,11 +179,12 @@ public class SettingsFragment extends Fragment {
                     mDatabaseManager.setUserSettings(Constants.locationDistanceUpdateIntervalName, mDisRefreshRatePicker.getValue()).addOnCompleteListener(new OnCompleteListener<Void>() {
                         @Override
                         public void onComplete(@NonNull Task<Void> task) {
-                            if(task.isSuccessful()){
+                            if (task.isSuccessful()) {
                                 Toast.makeText(getActivity(), R.string.distance_refresh_setting_change, Toast.LENGTH_SHORT).show();
-                            } else{
+                                Log.i(TAG, getString(R.string.distance_refresh_setting_change));
+                            } else {
                                 Toast.makeText(getActivity(), R.string.setting_change_unsuccessful_text, Toast.LENGTH_SHORT).show();
-                                // TODO log
+                                Log.e(TAG, getString(R.string.setting_change_unsuccessful_text));
                             }
                         }
                     });
@@ -187,12 +193,13 @@ public class SettingsFragment extends Fragment {
                     mDatabaseManager.setUserSettings(Constants.searchRadiusName, mSearchRadiusPicker.getValue()).addOnCompleteListener(new OnCompleteListener<Void>() {
                         @Override
                         public void onComplete(@NonNull Task<Void> task) {
-                            if(task.isSuccessful()){
+                            if (task.isSuccessful()) {
                                 mSearchRadiusValue = mSearchRadiusPicker.getValue();
-                                Toast.makeText(getActivity(), "Search radius successfully changed", Toast.LENGTH_SHORT).show();
-                            } else{
+                                Toast.makeText(getActivity(), R.string.search_radius_setting_change, Toast.LENGTH_SHORT).show();
+                                Log.i(TAG, getString(R.string.search_radius_setting_change));
+                            } else {
                                 Toast.makeText(getActivity(), R.string.setting_change_unsuccessful_text, Toast.LENGTH_SHORT).show();
-                                // TODO log
+                                Log.e(TAG, getString(R.string.setting_change_unsuccessful_text));
                             }
                         }
                     });
@@ -202,12 +209,13 @@ public class SettingsFragment extends Fragment {
                     mDatabaseManager.setUserSettings(Constants.personPinColorName, color).addOnCompleteListener(new OnCompleteListener<Void>() {
                         @Override
                         public void onComplete(@NonNull Task<Void> task) {
-                            if(task.isSuccessful()){
+                            if (task.isSuccessful()) {
                                 mPersonPinColorValue = mPersonPinColorSpinner.getSelectedItem().toString();
                                 Toast.makeText(getActivity(), R.string.person_pin_setting_change_successful, Toast.LENGTH_SHORT).show();
-                            } else{
+                                Log.i(TAG, getString(R.string.person_pin_setting_change_successful));
+                            } else {
                                 Toast.makeText(getActivity(), R.string.setting_change_unsuccessful_text, Toast.LENGTH_SHORT).show();
-                                // TODO log
+                                Log.e(TAG, getString(R.string.setting_change_unsuccessful_text));
                             }
                         }
                     });
@@ -217,13 +225,14 @@ public class SettingsFragment extends Fragment {
                     mDatabaseManager.setUserSettings(Constants.eventPinColorName, color).addOnCompleteListener(new OnCompleteListener<Void>() {
                         @Override
                         public void onComplete(@NonNull Task<Void> task) {
-                           if(task.isSuccessful()){
-                               mEventPinColorValue = mEventPinColorSpinner.getSelectedItem().toString();
-                               Toast.makeText(getActivity(), R.string.event_pin_setting_change_successful_text, Toast.LENGTH_SHORT).show();
-                           } else{
-                               Toast.makeText(getActivity(), R.string.setting_change_unsuccessful_text, Toast.LENGTH_SHORT).show();
-                               // TODO log
-                           }
+                            if (task.isSuccessful()) {
+                                mEventPinColorValue = mEventPinColorSpinner.getSelectedItem().toString();
+                                Toast.makeText(getActivity(), R.string.event_pin_setting_change_successful_text, Toast.LENGTH_SHORT).show();
+                                Log.i(TAG, getString(R.string.event_pin_setting_change_successful_text));
+                            } else {
+                                Toast.makeText(getActivity(), R.string.setting_change_unsuccessful_text, Toast.LENGTH_SHORT).show();
+                                Log.e(TAG, getString(R.string.setting_change_unsuccessful_text));
+                            }
                         }
                     });
                 }
@@ -232,12 +241,13 @@ public class SettingsFragment extends Fragment {
                     mDatabaseManager.setUserSettings(Constants.privacyIntensityName, intensity).addOnCompleteListener(new OnCompleteListener<Void>() {
                         @Override
                         public void onComplete(@NonNull Task<Void> task) {
-                            if(task.isSuccessful()){
+                            if (task.isSuccessful()) {
                                 mPrivacyIntensityValue = mPrivacyIntensitySpinner.getSelectedItem().toString();
-                                Toast.makeText(getActivity(), "Privacy intensity successfully changed", Toast.LENGTH_SHORT).show();
-                            } else{
+                                Toast.makeText(getActivity(), R.string.privacy_intensity_setting_change_successful, Toast.LENGTH_SHORT).show();
+                                Log.i(TAG, getString(R.string.privacy_intensity_setting_change_successful));
+                            } else {
                                 Toast.makeText(getActivity(), R.string.setting_change_unsuccessful_text, Toast.LENGTH_SHORT).show();
-                                // TODO log
+                                Log.e(TAG, getString(R.string.setting_change_unsuccessful_text));
                             }
                         }
                     });
@@ -292,9 +302,9 @@ public class SettingsFragment extends Fragment {
             public void onComplete(@NonNull Task<Void> task) {
                 if (task.isSuccessful()) {
                     mDatabaseManager.deleteEventAttending(eventId, userId);
-                    // TODO check deletion happened
+                    Log.i(TAG, "Stop attending event successful");
                 } else {
-                    // TODO log
+                    Log.e(TAG, "Stop attending event failed");
                 }
             }
         });
@@ -316,10 +326,19 @@ public class SettingsFragment extends Fragment {
                     public void onComplete(@NonNull Task<Void> task) {
                         if (task.isSuccessful()) {
                             // Delete event in event database
-                            mDatabaseManager.deleteEvent(eventId);
+                            mDatabaseManager.deleteEvent(eventId).addOnCompleteListener(new OnCompleteListener<Void>() {
+                                @Override
+                                public void onComplete(@NonNull Task<Void> task) {
+                                    if (task.isSuccessful()) {
+                                        Log.i(TAG, "Delete event successful");
+                                    } else {
+                                        Log.e(TAG, "Delete event unsuccessful");
+                                    }
+                                }
+                            });
                             // TODO how to check if deletion happened successfully
                         } else {
-                            // TODO LOg
+                            Log.e(TAG, "Delete hosting event failed");
                         }
                     }
                 });
@@ -327,7 +346,7 @@ public class SettingsFragment extends Fragment {
 
             @Override
             public void onCancelled(DatabaseError databaseError) {
-
+                Log.e(TAG, databaseError.toString());
             }
         });
     }
@@ -344,11 +363,15 @@ public class SettingsFragment extends Fragment {
                     mDatabaseManager.deleteConnection(connectionId, currentUserId).addOnCompleteListener(new OnCompleteListener<Void>() {
                         @Override
                         public void onComplete(@NonNull Task<Void> task) {
-                            // TODO Check success?
+                            if(task.isSuccessful()){
+                                Log.i(TAG, "Delete connection successful");
+                            } else{
+                                Log.e(TAG, "Delete other user connection failed");
+                            }
                         }
                     });
                 } else {
-                    // TODO: Log
+                    Log.e(TAG, "Delete current user connection failed");
                 }
             }
         });
@@ -371,7 +394,7 @@ public class SettingsFragment extends Fragment {
 
             @Override
             public void onCancelled(DatabaseError databaseError) {
-                // TODO:Log
+                Log.e(TAG, databaseError.toString());
             }
         });
     }
@@ -392,7 +415,7 @@ public class SettingsFragment extends Fragment {
 
             @Override
             public void onCancelled(DatabaseError databaseError) {
-                // TODO:Log
+                Log.e(TAG, databaseError.toString());
             }
         });
     }
@@ -413,7 +436,7 @@ public class SettingsFragment extends Fragment {
 
             @Override
             public void onCancelled(DatabaseError databaseError) {
-                // TODO:Log
+                Log.e(TAG, databaseError.toString());
             }
         });
     }
@@ -434,7 +457,7 @@ public class SettingsFragment extends Fragment {
 
             @Override
             public void onCancelled(DatabaseError databaseError) {
-                // TODO:Log
+                Log.e(TAG, databaseError.toString());
             }
         });
     }
@@ -445,7 +468,7 @@ public class SettingsFragment extends Fragment {
         mDatabaseManager.getUserSettings(Constants.personPinColorName).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                if(dataSnapshot.getValue(Integer.class) != null) {
+                if (dataSnapshot.getValue(Integer.class) != null) {
                     int pinColor = dataSnapshot.getValue(Integer.class);
                     mPersonPinColorValue = Util.getMapKeyFloat(pinColorMap, pinColor);
                     if (mPersonPinColorValue != null) {
@@ -457,7 +480,7 @@ public class SettingsFragment extends Fragment {
 
             @Override
             public void onCancelled(DatabaseError databaseError) {
-                // TODO:Log
+                Log.e(TAG, databaseError.toString());
             }
         });
     }
@@ -468,7 +491,7 @@ public class SettingsFragment extends Fragment {
         mDatabaseManager.getUserSettings(Constants.eventPinColorName).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                if(dataSnapshot.getValue(Integer.class) != null) {
+                if (dataSnapshot.getValue(Integer.class) != null) {
                     int pinColor = dataSnapshot.getValue(Integer.class);
                     mEventPinColorValue = Util.getMapKeyFloat(pinColorMap, pinColor);
                     if (mEventPinColorValue != null) {
@@ -480,7 +503,7 @@ public class SettingsFragment extends Fragment {
 
             @Override
             public void onCancelled(DatabaseError databaseError) {
-                // TODO:Log
+                Log.e(TAG, databaseError.toString());
             }
         });
     }
@@ -491,7 +514,7 @@ public class SettingsFragment extends Fragment {
         mDatabaseManager.getUserSettings(Constants.privacyIntensityName).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                if(dataSnapshot.getValue(Integer.class) != null) {
+                if (dataSnapshot.getValue(Integer.class) != null) {
                     int privacyIntensity = dataSnapshot.getValue(Integer.class);
                     mPrivacyIntensityValue = Util.getMapKeyInt(privacyIntensityMap, privacyIntensity);
                     if (mPrivacyIntensityValue != null) {
@@ -503,7 +526,7 @@ public class SettingsFragment extends Fragment {
 
             @Override
             public void onCancelled(DatabaseError databaseError) {
-                // TODO:Log
+                Log.e(TAG, databaseError.toString());
             }
         });
     }

@@ -21,7 +21,8 @@
             android:ems="10"
             android:hint="@string/New_Event_Title"
             android:inputType="textPersonName"
-            app:layout_constraintEnd_toEndOf="parent" />
+            app:layout_constraintEnd_toEndOf="parent"
+            style="@style/RoundedOutline" />
 
         <EditText
             android:id="@+id/new_event_topic_text"
@@ -32,7 +33,8 @@
             android:layout_marginTop="@dimen/entry_top_margin"
             android:ems="10"
             android:hint="@string/New_Event_Topic"
-            android:inputType="textPersonName"/>
+            android:inputType="textPersonName"
+            style="@style/RoundedOutline" />
 
         <EditText
             android:id="@+id/new_event_industry_text"
@@ -43,7 +45,8 @@
             android:layout_marginTop="@dimen/entry_top_margin"
             android:ems="10"
             android:hint="@string/New_Event_Industry"
-            android:inputType="textPersonName" />
+            android:inputType="textPersonName"
+            style="@style/RoundedOutline" />
 
     </LinearLayout>
 
@@ -54,6 +57,7 @@
         android:layout_alignParentBottom="true"
         android:layout_centerHorizontal="true"
         android:layout_margin="@dimen/button_margin"
-        android:text="@string/Next_Button" />
+        android:text="@string/Next_Button"
+        style="@style/PrimaryButton" />
 
 </RelativeLayout>

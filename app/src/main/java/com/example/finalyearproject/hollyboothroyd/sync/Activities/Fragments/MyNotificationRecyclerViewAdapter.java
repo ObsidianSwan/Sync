@@ -4,6 +4,7 @@ import android.app.AlertDialog;
 import android.content.Context;
 import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -13,7 +14,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.finalyearproject.hollyboothroyd.sync.Activities.Fragments.NotificationFragment.OnListFragmentInteractionListener;
-import com.example.finalyearproject.hollyboothroyd.sync.Model.Connection;
 import com.example.finalyearproject.hollyboothroyd.sync.Model.Notification;
 import com.example.finalyearproject.hollyboothroyd.sync.Model.NotificationBase;
 import com.example.finalyearproject.hollyboothroyd.sync.Model.Person;
@@ -39,6 +39,8 @@ import java.util.List;
  * specified {@link OnListFragmentInteractionListener}.
  */
 public class MyNotificationRecyclerViewAdapter extends RecyclerView.Adapter<MyNotificationRecyclerViewAdapter.ViewHolder> {
+
+    private static final String TAG = "MyNotificationRVA";
 
     private static final int NOTIFICATION_ERROR_TYPE = 0;
     private static final int NOTIFICATION_CONNECTION_REQUEST_TYPE = 1;
@@ -106,7 +108,6 @@ public class MyNotificationRecyclerViewAdapter extends RecyclerView.Adapter<MyNo
 
         switch (notification.getType()) {
             case CONNECTION_REQUEST:
-                //TODO: error checking
                 final ConnectionRequestViewHolder connectionRequestViewHolder = (ConnectionRequestViewHolder) holder;
                 connectionRequestViewHolder.mTimeStamp.setText(Util.getTimeDifference(notification.getTimeStamp()));
                 connectionRequestViewHolder.mConfirmButton.setOnClickListener(new View.OnClickListener() {
@@ -139,8 +140,9 @@ public class MyNotificationRecyclerViewAdapter extends RecyclerView.Adapter<MyNo
                             public void onComplete(@NonNull Task<Void> task) {
                                 if (task.isSuccessful()) {
                                     removeNotification(holder.getAdapterPosition());
+                                    Log.i(TAG, "Delete notification successful");
                                 } else {
-                                    // TODO LOG
+                                    Log.e(TAG, "Delete notification failed");
                                 }
                             }
                         });
@@ -149,6 +151,7 @@ public class MyNotificationRecyclerViewAdapter extends RecyclerView.Adapter<MyNo
                 break;
             case ERROR:
                 // Add any additional view items. Currently there are none
+                Log.e(TAG, "Notification type not recognized");
         }
         //TODO: test for error case
     }
@@ -225,9 +228,9 @@ public class MyNotificationRecyclerViewAdapter extends RecyclerView.Adapter<MyNo
                         @Override
                         public void onComplete(@NonNull Task<Void> task) {
                             if (task.isSuccessful()) {
-                                //TODO log
+                                Log.i(TAG, "Send notification successful");
                             } else {
-                                //TODO log
+                                Log.e(TAG, "Send notification failed");
                             }
                         }
                     });
@@ -240,7 +243,7 @@ public class MyNotificationRecyclerViewAdapter extends RecyclerView.Adapter<MyNo
 
             @Override
             public void onCancelled(DatabaseError databaseError) {
-
+                Log.e(TAG, databaseError.toString());
             }
         });
     }
@@ -271,23 +274,24 @@ public class MyNotificationRecyclerViewAdapter extends RecyclerView.Adapter<MyNo
                                                         public void onComplete(@NonNull Task<Void> task) {
                                                             if (task.isSuccessful()) {
                                                                 Toast.makeText(mContext, R.string.connection_accepted_toast_text, Toast.LENGTH_SHORT).show();
+                                                                Log.i(TAG, "Connection made");
                                                             } else {
-                                                                // TODO LOG
+                                                                Log.e(TAG, "Delete notification failed");
                                                             }
                                                         }
                                                     });
                                                 } else {
-                                                    // TODO: LOG
+                                                    Log.e(TAG, "Delete connection request failed");
                                                 }
                                             }
                                         });
                                     } else {
-                                        //TODO:Log
+                                        Log.e(TAG, "Add connection to other user failed");
                                     }
                                 }
                             });
                         } else {
-                            //TODO:Log
+                            Log.e(TAG, "Add connection to current user failed");
                         }
                     }
                 });
@@ -295,7 +299,7 @@ public class MyNotificationRecyclerViewAdapter extends RecyclerView.Adapter<MyNo
 
             @Override
             public void onCancelled(DatabaseError databaseError) {
-                //TODO:Log
+                Log.e(TAG, databaseError.toString());
             }
         });
     }
@@ -318,13 +322,16 @@ public class MyNotificationRecyclerViewAdapter extends RecyclerView.Adapter<MyNo
                                 mPopupButton.setVisibility(View.GONE);
                                 mConnectionPendingMessage.setVisibility(View.VISIBLE);
                                 Toast.makeText(mContext, R.string.connection_request_sent_success, Toast.LENGTH_SHORT).show();
+                                Log.i(TAG, "Connection request successful");
                             } else {
                                 Toast.makeText(mContext, R.string.connection_request_failed, Toast.LENGTH_SHORT).show();
+                                Log.e(TAG, "Connection request failed");
                             }
                         }
                     });
                 } else {
                     Toast.makeText(mContext, R.string.connection_request_failed, Toast.LENGTH_SHORT).show();
+                    Log.e(TAG, "Send notification failed");
                 }
             }
         });
@@ -345,18 +352,21 @@ public class MyNotificationRecyclerViewAdapter extends RecyclerView.Adapter<MyNo
                             if (task.isSuccessful()) {
                                 Toast.makeText(mContext, "You're no longer connected with " + person.getFirstName(), Toast.LENGTH_SHORT).show();
                                 mDialog.dismiss();
+                                Log.i(TAG, "Delete connection successful");
                             } else {
-                                // TODO: Log
+                                Log.e(TAG, "Delete other users connection failed");
                             }
                         }
                     });
                 } else {
-                    // TODO: Log
+                    Log.e(TAG, "Delete current users connection failed");
                 }
             }
         });
     }
 
+
+    // TODO remove repeat
     private void acceptConnectionRequest(final NotificationBase notification, final ViewHolder holder) {
         mDatabaseManager.getUserPeopleDatabaseReference().addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
@@ -384,23 +394,24 @@ public class MyNotificationRecyclerViewAdapter extends RecyclerView.Adapter<MyNo
                                                             if (task.isSuccessful()) {
                                                                 removeNotification(holder.getAdapterPosition());
                                                                 Toast.makeText(mContext, R.string.connection_accepted_toast_text, Toast.LENGTH_SHORT).show();
+                                                                Log.i(TAG, "Connection made");
                                                             } else {
-                                                                // TODO LOG
+                                                                Log.e(TAG, "Delete notification failed");
                                                             }
                                                         }
                                                     });
                                                 } else {
-                                                    // TODO: LOG
+                                                    Log.e(TAG, "Delete connection request failed");
                                                 }
                                             }
                                         });
                                     } else {
-                                        //TODO:Log
+                                        Log.e(TAG, "Add connection to other user failed");
                                     }
                                 }
                             });
                         } else {
-                            //TODO:Log
+                            Log.e(TAG, "Add connection to current user failed");
                         }
                     }
                 });
@@ -408,7 +419,7 @@ public class MyNotificationRecyclerViewAdapter extends RecyclerView.Adapter<MyNo
 
             @Override
             public void onCancelled(DatabaseError databaseError) {
-                //TODO:Log
+                Log.e(TAG, databaseError.toString());
             }
         });
     }
@@ -427,11 +438,13 @@ public class MyNotificationRecyclerViewAdapter extends RecyclerView.Adapter<MyNo
                             if (task.isSuccessful()) {
                                 removeNotification(holder.getAdapterPosition());
                                 Toast.makeText(mContext, R.string.connection_denied_toast_text, Toast.LENGTH_SHORT).show();
+                                Log.i(TAG, "Delete connection request successful");
                             }
                         }
                     });
                 } else {
                     Toast.makeText(mContext, R.string.generic_error_text, Toast.LENGTH_SHORT).show();
+                    Log.e(TAG, "Delete notification failed");
                 }
             }
         });

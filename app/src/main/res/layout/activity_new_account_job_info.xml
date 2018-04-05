@@ -6,60 +6,6 @@
     android:layout_height="match_parent"
     tools:context="com.example.finalyearproject.hollyboothroyd.sync.Activities.NewAccount.NewAccountJobInfoActivity">
 
+    <include layout="@layout/content_new_account_job_info" />
 
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="vertical"
-        android:layout_marginTop="@dimen/activity_margin">
-        <TextView
-            android:id="@+id/new_account_job_info_title"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:text="@string/New_Account_Job_Info_Title"
-            android:textAppearance="@style/TextAppearance.AppCompat.Headline"/>
-
-        <EditText
-            android:id="@+id/position_text"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginEnd="@dimen/entry_side_margin"
-            android:layout_marginStart="@dimen/entry_side_margin"
-            android:layout_marginTop="@dimen/entry_top_margin"
-            android:ems="10"
-            android:hint="@string/Position_Text_Hint"
-            android:inputType="textPersonName" />
-
-        <EditText
-            android:id="@+id/company_text"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginEnd="@dimen/entry_side_margin"
-            android:layout_marginStart="@dimen/entry_side_margin"
-            android:layout_marginTop="@dimen/entry_top_margin"
-            android:ems="10"
-            android:hint="@string/Company_Text_Hint"
-            android:inputType="textPersonName" />
-
-        <EditText
-            android:id="@+id/industry_text"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginEnd="@dimen/entry_side_margin"
-            android:layout_marginStart="@dimen/entry_side_margin"
-            android:layout_marginTop="@dimen/entry_top_margin"
-            android:ems="10"
-            android:hint="@string/Industry_Text_Hint"
-            android:inputType="textPersonName" />
-    </LinearLayout>
-
-    <Button
-        android:id="@+id/job_info_next_button"
-        android:layout_width="@dimen/button_width"
-        android:layout_height="wrap_content"
-        android:layout_margin="@dimen/button_margin"
-        android:layout_alignParentBottom="true"
-        android:layout_centerHorizontal="true"
-        android:text="@string/Next_Button"/>
 </RelativeLayout>

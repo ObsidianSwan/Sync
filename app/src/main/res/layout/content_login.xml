@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
@@ -8,4 +8,77 @@
     tools:context="com.example.finalyearproject.hollyboothroyd.sync.Activities.LoginActivity"
     tools:showIn="@layout/activity_login">
 
-</android.support.constraint.ConstraintLayout>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <ImageView
+            android:id="@+id/login_sync_image"
+            android:layout_width="150dp"
+            android:layout_height="150dp"
+            android:layout_gravity="center"
+            android:layout_marginTop="@dimen/activity_margin"
+            android:background="@mipmap/ic_launcher_foreground"
+            android:contentDescription="@string/sync_icon"
+            android:cropToPadding="false" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:text="@string/sync_title_text"
+            android:textAppearance="@style/TextAppearance.AppCompat.Large" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/login"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_centerVertical="true"
+        android:gravity="center"
+        android:orientation="vertical">
+
+        <Button
+            android:id="@+id/connect_linkedin_button"
+            android:layout_margin="@dimen/button_margin"
+            android:layout_width="@dimen/button_width"
+            android:layout_height="wrap_content"
+            android:text="@string/Connect_With_LinkedIn"
+            style="@style/PrimaryButton" />
+
+        <Button
+            android:id="@+id/new_account_button"
+            android:layout_width="@dimen/button_width"
+            android:layout_height="wrap_content"
+            style="@style/SecondaryButton"
+            android:text="@string/New_Account" />
+
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:gravity="center
+        "
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/existing_account_text"
+            android:layout_width="wrap_content"
+            android:layout_height="20dp"
+            android:text="@string/Login_Existing_Account" />
+
+        <Button
+            android:id="@+id/login_form_button"
+            android:layout_width="@dimen/button_width"
+            android:layout_height="wrap_content"
+            android:layout_margin="@dimen/button_margin"
+            android:text="@string/action_sign_in"
+            style="@style/PrimaryButton" />
+    </LinearLayout>
+
+</RelativeLayout>

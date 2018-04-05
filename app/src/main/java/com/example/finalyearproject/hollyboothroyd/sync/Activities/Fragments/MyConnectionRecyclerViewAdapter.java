@@ -4,6 +4,7 @@ import android.app.AlertDialog;
 import android.content.Context;
 import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -13,22 +14,15 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.finalyearproject.hollyboothroyd.sync.Activities.Fragments.ConnectionFragment.OnListFragmentInteractionListener;
-import com.example.finalyearproject.hollyboothroyd.sync.Model.Connection;
-import com.example.finalyearproject.hollyboothroyd.sync.Model.Event;
 import com.example.finalyearproject.hollyboothroyd.sync.Model.Notification;
 import com.example.finalyearproject.hollyboothroyd.sync.Model.Person;
-import com.example.finalyearproject.hollyboothroyd.sync.Model.UserConnections;
-import com.example.finalyearproject.hollyboothroyd.sync.Model.UserEvents;
 import com.example.finalyearproject.hollyboothroyd.sync.R;
 import com.example.finalyearproject.hollyboothroyd.sync.Services.AccountManager;
 import com.example.finalyearproject.hollyboothroyd.sync.Services.DatabaseManager;
 import com.example.finalyearproject.hollyboothroyd.sync.Utils.NotificationType;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.ValueEventListener;
 import com.squareup.picasso.Picasso;
 
 import java.util.List;
@@ -38,6 +32,8 @@ import java.util.List;
  * specified {@link OnListFragmentInteractionListener}.
  */
 public class MyConnectionRecyclerViewAdapter extends RecyclerView.Adapter<MyConnectionRecyclerViewAdapter.ViewHolder> {
+
+    private static final String TAG = "MyConnectionRVA";
 
     private final Context mContext;
     private final List<Person> mValues;
@@ -130,9 +126,9 @@ public class MyConnectionRecyclerViewAdapter extends RecyclerView.Adapter<MyConn
             @Override
             public void onComplete(@NonNull Task<Void> task) {
                 if (task.isSuccessful()) {
-                    //TODO log
+                    Log.i(TAG, "Send notification successful");
                 } else {
-                    //TODO log
+                    Log.e(TAG, "Send notification failed");
                 }
             }
         });
@@ -159,12 +155,12 @@ public class MyConnectionRecyclerViewAdapter extends RecyclerView.Adapter<MyConn
                                 Toast.makeText(mContext, "You're no longer connected with " + person.getFirstName(), Toast.LENGTH_SHORT).show();
                                 mDialog.dismiss();
                             } else {
-                                // TODO: Log
+                                Log.e(TAG, "Delete other user connection failed");
                             }
                         }
                     });
                 } else {
-                    // TODO: Log
+                    Log.e(TAG, "Delete current user connection failed");
                 }
             }
         });
@@ -182,13 +178,13 @@ public class MyConnectionRecyclerViewAdapter extends RecyclerView.Adapter<MyConn
     }
 
     public class ViewHolder extends RecyclerView.ViewHolder {
-        public final View mView;
-        public ImageView mConnectionProfileImage;
-        public TextView mConnectionNameText;
-        public TextView mConnectionPositionText;
-        public TextView mConnectionCompanyText;
-        public TextView mConnectionIndustryText;
-        public Person mItem;
+        private final View mView;
+        private ImageView mConnectionProfileImage;
+        private TextView mConnectionNameText;
+        private TextView mConnectionPositionText;
+        private TextView mConnectionCompanyText;
+        private TextView mConnectionIndustryText;
+        private Person mItem;
 
         public ViewHolder(View view) {
             super(view);

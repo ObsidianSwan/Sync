@@ -185,4 +185,9 @@
     <string name="time_refresh_setting_change_succesful">Time refresh rate successfully changed</string>
     <string name="zoom_level_setting_change_successful">Zoom level changed successfully</string>
     <string name="title_activity_nfc">NFCActivity</string>
+    <string name="nfc_connection_success_text">You\'re connected!</string>
+    <string name="search_radius_setting_change">Search radius successfully changed</string>
+    <string name="privacy_intensity_setting_change_successful">Privacy intensity successfully changed</string>
+    <string name="sync_icon">sync_icon</string>
+    <string name="sync_title_text">Sync</string>
 </resources>

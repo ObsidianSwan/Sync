@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
@@ -8,4 +8,63 @@
     tools:context="com.example.finalyearproject.hollyboothroyd.sync.Activities.LoginFormActivity"
     tools:showIn="@layout/activity_login_form">
 
-</android.support.constraint.ConstraintLayout>
+    <!-- Login progress -->
+    <ProgressBar
+        android:id="@+id/login_progress"
+        style="?android:attr/progressBarStyleLarge"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:visibility="gone" />
+
+    <LinearLayout
+        android:id="@+id/login_form"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginTop="@dimen/activity_margin"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/login_title_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:text="@string/Login"
+            android:textAppearance="@style/TextAppearance.AppCompat.Headline" />
+
+        <EditText
+            android:id="@+id/email"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="@dimen/entry_side_margin"
+            android:layout_marginStart="@dimen/entry_side_margin"
+            android:layout_marginTop="@dimen/entry_top_margin"
+            android:ems="10"
+            android:hint="@string/prompt_email"
+            android:inputType="textEmailAddress"
+            style="@style/RoundedOutline"/>
+
+        <EditText
+            android:id="@+id/password"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="@dimen/entry_side_margin"
+            android:layout_marginStart="@dimen/entry_side_margin"
+            android:layout_marginTop="@dimen/entry_top_margin"
+            android:ems="10"
+            android:hint="@string/prompt_password"
+            android:inputType="textPassword"
+            style="@style/RoundedOutline"/>
+    </LinearLayout>
+
+    <Button
+        android:id="@+id/login_button"
+        android:layout_width="@dimen/button_width"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:layout_margin="@dimen/button_margin"
+        style="@style/PrimaryButton"
+        android:text="@string/action_sign_in" />
+
+</RelativeLayout>

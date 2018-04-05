@@ -126,7 +126,6 @@ public class LocationFilter {
     }
 
     public static boolean eventWithinRange(LatLng originalLocation, LatLng eventLocation, int searchRadius){
-        // TODO change for settings page.
         if(distanceBetweenPoints(originalLocation, eventLocation) < searchRadius){
             return true;
         }

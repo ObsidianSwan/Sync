@@ -15,6 +15,7 @@ import android.widget.TabHost;
 import com.example.finalyearproject.hollyboothroyd.sync.Model.Event;
 import com.example.finalyearproject.hollyboothroyd.sync.Model.UserEvents;
 import com.example.finalyearproject.hollyboothroyd.sync.R;
+import com.example.finalyearproject.hollyboothroyd.sync.Utils.Constants;
 
 /**
  * A fragment representing a list of Items.
@@ -73,8 +74,7 @@ public class ViewEventsFragment extends Fragment {
         mTabHost = (FragmentTabHost) view.findViewById(R.id.tab_host);
         mTabHost.setup(getActivity(), getChildFragmentManager(), R.id.tab_content);
 
-        // TODO: Constants
-        mTabHost.addTab(mTabHost.newTabSpec("allEvents").setIndicator("All Events").setContent(new TabHost.TabContentFactory() {
+        mTabHost.addTab(mTabHost.newTabSpec(Constants.allEventsTab).setIndicator(Constants.allEventsTabName).setContent(new TabHost.TabContentFactory() {
             @Override
             public View createTabContent(String tag) {
                 Context context = view.getContext();
@@ -89,7 +89,7 @@ public class ViewEventsFragment extends Fragment {
             }
         }));
 
-        mTabHost.addTab(mTabHost.newTabSpec("eventsAttending").setIndicator("Events Attending").setContent(new TabHost.TabContentFactory() {
+        mTabHost.addTab(mTabHost.newTabSpec(Constants.eventsAttendingTab).setIndicator(Constants.eventsAttendingTabName).setContent(new TabHost.TabContentFactory() {
             @Override
             public View createTabContent(String tag) {
                 Context context = view.getContext();
@@ -104,7 +104,7 @@ public class ViewEventsFragment extends Fragment {
             }
         }));
 
-        mTabHost.addTab(mTabHost.newTabSpec("eventsHosting").setIndicator("Events Hosting").setContent(new TabHost.TabContentFactory() {
+        mTabHost.addTab(mTabHost.newTabSpec(Constants.eventsHostingTab).setIndicator(Constants.eventsHostingTabName).setContent(new TabHost.TabContentFactory() {
             @Override
             public View createTabContent(String tag) {
                 Context context = view.getContext();

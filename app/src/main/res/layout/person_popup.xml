@@ -37,7 +37,8 @@
             android:layout_marginStart="@dimen/popup_margin"
             android:layout_marginTop="@dimen/popup_title_top_margin"
             android:text="TextView"
-            android:textAppearance="@style/TextAppearance.AppCompat.Large" />
+            android:textAppearance="@style/TextAppearance.AppCompat.Large"
+            android:textColor="@color/dark_blue"/>
 
         <TextView
             android:id="@+id/popup_position"
@@ -73,7 +74,8 @@
         android:layout_below="@+id/person_popup"
         android:layout_centerHorizontal="true"
         android:layout_marginBottom="@dimen/button_margin"
-        android:text="@string/Connect_Button" />
+        android:text="@string/Connect_Button"
+        style="@style/PrimaryButton"/>
 
     <TextView
         android:id="@+id/popup_connected"
@@ -85,18 +87,21 @@
         android:paddingBottom="16dp"
         android:text="@string/popup_connected_text"
         android:textAppearance="@style/TextAppearance.AppCompat.Large"
-        android:visibility="invisible" />
+        android:visibility="invisible"
+        android:textColor="@color/dark_blue"/>
 
     <TextView
         android:id="@+id/popup_connection_pending"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/person_popup"
-        android:layout_centerHorizontal="true"
-        android:layout_margin="@dimen/popup_margin"
+        android:layout_alignStart="@+id/popup_connected"
+        android:layout_below="@+id/dismiss_popup_button"
+        android:layout_marginStart="152dp"
+        android:layout_marginTop="111dp"
         android:paddingBottom="16dp"
         android:text="@string/popup_connection_pending_text"
         android:textAppearance="@style/TextAppearance.AppCompat.Large"
+        android:textColor="@color/dark_blue"
         android:visibility="invisible" />
 
 </RelativeLayout>

@@ -5,6 +5,7 @@ import android.content.Context;
 import android.support.annotation.NonNull;
 import android.support.constraint.solver.widgets.Snapshot;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -34,6 +35,8 @@ import java.util.List;
  * specified {@link OnListFragmentInteractionListener}.
  */
 public class MyEventRecyclerViewAdapter extends RecyclerView.Adapter<MyEventRecyclerViewAdapter.ViewHolder> {
+
+    private static final String TAG = "MyEventRVA";
 
     private final Context mContext;
     private final List<Event> mValues;
@@ -200,13 +203,16 @@ public class MyEventRecyclerViewAdapter extends RecyclerView.Adapter<MyEventRecy
                             if (task.isSuccessful()) {
                                 Toast.makeText(mContext, "You're attending " + event.getTitle() + "!", Toast.LENGTH_SHORT).show();
                                 mDialog.dismiss();
+                                Log.i(TAG, "Attend event successful");
                             } else {
                                 Toast.makeText(mContext, R.string.event_attendence_unsuccessful, Toast.LENGTH_SHORT).show();
+                                Log.e(TAG, "Attend event failed");
                             }
                         }
                     });
                 } else {
                     Toast.makeText(mContext, R.string.event_attendence_unsuccessful, Toast.LENGTH_SHORT).show();
+                    Log.e(TAG, "User attend event failed");
                 }
             }
         });
@@ -225,13 +231,16 @@ public class MyEventRecyclerViewAdapter extends RecyclerView.Adapter<MyEventRecy
                                 removeEvent(holder.getAdapterPosition());
                                 Toast.makeText(mContext, "You're no longer attending" + event.getTitle() + "!", Toast.LENGTH_SHORT).show();
                                 mDialog.dismiss();
+                                Log.i(TAG, "Stop attending even successful");
                             } else {
                                 Toast.makeText(mContext, R.string.event_attendence_deletion_unsuccessful, Toast.LENGTH_SHORT).show();
+                                Log.e(TAG, "Stop attending event failed");
                             }
                         }
                     });
                 } else{
                     Toast.makeText(mContext, R.string.event_attendence_deletion_unsuccessful, Toast.LENGTH_SHORT).show();
+                    Log.e(TAG, "User delete attendance failed");
                 }
             }
         });
@@ -260,21 +269,23 @@ public class MyEventRecyclerViewAdapter extends RecyclerView.Adapter<MyEventRecy
                                         removeEvent(holder.getAdapterPosition());
                                         Toast.makeText(mContext, R.string.delete_event_successful, Toast.LENGTH_SHORT).show();
                                         mDialog.dismiss();
+                                        Log.i(TAG, "Delete event successful");
                                     } else {
                                         Toast.makeText(mContext, R.string.delete_event_unsuccessful, Toast.LENGTH_SHORT).show();
+                                        Log.e(TAG, "Delete event failed");
                                     }
                                 }
                             });
                         } else {
                             Toast.makeText(mContext, R.string.delete_event_unsuccessful, Toast.LENGTH_SHORT).show();
-                            // TODO LOg
+                            Log.e(TAG, "Delete hosting event failed");
                         }
                     }
                 });
             }
             @Override
             public void onCancelled(DatabaseError databaseError) {
-
+                Log.e(TAG, databaseError.toString());
             }
         });
     }

@@ -36,7 +36,8 @@
                 android:hint="@string/new_event_date_hint"
                 android:inputType="date"
                 android:maxLength="10"
-                android:textAppearance="@style/TextAppearance.AppCompat.Medium" />
+                android:textAppearance="@style/TextAppearance.AppCompat.Medium"
+                style="@style/RoundedOutline" />
 
             <Button
                 android:id="@+id/new_event_date_button"
@@ -71,7 +72,8 @@
                 android:inputType="time"
                 android:hint="@string/new_event_time_hint"
                 android:maxLength="5"
-                android:textAppearance="@style/TextAppearance.AppCompat.Medium" />
+                android:textAppearance="@style/TextAppearance.AppCompat.Medium"
+                style="@style/RoundedOutline" />
 
             <Button
                 android:id="@+id/new_event_time_button"
@@ -100,7 +102,8 @@
             android:layout_marginTop="@dimen/entry_top_margin"
             android:ems="10"
             android:hint="@string/new_event_location_street_hint"
-            android:inputType="textPostalAddress" />
+            android:inputType="textPostalAddress"
+            style="@style/RoundedOutline" />
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -123,7 +126,8 @@
                     android:layout_marginTop="@dimen/entry_top_margin"
                     android:ems="10"
                     android:hint="@string/new_event_location_city"
-                    android:inputType="textPostalAddress" />
+                    android:inputType="textPostalAddress"
+                    style="@style/RoundedOutline" />
 
                 <EditText
                     android:id="@+id/new_event_location_state"
@@ -132,7 +136,8 @@
                     android:layout_marginTop="@dimen/entry_top_margin"
                     android:ems="10"
                     android:hint="@string/new_event_location_state"
-                    android:inputType="textPostalAddress" />
+                    android:inputType="textPostalAddress"
+                    style="@style/RoundedOutline" />
 
 
             </LinearLayout>
@@ -153,7 +158,8 @@
                     android:layout_marginTop="@dimen/entry_top_margin"
                     android:ems="10"
                     android:hint="@string/new_event_location_zipcode"
-                    android:inputType="textPostalAddress" />
+                    android:inputType="textPostalAddress"
+                    style="@style/RoundedOutline" />
 
                 <EditText
                     android:id="@+id/new_event_location_country"
@@ -162,7 +168,8 @@
                     android:layout_marginTop="@dimen/entry_top_margin"
                     android:ems="10"
                     android:hint="@string/new_event_location_country"
-                    android:inputType="textPostalAddress" />
+                    android:inputType="textPostalAddress"
+                    style="@style/RoundedOutline" />
             </LinearLayout>
         </LinearLayout>
     </LinearLayout>
@@ -174,5 +181,6 @@
         android:layout_alignParentBottom="true"
         android:layout_centerHorizontal="true"
         android:layout_margin="@dimen/button_margin"
-        android:text="@string/Next_Button" />
+        android:text="@string/Next_Button"
+        style="@style/PrimaryButton" />
 </RelativeLayout>

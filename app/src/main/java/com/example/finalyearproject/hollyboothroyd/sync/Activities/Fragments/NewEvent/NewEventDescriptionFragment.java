@@ -13,6 +13,7 @@ import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.provider.ContactsContract;
 import android.support.annotation.NonNull;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -52,6 +53,9 @@ import static android.app.Activity.RESULT_OK;
  * create an instance of this fragment.
  */
 public class NewEventDescriptionFragment extends Fragment {
+
+    private static final String TAG = "NewEventDesFragment";
+
     public static final String ARG_TITLE = "title";
     public static final String ARG_INDUSTRY = "industry";
     public static final String ARG_TOPIC = "topic";
@@ -82,7 +86,6 @@ public class NewEventDescriptionFragment extends Fragment {
     private EditText mDescription;
     private Button mDoneButton;
     private Uri mImageUri;
-    private static final int GALLERY_CODE = 1;
 
     private View mProgressView;
     private View mEventDescriptionView;
@@ -163,7 +166,7 @@ public class NewEventDescriptionFragment extends Fragment {
             public void onClick(View view) {
                 Intent galleryIntent = new Intent(Intent.ACTION_GET_CONTENT);
                 galleryIntent.setType("image/*");
-                startActivityForResult(galleryIntent, GALLERY_CODE);
+                startActivityForResult(galleryIntent, Constants.GALLERY_CODE);
             }
         });
 
@@ -185,8 +188,7 @@ public class NewEventDescriptionFragment extends Fragment {
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
-        //TODO: Utils
-        if (requestCode == GALLERY_CODE && resultCode == RESULT_OK) {
+        if (requestCode == Constants.GALLERY_CODE && resultCode == RESULT_OK) {
             mImageUri = data.getData();
             CropImage.activity(mImageUri)
                     .setAspectRatio(1, 1)
@@ -199,8 +201,10 @@ public class NewEventDescriptionFragment extends Fragment {
             if (resultCode == RESULT_OK) {
                 mImageUri = result.getUri();
                 mEventImage.setImageURI(mImageUri);
+                Log.i(TAG, "Image loaded successfully");
             } else if (resultCode == CropImage.CROP_IMAGE_ACTIVITY_RESULT_ERROR_CODE) {
                 Exception error = result.getError();
+                Log.e(TAG, "Image loading failed: " + error.toString());
             }
         }
     }
@@ -216,16 +220,18 @@ public class NewEventDescriptionFragment extends Fragment {
                 @Override
                 public void onSuccess(final UploadTask.TaskSnapshot taskSnapshot) {
                     // Get a URL to the uploaded content
-                    String downloadUrl = taskSnapshot.getDownloadUrl().toString();
-                    registerEventInternal(description, downloadUrl);
+                    if(taskSnapshot.getDownloadUrl() != null) {
+                        String downloadUrl = taskSnapshot.getDownloadUrl().toString();
+                        registerEventInternal(description, downloadUrl);
+                    }
                 }
             }).addOnFailureListener(new OnFailureListener() {
                 @Override
                 public void onFailure(@NonNull Exception e) {
                     // Adding the events's image was not successful
-                    //TODO: add logging tags. Debugging. Better retry
-                    Toast.makeText(getActivity(), R.string.generic_event_creation_failed, Toast.LENGTH_LONG).show();
+                    Toast.makeText(getActivity(), R.string.generic_event_creation_failed, Toast.LENGTH_SHORT).show();
                     showProgress(false);
+                    Log.e(TAG, getString(R.string.generic_event_creation_failed));
                 }
             });
         }
@@ -248,21 +254,21 @@ public class NewEventDescriptionFragment extends Fragment {
                         @Override
                         public void onComplete(@NonNull Task<Void> task) {
                             if (task.isSuccessful()) {
-                                Toast.makeText(getActivity(), R.string.event_creation_successful, Toast.LENGTH_LONG).show();
+                                Toast.makeText(getActivity(), R.string.event_creation_successful, Toast.LENGTH_SHORT).show();
                                 if (mListener != null) {
                                     mListener.onNewEventDescriptionDoneButtonPressed(mLongitude, mLatitude);
                                 }
                             } else {
-                                //TODO: add logging tags. Debugging. Better retry
-                                Toast.makeText(getActivity(), R.string.generic_event_creation_failed, Toast.LENGTH_LONG).show();
+                                Toast.makeText(getActivity(), R.string.generic_event_creation_failed, Toast.LENGTH_SHORT).show();
                                 showProgress(false);
+                                Log.e(TAG, "Add event creator failed");
                             }
                         }
                     });
                 } else {
-                    //TODO: add logging tags. Debugging. Better retry
-                    Toast.makeText(getActivity(), R.string.generic_event_creation_failed, Toast.LENGTH_LONG).show();
+                    Toast.makeText(getActivity(), R.string.generic_event_creation_failed, Toast.LENGTH_SHORT).show();
                     showProgress(false);
+                    Log.e(TAG, "Add event failed");
                 }
             }
         });

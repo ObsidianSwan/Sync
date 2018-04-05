@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
@@ -8,4 +8,50 @@
     tools:context="com.example.finalyearproject.hollyboothroyd.sync.Activities.NewAccount.NewAccountPhotoActivity"
     tools:showIn="@layout/activity_new_account_photo">
 
-</android.support.constraint.ConstraintLayout>
+    <!-- Login progress -->
+    <ProgressBar
+        android:id="@+id/sign_up_progress"
+        style="?android:attr/progressBarStyleLarge"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:visibility="gone" />
+
+    <LinearLayout
+        android:id="@+id/sign_up_layout"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginTop="@dimen/activity_margin"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/new_account_photo_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:text="@string/Upload_Photo"
+            android:textAppearance="@style/TextAppearance.AppCompat.Headline" />
+
+        <ImageButton
+            android:id="@+id/profile_photo_button"
+            android:layout_width="@dimen/new_account_profile_img_dimen"
+            android:layout_height="@dimen/new_account_profile_img_dimen"
+            android:layout_gravity="center"
+            android:layout_marginTop="@dimen/entry_top_margin"
+            android:background="@android:color/transparent"
+            android:scaleType="centerCrop"
+            app:srcCompat="@drawable/add_photo" />
+
+    </LinearLayout>
+
+    <Button
+        android:id="@+id/done_button"
+        android:layout_width="@dimen/button_width"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:layout_margin="@dimen/button_margin"
+        android:text="@string/Done_Button"
+        style="@style/PrimaryButton"/>
+
+</RelativeLayout>

@@ -81,6 +81,8 @@ import static android.content.Context.LOCATION_SERVICE;
 public class GMapFragment extends Fragment implements OnMapReadyCallback,
         GoogleMap.OnInfoWindowClickListener, GoogleMap.OnMarkerClickListener, NavigationView.OnNavigationItemSelectedListener {
 
+    private static final String TAG = "GMapFragment";
+
     private GoogleMap mMap;
 
     private LocationManager mLocationManager;
@@ -288,7 +290,7 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
 
             @Override
             public void onCancelled(DatabaseError databaseError) {
-                // TODO Log
+                Log.e(TAG, databaseError.toString());
             }
         });
 
@@ -326,7 +328,7 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
                     mLocationDistanceUpdateIntervalName,
                     mLocationListener);
         } catch (SecurityException ex) {
-            //TODO:log
+            Log.e(TAG, ex.toString());
         }
         mDatabaseManager.getUserSettings(Constants.locationTimeUpdateIntervalName).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
@@ -346,20 +348,20 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
                                     mLocationDistanceUpdateIntervalName,
                                     mLocationListener);
                         } catch (SecurityException ex) {
-                            //TODO:log
+                            Log.e(TAG, ex.toString());
                         }
                     }
 
                     @Override
                     public void onCancelled(DatabaseError databaseError) {
-                        //TODO: Log?
+                        Log.e(TAG, databaseError.toString());
                     }
                 });
             }
 
             @Override
             public void onCancelled(DatabaseError databaseError) {
-                //TODO: Log?
+                Log.e(TAG, databaseError.toString());
             }
         });
     }
@@ -448,7 +450,7 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
 
                 @Override
                 public void onCancelled(DatabaseError databaseError) {
-                    //TODO: Log?
+                    Log.e(TAG, databaseError.toString());
                 }
             });
         }
@@ -476,14 +478,14 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
                         @Override
                         public void onSuccess(Void aVoid) {
                             // Geofences added
-                            // TODO:Log
+                            Log.i(TAG, "Geofence added successfully");
                         }
                     })
                     .addOnFailureListener(getActivity(), new OnFailureListener() {
                         @Override
                         public void onFailure(@NonNull Exception e) {
                             // Failed to add geofences
-                            // TODO:log
+                            Log.e(TAG, e.toString());
                         }
                     });
         }
@@ -499,14 +501,14 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
                             @Override
                             public void onSuccess(Void aVoid) {
                                 // Geofences removed
-                                // ...
+                                Log.i(TAG, "Geofence removed successfully");
                             }
                         })
                         .addOnFailureListener(getActivity(), new OnFailureListener() {
                             @Override
                             public void onFailure(@NonNull Exception e) {
                                 // Failed to remove geofences
-                                // ...
+                                Log.e(TAG, e.toString());
                             }
                         });
             }
@@ -785,17 +787,20 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
                         @Override
                         public void onComplete(@NonNull Task<Void> task) {
                             if (task.isSuccessful()) {
-                                Toast.makeText(getActivity(), "You're attending " + event.getTitle() + "!", Toast.LENGTH_LONG).show();
+                                Toast.makeText(getActivity(), "You're attending " + event.getTitle() + "!", Toast.LENGTH_SHORT).show();
                                 mDialog.dismiss();
+                                Log.i(TAG, "Attend event successful");
                             } else {
-                                Toast.makeText(getActivity(), R.string.event_attendence_unsuccessful, Toast.LENGTH_LONG).show();
+                                Toast.makeText(getActivity(), R.string.event_attendence_unsuccessful, Toast.LENGTH_SHORT).show();
+                                Log.e(TAG, getString(R.string.event_attendence_unsuccessful));
                                 // TODO: Remove the added previous db entry
                             }
                         }
                     });
 
                 } else {
-                    Toast.makeText(getActivity(), R.string.event_attendence_unsuccessful, Toast.LENGTH_LONG).show();
+                    Toast.makeText(getActivity(), R.string.event_attendence_unsuccessful, Toast.LENGTH_SHORT).show();
+                    Log.e(TAG, getString(R.string.event_attendence_unsuccessful));
                 }
             }
         });
@@ -812,13 +817,16 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
                             if (task.isSuccessful()) {
                                 Toast.makeText(getActivity(), "You're no longer attending" + event.getTitle() + "!", Toast.LENGTH_SHORT).show();
                                 mDialog.dismiss();
+                                Log.i(TAG, "Stop attending event successful");
                             } else {
                                 Toast.makeText(getActivity(), R.string.event_attendence_deletion_unsuccessful, Toast.LENGTH_SHORT).show();
+                                Log.e(TAG, getString(R.string.event_attendence_deletion_unsuccessful));
                             }
                         }
                     });
                 } else {
                     Toast.makeText(getActivity(), R.string.event_attendence_deletion_unsuccessful, Toast.LENGTH_SHORT).show();
+                    Log.e(TAG, getString(R.string.event_attendence_deletion_unsuccessful));
                 }
             }
         });
@@ -846,14 +854,16 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
                                     if (task.isSuccessful()) {
                                         Toast.makeText(getActivity(), R.string.delete_event_successful, Toast.LENGTH_SHORT).show();
                                         mDialog.dismiss();
+                                        Log.i(TAG, getString(R.string.delete_event_successful));
                                     } else {
                                         Toast.makeText(getActivity(), R.string.delete_event_unsuccessful, Toast.LENGTH_SHORT).show();
+                                        Log.e(TAG, getString(R.string.delete_event_unsuccessful));
                                     }
                                 }
                             });
                         } else {
                             Toast.makeText(getActivity(), R.string.delete_event_unsuccessful, Toast.LENGTH_SHORT).show();
-                            // TODO LOg
+                            Log.e(TAG, getString(R.string.delete_event_unsuccessful));
                         }
                     }
                 });
@@ -861,7 +871,7 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
 
             @Override
             public void onCancelled(DatabaseError databaseError) {
-
+                Log.e(TAG, databaseError.toString());
             }
         });
     }
@@ -943,9 +953,9 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
                 @Override
                 public void onComplete(@NonNull Task<Void> task) {
                     if (task.isSuccessful()) {
-                        //TODO log
+                        Log.i(TAG, "Send notification successful");
                     } else {
-                        //TODO log
+                        Log.e(TAG, "Send notification failed");
                     }
                 }
             });
@@ -983,23 +993,24 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
                                                             if (task.isSuccessful()) {
                                                                 Toast.makeText(getContext(), R.string.connection_accepted_toast_text, Toast.LENGTH_SHORT).show();
                                                                 mDialog.dismiss();
+                                                                Log.i(TAG, getString(R.string.connection_accepted_toast_text));
                                                             } else {
-                                                                // TODO LOG
+                                                                Log.e(TAG, "Delete notification failed");
                                                             }
                                                         }
                                                     });
                                                 } else {
-                                                    // TODO: LOG
+                                                    Log.e(TAG, "Delete connection request failed");
                                                 }
                                             }
                                         });
                                     } else {
-                                        //TODO:Log
+                                        Log.e(TAG, "Add connection to other user failed");
                                     }
                                 }
                             });
                         } else {
-                            //TODO:Log
+                            Log.e(TAG, "Add connection to current user failed");
                         }
                     }
                 });
@@ -1007,7 +1018,7 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
 
             @Override
             public void onCancelled(DatabaseError databaseError) {
-                //TODO:Log
+                Log.e(TAG, databaseError.toString());
             }
         });
     }
@@ -1029,13 +1040,16 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
                                 mPopupButton.setVisibility(View.GONE);
                                 mConnectionPendingMessage.setVisibility(View.VISIBLE);
                                 Toast.makeText(getActivity(), R.string.connection_request_sent_success, Toast.LENGTH_SHORT).show();
+                                Log.i(TAG, getString(R.string.connection_request_sent_success));
                             } else {
                                 Toast.makeText(getActivity(), R.string.connection_request_failed, Toast.LENGTH_SHORT).show();
+                                Log.e(TAG, getString(R.string.connection_request_failed));
                             }
                         }
                     });
                 } else {
                     Toast.makeText(getActivity(), R.string.connection_request_failed, Toast.LENGTH_SHORT).show();
+                    Log.e(TAG, "Send notification failed");
                 }
             }
         });
@@ -1056,13 +1070,14 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
                             if (task.isSuccessful()) {
                                 Toast.makeText(getContext(), "You're no longer connected with " + person.getFirstName(), Toast.LENGTH_SHORT).show();
                                 mDialog.dismiss();
+                                Log.i(TAG, "Delete connection successful");
                             } else {
-                                // TODO: Log
+                                Log.e(TAG, "Delete other users connection failed");
                             }
                         }
                     });
                 } else {
-                    // TODO: Log
+                    Log.e(TAG, "Delete current users connection failed");
                 }
             }
         });

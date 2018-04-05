@@ -36,6 +36,7 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/logout_confirmation_text"
-            app:layout_constraintVertical_bias="0.0" />
+            app:layout_constraintVertical_bias="0.0"
+            style="@style/PrimaryButton" />
     </android.support.constraint.ConstraintLayout>
 </FrameLayout>

@@ -75,7 +75,7 @@ public class LoginFormActivity extends AppCompatActivity {
                             showProgress(false);
                             if (task.isSuccessful()) {
                                 // Sign in was successful
-                                Toast.makeText(LoginFormActivity.this, "Signed in", Toast.LENGTH_LONG).show();
+                                Toast.makeText(LoginFormActivity.this, "Signed in", Toast.LENGTH_SHORT).show();
                                 if (ActivityCompat.checkSelfPermission(LoginFormActivity.this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(LoginFormActivity.this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
                                     // Request Location permissions
                                     ActivityCompat.requestPermissions(LoginFormActivity.this, new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION, android.Manifest.permission.ACCESS_COARSE_LOCATION}, 2);
@@ -84,7 +84,7 @@ public class LoginFormActivity extends AppCompatActivity {
                                 }
                             } else {
                                 // Sign in was not successful
-                                Toast.makeText(LoginFormActivity.this, "Signed in failed", Toast.LENGTH_LONG).show();
+                                Toast.makeText(LoginFormActivity.this, "Signed in failed", Toast.LENGTH_SHORT).show();
                             }
                         }
                     });
