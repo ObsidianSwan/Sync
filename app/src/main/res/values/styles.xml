@@ -21,4 +21,19 @@
 
     <style name="AppTheme.NoActionBar.PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />
 
+    <style name="RoundedOutline">
+        <item name="android:background">@drawable/edit_text_style</item>
+        <item name="android:textColor">@color/black</item>
+        <item name="android:padding">@dimen/edit_text_padding</item>
+    </style>
+
+    <style name="PrimaryButton">
+        <item name="android:background">@drawable/blue_button_rounded_edges</item>
+        <item name="android:textColor">@color/highlight_text_color</item>
+    </style>
+
+    <style name="SecondaryButton">
+        <item name="android:background">@drawable/button_rounded_edges</item>
+    </style>
+
 </resources>

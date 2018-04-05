@@ -58,7 +58,6 @@ public class Constants {
     public static final String userNotificationDatabaseRefName = "notifications";
     public static final String connectionDatabaseRefName = "connections";
     public static final String connectionRequestsDatabaseRefName = "connection_requests";
-    public static final String connectionRemovalDatabaseRefName = "connection_removals";
 
     public static final String eventDatabaseRefName = "event";
     public static final String peopleEventsCreatedDatabaseRefName = "events_created";
@@ -66,7 +65,16 @@ public class Constants {
     public static final String eventAttendeesDatabaseRefName = "event_attendees";
     public static final String userSettingsDatabaseRefName = "userSettings";
 
+    public static final int GALLERY_CODE = 1;
     public static final String personImgStorageName = "person_images";
     public static final String eventImgStorageName = "event_images";
     public static final String eventDefaultImgStorageUrl = "https://firebasestorage.googleapis.com/v0/b/sync-1a37a.appspot.com/o/Event_Images%2FLogoSqTransparent.png?alt=media&token=b45dc652-3b09-48a1-8371-31748e4967ac";
+
+    // Event tabs
+    public static final String allEventsTab = "allEvents";
+    public static final String allEventsTabName = "All Events";
+    public static final String eventsAttendingTab = "eventsAttending";
+    public static final String eventsAttendingTabName = "Events Attending";
+    public static final String eventsHostingTab = "eventsHosting";
+    public static final String eventsHostingTabName = "Events Hosting";
 }

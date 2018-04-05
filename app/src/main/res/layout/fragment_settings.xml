@@ -24,7 +24,7 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
                 android:text="@string/settings_map_header"
-                android:textAppearance="@style/TextAppearance.AppCompat.Medium" />
+                android:textAppearance="@style/TextAppearance.AppCompat.Large" />
 
             <RelativeLayout
                 android:layout_width="match_parent"
@@ -40,7 +40,8 @@
                     android:layout_alignParentStart="true"
                     android:layout_centerVertical="true"
                     android:text="@string/settings_zoom_text"
-                    android:textAppearance="@style/TextAppearance.AppCompat.Medium" />
+                    android:textAppearance="@style/TextAppearance.AppCompat.Medium"
+                    android:textColor="@color/dark_blue" />
 
                 <NumberPicker
                     android:id="@+id/settings_map_zoom_number_picker"
@@ -65,10 +66,12 @@
                     android:layout_alignParentStart="true"
                     android:layout_centerVertical="true"
                     android:text="@string/settings_user_pin_color_text"
-                    android:textAppearance="@style/TextAppearance.AppCompat.Medium" />
+                    android:textAppearance="@style/TextAppearance.AppCompat.Medium"
+                    android:textColor="@color/dark_blue" />
 
                 <Spinner
                     android:id="@+id/settings_user_color_spinner"
+                    style="@style/RoundedOutline"
                     android:layout_width="@dimen/spinner_width"
                     android:layout_height="@dimen/spinner_height"
                     android:layout_alignParentEnd="true" />
@@ -90,10 +93,12 @@
                     android:layout_alignParentStart="true"
                     android:layout_centerVertical="true"
                     android:text="@string/settings_event_pin_color_text"
-                    android:textAppearance="@style/TextAppearance.AppCompat.Medium" />
+                    android:textAppearance="@style/TextAppearance.AppCompat.Medium"
+                    android:textColor="@color/dark_blue" />
 
                 <Spinner
                     android:id="@+id/settings_event_color_spinner"
+                    style="@style/RoundedOutline"
                     android:layout_width="@dimen/spinner_width"
                     android:layout_height="@dimen/spinner_height"
                     android:layout_alignParentEnd="true" />
@@ -114,7 +119,7 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
                 android:text="Location details"
-                android:textAppearance="@style/TextAppearance.AppCompat.Medium" />
+                android:textAppearance="@style/TextAppearance.AppCompat.Large" />
 
             <RelativeLayout
                 android:layout_width="wrap_content"
@@ -131,10 +136,12 @@
                     android:layout_alignParentStart="true"
                     android:layout_centerVertical="true"
                     android:text="Privacy intensity"
-                    android:textAppearance="@style/TextAppearance.AppCompat.Medium" />
+                    android:textAppearance="@style/TextAppearance.AppCompat.Medium"
+                    android:textColor="@color/dark_blue" />
 
                 <Spinner
                     android:id="@+id/settings_privacy_intensity_spinner"
+                    style="@style/RoundedOutline"
                     android:layout_width="@dimen/spinner_width"
                     android:layout_height="@dimen/spinner_height"
                     android:layout_alignParentEnd="true" />
@@ -156,7 +163,8 @@
                     android:layout_alignParentStart="true"
                     android:layout_centerVertical="true"
                     android:text="Search distance"
-                    android:textAppearance="@style/TextAppearance.AppCompat.Medium" />
+                    android:textAppearance="@style/TextAppearance.AppCompat.Medium"
+                    android:textColor="@color/dark_blue" />
 
                 <NumberPicker
                     android:id="@+id/settings_search_distance_picker"
@@ -181,7 +189,8 @@
                     android:layout_alignParentStart="true"
                     android:layout_centerVertical="true"
                     android:text="Refresh rate: Time (min)"
-                    android:textAppearance="@style/TextAppearance.AppCompat.Medium" />
+                    android:textAppearance="@style/TextAppearance.AppCompat.Medium"
+                    android:textColor="@color/dark_blue" />
 
                 <NumberPicker
                     android:id="@+id/settings_time_refresh_number_picker"
@@ -206,7 +215,8 @@
                     android:layout_alignParentStart="true"
                     android:layout_centerVertical="true"
                     android:text="Refresh rate: Distance (meters)"
-                    android:textAppearance="@style/TextAppearance.AppCompat.Medium" />
+                    android:textAppearance="@style/TextAppearance.AppCompat.Medium"
+                    android:textColor="@color/dark_blue" />
 
                 <NumberPicker
                     android:id="@+id/settings_dis_refresh_number_picker"
@@ -219,6 +229,7 @@
 
         <Button
             android:id="@+id/delete_account_button"
+            style="@style/SecondaryButton"
             android:layout_width="@dimen/button_width"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
@@ -227,6 +238,7 @@
 
         <Button
             android:id="@+id/commit_settings_button"
+            style="@style/PrimaryButton"
             android:layout_width="@dimen/button_width"
             android:layout_height="wrap_content"
             android:layout_gravity="center"

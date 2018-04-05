@@ -35,7 +35,8 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="@string/notification_profile_view_text"
-                    android:textAppearance="@style/TextAppearance.AppCompat.Medium" />
+                    android:textAppearance="@style/TextAppearance.AppCompat.Medium"
+                    android:textColor="@color/dark_blue" />
 
                 <TextView
                     android:id="@+id/notification_description_text"
@@ -69,17 +70,23 @@
 
             <Button
                 android:id="@+id/notification_profile_view_button"
-                android:layout_width="125dp"
+                style="@style/PrimaryButton"
+                android:layout_width="@dimen/notification_button_width"
                 android:layout_height="wrap_content"
+                android:layout_marginEnd="@dimen/notification_button_margin"
+                android:layout_marginTop="@dimen/notification_button_margin"
                 android:layout_weight="1"
-                android:text="@string/notification_view_profile_button_text"/>
+                android:text="@string/notification_view_profile_button_text" />
 
             <Button
                 android:id="@+id/notification_remove_button"
-                android:layout_width="125dp"
+                style="@style/SecondaryButton"
+                android:layout_width="@dimen/notification_button_width"
                 android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/notification_button_margin"
+                android:layout_marginTop="@dimen/notification_button_margin"
                 android:layout_weight="1"
-                android:text="@string/notification_remove_button_text"/>
+                android:text="@string/notification_remove_button_text" />
         </LinearLayout>
     </LinearLayout>
 </LinearLayout>

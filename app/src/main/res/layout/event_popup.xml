@@ -44,7 +44,8 @@
                 android:layout_marginTop="@dimen/popup_title_top_margin"
                 android:gravity="center"
                 android:text="TextView"
-                android:textAppearance="@style/TextAppearance.AppCompat.Large" />
+                android:textAppearance="@style/TextAppearance.AppCompat.Large"
+                android:textColor="@color/dark_blue" />
 
             <TextView
                 android:id="@+id/popup_topic"
@@ -98,18 +99,20 @@
 
             <Button
                 android:id="@+id/popup_event_button"
+                style="@style/PrimaryButton"
                 android:layout_width="@dimen/button_width"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="@dimen/button_margin"
-                android:paddingEnd="@dimen/double_button_padding"
+                android:layout_marginTop="@dimen/button_margin"
                 android:text="@string/event_attend_button" />
 
             <Button
                 android:id="@+id/popup_event_button2"
-                android:layout_height="wrap_content"
+                style="@style/SecondaryButton"
                 android:layout_width="@dimen/button_width"
+                android:layout_height="wrap_content"
                 android:layout_marginBottom="@dimen/button_margin"
-                android:visibility="gone"/>
+                android:visibility="gone" />
 
         </LinearLayout>
 

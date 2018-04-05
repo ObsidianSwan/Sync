@@ -13,7 +13,7 @@
     <dimen name="fragment_top_margin">55dp</dimen>
 
     <dimen name="spinner_width">200dp</dimen>
-    <dimen name="spinner_height">30dp</dimen>
+    <dimen name="spinner_height">40dp</dimen>
 
     <dimen name="number_picker_dim">50dp</dimen>
     <dimen name="dismiss_button_small">20dp</dimen>
@@ -56,6 +56,10 @@
     <dimen name="fragment_top_item_margin">20dp</dimen>
     <dimen name="double_button_padding">5dp</dimen>
     <dimen name="fab_margin">16dp</dimen>
+    <dimen name="edit_text_padding">10dp</dimen>
+    <dimen name="notification_button_margin">5dp</dimen>
+    <dimen name="notification_button_width">125dp</dimen>
+    <dimen name="filter_dimen">50dp</dimen>
 
 
 </resources>

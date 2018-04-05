@@ -6,6 +6,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -18,6 +19,7 @@ import com.example.finalyearproject.hollyboothroyd.sync.Activities.CoreActivity;
 import com.example.finalyearproject.hollyboothroyd.sync.Model.Person;
 import com.example.finalyearproject.hollyboothroyd.sync.R;
 import com.example.finalyearproject.hollyboothroyd.sync.Services.DatabaseManager;
+import com.example.finalyearproject.hollyboothroyd.sync.Utils.Constants;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
@@ -43,6 +45,8 @@ import static android.app.Activity.RESULT_OK;
  */
 public class EditProfileFragment extends Fragment {
 
+    private static final String TAG = "EditProfileFragment";
+
     private DatabaseManager mDatabaseManager;
 
     private ImageButton mProfileImage;
@@ -59,9 +63,6 @@ public class EditProfileFragment extends Fragment {
     private String mOriginalPosition;
     private String mOriginalCompany;
     private String mOriginalIndustry;
-
-    //TODO: constant
-    private static final int GALLERY_CODE = 1;
 
     private Button mCommitButton;
 
@@ -113,7 +114,7 @@ public class EditProfileFragment extends Fragment {
             public void onClick(View view) {
                 Intent galleryIntent = new Intent(Intent.ACTION_GET_CONTENT);
                 galleryIntent.setType("image/*");
-                startActivityForResult(galleryIntent, GALLERY_CODE);
+                startActivityForResult(galleryIntent, Constants.GALLERY_CODE);
             }
         });
 
@@ -167,12 +168,12 @@ public class EditProfileFragment extends Fragment {
                                             mDatabaseManager.getUserPeopleDatabaseReference().child("imageId").setValue(mProfileImageUri.toString());
                                             mOriginalProfileImageUri = mProfileImageUri.toString();
                                         } else {
-                                            //TODO: log
+                                            Log.e(TAG, "Upload person image failed");
                                         }
                                     }
                                 });
                             } else {
-                                //TODO:log
+                                Log.e(TAG, "Delete person image failed");
                             }
                         }
                     });
@@ -217,8 +218,7 @@ public class EditProfileFragment extends Fragment {
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
-        //TODO:utils
-        if (requestCode == GALLERY_CODE && resultCode == RESULT_OK) {
+        if (requestCode == Constants.GALLERY_CODE && resultCode == RESULT_OK) {
             mProfileImageUri = data.getData();
             CropImage.activity(mProfileImageUri)
                     .setAspectRatio(1, 1)
@@ -233,6 +233,7 @@ public class EditProfileFragment extends Fragment {
                 mProfileImage.setImageURI(mProfileImageUri);
             } else if (resultCode == CropImage.CROP_IMAGE_ACTIVITY_RESULT_ERROR_CODE) {
                 Exception error = result.getError();
+                Log.e(TAG, error.toString());
             }
         }
     }

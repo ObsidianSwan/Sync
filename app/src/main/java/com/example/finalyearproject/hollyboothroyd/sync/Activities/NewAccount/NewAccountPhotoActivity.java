@@ -143,7 +143,7 @@ public class NewAccountPhotoActivity extends AppCompatActivity {
 
                                 if (task.isSuccessful()) {
                                     // Sign in was successful
-                                    Toast.makeText(NewAccountPhotoActivity.this, "Signed in", Toast.LENGTH_LONG).show();
+                                    Toast.makeText(NewAccountPhotoActivity.this, "Signed in", Toast.LENGTH_SHORT).show();
 
                                     // Add the user to the people database that is accessible by all users.
                                     // Add the user's image to the Firebase Storage

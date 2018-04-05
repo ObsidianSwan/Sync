@@ -38,6 +38,8 @@ import static android.nfc.NdefRecord.createMime;
 
 public class NFCActivity extends AppCompatActivity implements NfcAdapter.CreateNdefMessageCallback {
 
+    private static final String TAG = "NFCActivity";
+
     NfcAdapter mNfcAdapter;
     PendingIntent mNfcPendingIntent;
     IntentFilter[] mNdefExchangeFilters;
@@ -68,8 +70,6 @@ public class NFCActivity extends AppCompatActivity implements NfcAdapter.CreateN
             ActivityCompat.requestPermissions(NFCActivity.this, new String[]{android.Manifest.permission.NFC}, 2);
         } else {
             setUpNFC();
-
-            //mNfcAdapter.setNdefPushMessageCallback(NFCActivity.this, NFCActivity.this);
         }
     }
 
@@ -78,26 +78,18 @@ public class NFCActivity extends AppCompatActivity implements NfcAdapter.CreateN
         super.onResume();
 
         enableNdefExchangeMode();
-
-        // Check to see that the Activity started due to an Android Beam
-        /*if (NfcAdapter.ACTION_NDEF_DISCOVERED.equals(getIntent().getAction())) {
-            processIntent(getIntent());
-        }*/
     }
 
 
     @Override
     public void onNewIntent(Intent intent) {
-        // onResume gets called after this to handle the intent
-        //setIntent(intent);
-
         if (NfcAdapter.ACTION_NDEF_DISCOVERED.equals(intent.getAction())) {
             NdefMessage[] msgs = getNdefMessages(intent);
             // only one message sent during the beam
             NdefMessage msg = (NdefMessage) msgs[0];
             String userId = new String(msg.getRecords()[0].getPayload());
             addConnection(userId);
-            Toast.makeText(this, "sent friend request via nfc!", Toast.LENGTH_LONG).show();
+            Toast.makeText(this, R.string.nfc_connection_success_text, Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -127,27 +119,11 @@ public class NFCActivity extends AppCompatActivity implements NfcAdapter.CreateN
                 };
             }
         } else {
-            //Log.d(t, "Unknown intent.");
+            Log.d(TAG, "Unknown intent.");
             finish();
         }
         return msgs;
     }
-
-
-
-    /**
-     * Parses the NDEF Message from the intent and prints to the TextView
-     */
-    void processIntent(Intent intent) {
-        TextView textView = (TextView) findViewById(R.id.NFC_text);
-        Parcelable[] rawMsgs = intent.getParcelableArrayExtra(
-                NfcAdapter.EXTRA_NDEF_MESSAGES);
-        // only one message sent during the beam
-        NdefMessage msg = (NdefMessage) rawMsgs[0];
-        // record 0 contains the MIME type
-        textView.setText(new String(msg.getRecords()[0].getPayload()));
-    }
-
 
     private void setUpNFC(){
         mNfcAdapter = NfcAdapter.getDefaultAdapter(this);
@@ -194,7 +170,6 @@ public class NFCActivity extends AppCompatActivity implements NfcAdapter.CreateN
             if (ContextCompat.checkSelfPermission(NFCActivity.this, android.Manifest.permission.NFC)
                     == PackageManager.PERMISSION_GRANTED) {
                 setUpNFC();
-                //mNfcAdapter.setNdefPushMessageCallback(NFCActivity.this, NFCActivity.this);
             }
         }
     }
@@ -238,22 +213,22 @@ public class NFCActivity extends AppCompatActivity implements NfcAdapter.CreateN
                                                             if (task.isSuccessful()) {
                                                                 Toast.makeText(NFCActivity.this, R.string.connection_accepted_toast_text, Toast.LENGTH_SHORT).show();
                                                             } else {
-                                                                // TODO LOG
+                                                                Log.e(TAG, "Delete user notification failed");
                                                             }
                                                         }
                                                     });
                                                 } else {
-                                                    // TODO: LOG
+                                                    Log.e(TAG, "Delete user connection request failed");
                                                 }
                                             }
                                         });
                                     } else {
-                                        //TODO:Log
+                                        Log.e(TAG, "Add connection for other user failed");
                                     }
                                 }
                             });
                         } else {
-                            //TODO:Log
+                            Log.e(TAG, "Add connection for current user failed");
                         }
                     }
                 });
@@ -261,29 +236,9 @@ public class NFCActivity extends AppCompatActivity implements NfcAdapter.CreateN
 
             @Override
             public void onCancelled(DatabaseError databaseError) {
-                //TODO:Log
+                Log.e(TAG, databaseError.toString());
             }
         });
-    }
-
-
-
-    /**
-     * Utility method to convert a byte array to a hexadecimal string.
-     *
-     * @param bytes Bytes to convert
-     * @return String, containing hexadecimal representation.
-     */
-    public static String ByteArrayToHexString(byte[] bytes) {
-        final char[] hexArray = {'0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F'};
-        char[] hexChars = new char[bytes.length * 2]; // Each byte has two hex characters (nibbles)
-        int v;
-        for (int j = 0; j < bytes.length; j++) {
-            v = bytes[j] & 0xFF; // Cast bytes[j] to int, treating as unsigned value
-            hexChars[j * 2] = hexArray[v >>> 4]; // Select hex character from upper nibble
-            hexChars[j * 2 + 1] = hexArray[v & 0x0F]; // Select hex character from lower nibble
-        }
-        return new String(hexChars);
     }
 
     /**
@@ -295,6 +250,8 @@ public class NFCActivity extends AppCompatActivity implements NfcAdapter.CreateN
      * @return Byte array generated from input
      * @throws java.lang.IllegalArgumentException if input length is incorrect
      */
+
+    // TODO Is this needed
     public static byte[] HexStringToByteArray(String s) throws IllegalArgumentException {
         int len = s.length();
         if (len % 2 == 1) {

@@ -1,38 +1,21 @@
 package com.example.finalyearproject.hollyboothroyd.sync.Services;
 
-import android.app.Activity;
 import android.net.Uri;
-import android.provider.ContactsContract;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.widget.EditText;
 
-import com.example.finalyearproject.hollyboothroyd.sync.Model.Connection;
 import com.example.finalyearproject.hollyboothroyd.sync.Model.Event;
 import com.example.finalyearproject.hollyboothroyd.sync.Model.Notification;
 import com.example.finalyearproject.hollyboothroyd.sync.Model.Person;
 import com.example.finalyearproject.hollyboothroyd.sync.Utils.Constants;
-import com.example.finalyearproject.hollyboothroyd.sync.Utils.NotificationType;
 import com.google.android.gms.maps.model.LatLng;
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.OnFailureListener;
-import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
-import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.Query;
-import com.google.firebase.database.ServerValue;
-import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
-import java.util.concurrent.Executor;
 
 /**
  * Created by hollyboothroyd on 11/11/2017.
@@ -87,7 +70,6 @@ public class DatabaseManager {
     }
 
     public void updateCurrentUserLocation(LatLng userLocation) {
-        // TODO: Put hashmap conversion in utils
         HashMap<String, Object> personLocationHash = new HashMap<>();
         personLocationHash.put("longitude", userLocation.longitude);
         personLocationHash.put("latitude", userLocation.latitude);
@@ -177,7 +159,6 @@ public class DatabaseManager {
 
     // Events
 
-    // TODO: Add distance check
     public DatabaseReference getAllEventsDatabaseReference() {
         return mEventDatabaseReference;
     }

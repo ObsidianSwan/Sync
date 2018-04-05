@@ -39,7 +39,8 @@
             android:layout_gravity="center"
             android:ems="10"
             android:hint="@string/new_event_description"
-            android:inputType="textMultiLine" />
+            android:inputType="textMultiLine"
+            style="@style/RoundedOutline" />
     </LinearLayout>
 
     <Button
@@ -49,6 +50,7 @@
         android:layout_alignParentBottom="true"
         android:layout_centerHorizontal="true"
         android:layout_marginBottom="@dimen/button_margin"
-        android:text="@string/Done_Button"/>
+        android:text="@string/Done_Button"
+        style="@style/PrimaryButton" />
 
 </RelativeLayout>
