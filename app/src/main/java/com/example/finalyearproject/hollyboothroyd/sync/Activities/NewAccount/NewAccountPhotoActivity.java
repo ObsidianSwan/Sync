@@ -45,7 +45,6 @@ public class NewAccountPhotoActivity extends AppCompatActivity {
     private ImageButton mProfileImage;
     private Button mDoneButton;
     private Uri mImageUri;
-    private static final int GALLERY_CODE = 1;
 
     private View mProgressView;
     private View mSignUpFormView;
@@ -59,7 +58,7 @@ public class NewAccountPhotoActivity extends AppCompatActivity {
         put(Constants.locationDistanceUpdateIntervalName, Constants.locationDistanceUpdateIntervalDefault);
         put(Constants.locationTimeUpdateIntervalName, Constants.locationTimeUpdateIntervalDefault);
         put(Constants.mapZoomLevelName, Constants.mapZoomLevelDefault);
-        put(Constants.searchRadiusName, Constants.obfuscationRadiusDefault);
+        put(Constants.searchRadiusName, Constants.geofenceRadiusDefault);
         put(Constants.privacyIntensityName, Constants.privacyIntensityDefault);
     }};
 
@@ -79,7 +78,7 @@ public class NewAccountPhotoActivity extends AppCompatActivity {
             public void onClick(View view) {
                 Intent galleryIntent = new Intent(Intent.ACTION_GET_CONTENT);
                 galleryIntent.setType("image/*");
-                startActivityForResult(galleryIntent, GALLERY_CODE);
+                startActivityForResult(galleryIntent, Constants.GALLERY_CODE);
             }
         });
 
@@ -108,7 +107,7 @@ public class NewAccountPhotoActivity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
-        if (requestCode == GALLERY_CODE && resultCode == RESULT_OK) {
+        if (requestCode == Constants.GALLERY_CODE && resultCode == RESULT_OK) {
             mImageUri = data.getData();
             CropImage.activity(mImageUri)
                     .setAspectRatio(1,1)
@@ -143,8 +142,7 @@ public class NewAccountPhotoActivity extends AppCompatActivity {
 
                                 if (task.isSuccessful()) {
                                     // Sign in was successful
-                                    Toast.makeText(NewAccountPhotoActivity.this, "Signed in", Toast.LENGTH_SHORT).show();
-
+                                    // TODO add log
                                     // Add the user to the people database that is accessible by all users.
                                     // Add the user's image to the Firebase Storage
                                     databaseManager.uploadPersonImage(imageUri).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
@@ -164,6 +162,8 @@ public class NewAccountPhotoActivity extends AppCompatActivity {
                                                         if (ActivityCompat.checkSelfPermission(NewAccountPhotoActivity.this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(NewAccountPhotoActivity.this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
                                                             // Request Location permissions
                                                             ActivityCompat.requestPermissions(NewAccountPhotoActivity.this, new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION, android.Manifest.permission.ACCESS_COARSE_LOCATION}, 2);
+                                                        } else {
+                                                            startActivity(new Intent(NewAccountPhotoActivity.this, CoreActivity.class));
                                                         }
                                                         Toast.makeText(NewAccountPhotoActivity.this, R.string.sign_up_successful, Toast.LENGTH_SHORT).show();
                                                     }

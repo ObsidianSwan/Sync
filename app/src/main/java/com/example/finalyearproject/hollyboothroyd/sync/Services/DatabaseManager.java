@@ -26,23 +26,26 @@ public class DatabaseManager {
     private FirebaseDatabase mDatabase;
     private StorageReference mStorage;
     private DatabaseReference mPeopleDatabaseReference;
-    private DatabaseReference mUserNotificationDatabaseReference;
-    private DatabaseReference mConnectionsDatabaseReference;
-
+    private DatabaseReference mLocationDatabaseReference;
     private DatabaseReference mEventDatabaseReference;
     private AccountManager mAccountManager;
+
+    private String mCurrentUserId;
 
     public DatabaseManager() {
         mDatabase = FirebaseDatabase.getInstance();
         mStorage = FirebaseStorage.getInstance().getReference();
         mPeopleDatabaseReference = mDatabase.getReference().child(Constants.peopleDatabaseRefName);
-        mConnectionsDatabaseReference = mDatabase.getReference().child(Constants.connectionDatabaseRefName);
-
+        mLocationDatabaseReference = mDatabase.getReference().child(Constants.locationDatabaseRefName);
         mEventDatabaseReference = mDatabase.getReference().child(Constants.eventDatabaseRefName);
 
         mAccountManager = new AccountManager();
+        if(mAccountManager.getCurrentUser() != null) {
+            mCurrentUserId = mAccountManager.getCurrentUser().getUid();
+        }
+
         //TODO: when DMMan and AccountMan is put into utils return this to be here.
-        //mUserNotificationDatabaseReference = mPeopleDatabaseReference.child(mAccountManager.getCurrentUser().getUid()).child(Constants.userNotificationDatabaseRefName);
+        //mUserNotificationDatabaseReference = mPeopleDatabaseReference.child(mCurrentUserId).child(Constants.userNotificationDatabaseRefName);
     }
 
     // Users
@@ -66,7 +69,17 @@ public class DatabaseManager {
     }
 
     public Task<Void> deletePerson(){
-        return mPeopleDatabaseReference.child(mAccountManager.getCurrentUser().getUid()).setValue(null);
+        return mPeopleDatabaseReference.child(mCurrentUserId).setValue(null);
+    }
+
+    // Location
+
+    public DatabaseReference getLocationDatabaseReference() {
+        return mLocationDatabaseReference;
+    }
+
+    public DatabaseReference getUserLocationDatabaseReference(String userId) {
+        return mLocationDatabaseReference.child(userId);
     }
 
     public void updateCurrentUserLocation(LatLng userLocation) {
@@ -74,12 +87,11 @@ public class DatabaseManager {
         personLocationHash.put("longitude", userLocation.longitude);
         personLocationHash.put("latitude", userLocation.latitude);
 
-        String userId = mAccountManager.getCurrentUser().getUid();
-        DatabaseReference currentPerson = mPeopleDatabaseReference.child(userId);
-        currentPerson.updateChildren(personLocationHash, new DatabaseReference.CompletionListener() {
+        DatabaseReference currentPersonLocation = mLocationDatabaseReference.child(mCurrentUserId);
+        currentPersonLocation.updateChildren(personLocationHash, new DatabaseReference.CompletionListener() {
             @Override
             public void onComplete(DatabaseError databaseError, DatabaseReference databaseReference) {
-
+                //TODO Add logging
             }
         });
     }
@@ -89,22 +101,13 @@ public class DatabaseManager {
     }
 
     public DatabaseReference getUserPeopleDatabaseReference() {
-        return mPeopleDatabaseReference.child(mAccountManager.getCurrentUser().getUid());
+        return mPeopleDatabaseReference.child(mCurrentUserId);
     }
 
     // Connections
 
     public DatabaseReference getUserConnectionsDatabaseReference() {
-        return mPeopleDatabaseReference.child(mAccountManager.getCurrentUser().getUid()).child(Constants.connectionDatabaseRefName);
-    }
-
-    public DatabaseReference getNewConnectionReference() {
-        return mConnectionsDatabaseReference.push();
-    }
-
-    public Task<Void> addNewConnection(DatabaseReference connectionRef, String userAId, String userBId){
-        connectionRef.child(userAId).setValue(true);
-        return connectionRef.child(userBId).setValue(true);
+        return mPeopleDatabaseReference.child(mCurrentUserId).child(Constants.connectionDatabaseRefName);
     }
 
     public Task<Void> addConnection(String userAId, String userBId){
@@ -114,30 +117,22 @@ public class DatabaseManager {
     // Connection Requests
 
     public Task<Void> addUserConnectionRequest(String personId){
-        return mPeopleDatabaseReference.child(mAccountManager.getCurrentUser().getUid()).child(Constants.connectionRequestsDatabaseRefName).child(personId).setValue(true);
+        return mPeopleDatabaseReference.child(mCurrentUserId).child(Constants.connectionRequestsDatabaseRefName).child(personId).setValue(true);
     }
 
     public DatabaseReference getUserConnectionRequestsDatabaseReference() {
-        return mPeopleDatabaseReference.child(mAccountManager.getCurrentUser().getUid()).child(Constants.connectionRequestsDatabaseRefName);
+        return mPeopleDatabaseReference.child(mCurrentUserId).child(Constants.connectionRequestsDatabaseRefName);
     }
 
     public Task<Void> deleteUserNotification(String notificationId) {
-        return mPeopleDatabaseReference.child(mAccountManager.getCurrentUser().getUid()).child(Constants.userNotificationDatabaseRefName).child(notificationId).setValue(null);
+        return mPeopleDatabaseReference.child(mCurrentUserId).child(Constants.userNotificationDatabaseRefName).child(notificationId).setValue(null);
     }
 
     public Task<Void> deleteUserConnectionRequest(String personId) {
-        return mPeopleDatabaseReference.child(personId).child(Constants.connectionRequestsDatabaseRefName).child(mAccountManager.getCurrentUser().getUid()).setValue(null);
+        return mPeopleDatabaseReference.child(personId).child(Constants.connectionRequestsDatabaseRefName).child(mCurrentUserId).setValue(null);
     }
 
     // Delete Connection
-
-    public DatabaseReference getUserConnectionReference(String connectionId){
-        return mPeopleDatabaseReference.child(mAccountManager.getCurrentUser().getUid()).child(Constants.connectionDatabaseRefName).child(connectionId);
-    }
-
-    public Task<Void> deleteConnection(String databaseReference){
-        return mConnectionsDatabaseReference.child(databaseReference).setValue(null);
-    }
 
     public Task<Void> deleteConnection(String userId, String connectionId){
         return mPeopleDatabaseReference.child(userId).child(Constants.connectionDatabaseRefName).child(connectionId).setValue(null);
@@ -154,7 +149,7 @@ public class DatabaseManager {
     }
 
     public DatabaseReference getNotifications() {
-        return mPeopleDatabaseReference.child(mAccountManager.getCurrentUser().getUid()).child(Constants.userNotificationDatabaseRefName);
+        return mPeopleDatabaseReference.child(mCurrentUserId).child(Constants.userNotificationDatabaseRefName);
     }
 
     // Events
@@ -197,20 +192,20 @@ public class DatabaseManager {
     }
 
     public Task<Void> addUserAttendingEvent(String eventId) {
-        return mEventDatabaseReference.child(eventId).child(Constants.eventAttendeesDatabaseRefName).child(mAccountManager.getCurrentUser().getUid()).setValue(true);
+        return mEventDatabaseReference.child(eventId).child(Constants.eventAttendeesDatabaseRefName).child(mCurrentUserId).setValue(true);
     }
 
     public Task<Void> addEventAttending(String eventId){
-        return mPeopleDatabaseReference.child(mAccountManager.getCurrentUser().getUid()).child(Constants.peopleEventsAttendingDatabaseRefName).child(eventId).setValue(true);
+        return mPeopleDatabaseReference.child(mCurrentUserId).child(Constants.peopleEventsAttendingDatabaseRefName).child(eventId).setValue(true);
     }
 
     // Delete event
     public Task<Void> deleteEventHosting(String eventId){
-        return mPeopleDatabaseReference.child(mAccountManager.getCurrentUser().getUid()).child(Constants.peopleEventsCreatedDatabaseRefName).child(eventId).setValue(null);
+        return mPeopleDatabaseReference.child(mCurrentUserId).child(Constants.peopleEventsCreatedDatabaseRefName).child(eventId).setValue(null);
     }
 
     public Task<Void> deleteUserAttendingEvent(String eventId) {
-        return mEventDatabaseReference.child(eventId).child(Constants.eventAttendeesDatabaseRefName).child(mAccountManager.getCurrentUser().getUid()).setValue(null);
+        return mEventDatabaseReference.child(eventId).child(Constants.eventAttendeesDatabaseRefName).child(mCurrentUserId).setValue(null);
     }
 
     public Task<Void> deleteEventAttending(String eventId, String personId){

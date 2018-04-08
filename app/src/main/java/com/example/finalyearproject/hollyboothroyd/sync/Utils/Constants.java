@@ -17,7 +17,7 @@ public class Constants {
     public static final int locationTimeUpdateIntervalDefault = 1000;
     public static final int locationDistanceUpdateIntervalDefault = 5;
     public static final int obfuscationRadiusDefault = 60; // Meters
-    public static final int geofenceRadiusDefault = 150; //Meters
+    public static final int geofenceRadiusDefault = 200; //Meters
     public static final int privacyIntensityDefault = 2; //Intermediate: N-Rand
     public static final float metersPerDegree = 111300f;
     public static final int obfuscationTrials = 4;
@@ -57,6 +57,7 @@ public class Constants {
     public static final String peopleDatabaseRefName = "people";
     public static final String userNotificationDatabaseRefName = "notifications";
     public static final String connectionDatabaseRefName = "connections";
+    public static final String locationDatabaseRefName = "people_locations";
     public static final String connectionRequestsDatabaseRefName = "connection_requests";
 
     public static final String eventDatabaseRefName = "event";

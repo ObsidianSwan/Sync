@@ -14,8 +14,6 @@ public class Person {
     private String mIndustry;
     private String mImageId;
     private String mUserId;
-    private double mLongitude;
-    private double mLatitude;
 
     private HashMap<String, Integer> mUserSettings;
 
@@ -87,14 +85,6 @@ public class Person {
     public String getUserId() { return mUserId; }
 
     public void setUserId(String userId) { this.mUserId = userId; }
-
-    public double getLongitude() { return mLongitude; }
-
-    public void setLongitude(double longitude) { this.mLongitude = longitude; }
-
-    public double getLatitude() { return mLatitude; }
-
-    public void setLatitude(double latitude) { this.mLatitude = latitude; }
 
     public HashMap<String, Integer> getUserSettings() { return mUserSettings; }
 
