@@ -41,7 +41,7 @@
                     android:layout_centerVertical="true"
                     android:text="@string/settings_zoom_text"
                     android:textAppearance="@style/TextAppearance.AppCompat.Medium"
-                    android:textColor="@color/dark_blue" />
+                    android:textColor="@color/colorPrimary" />
 
                 <NumberPicker
                     android:id="@+id/settings_map_zoom_number_picker"
@@ -67,7 +67,7 @@
                     android:layout_centerVertical="true"
                     android:text="@string/settings_user_pin_color_text"
                     android:textAppearance="@style/TextAppearance.AppCompat.Medium"
-                    android:textColor="@color/dark_blue" />
+                    android:textColor="@color/colorPrimary" />
 
                 <Spinner
                     android:id="@+id/settings_user_color_spinner"
@@ -94,7 +94,7 @@
                     android:layout_centerVertical="true"
                     android:text="@string/settings_event_pin_color_text"
                     android:textAppearance="@style/TextAppearance.AppCompat.Medium"
-                    android:textColor="@color/dark_blue" />
+                    android:textColor="@color/colorPrimary" />
 
                 <Spinner
                     android:id="@+id/settings_event_color_spinner"
@@ -137,7 +137,7 @@
                     android:layout_centerVertical="true"
                     android:text="Privacy intensity"
                     android:textAppearance="@style/TextAppearance.AppCompat.Medium"
-                    android:textColor="@color/dark_blue" />
+                    android:textColor="@color/colorPrimary" />
 
                 <Spinner
                     android:id="@+id/settings_privacy_intensity_spinner"
@@ -164,7 +164,7 @@
                     android:layout_centerVertical="true"
                     android:text="Search distance"
                     android:textAppearance="@style/TextAppearance.AppCompat.Medium"
-                    android:textColor="@color/dark_blue" />
+                    android:textColor="@color/colorPrimary" />
 
                 <NumberPicker
                     android:id="@+id/settings_search_distance_picker"
@@ -190,7 +190,7 @@
                     android:layout_centerVertical="true"
                     android:text="Refresh rate: Time (min)"
                     android:textAppearance="@style/TextAppearance.AppCompat.Medium"
-                    android:textColor="@color/dark_blue" />
+                    android:textColor="@color/colorPrimary" />
 
                 <NumberPicker
                     android:id="@+id/settings_time_refresh_number_picker"
@@ -216,7 +216,7 @@
                     android:layout_centerVertical="true"
                     android:text="Refresh rate: Distance (meters)"
                     android:textAppearance="@style/TextAppearance.AppCompat.Medium"
-                    android:textColor="@color/dark_blue" />
+                    android:textColor="@color/colorPrimary" />
 
                 <NumberPicker
                     android:id="@+id/settings_dis_refresh_number_picker"

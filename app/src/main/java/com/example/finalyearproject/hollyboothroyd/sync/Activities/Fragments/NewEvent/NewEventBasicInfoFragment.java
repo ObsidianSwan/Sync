@@ -25,7 +25,6 @@ public class NewEventBasicInfoFragment extends Fragment {
     private EditText mEventTitleText;
     private EditText mEventIndustryText;
     private EditText mEventTopicText;
-    private Button mNextButton;
 
     private OnFragmentInteractionListener mListener;
 
@@ -33,6 +32,7 @@ public class NewEventBasicInfoFragment extends Fragment {
         // Required empty public constructor
     }
 
+    // TODO remove
     /**
      * Use this factory method to create a new instance of
      * this fragment using the provided parameters.
@@ -57,22 +57,26 @@ public class NewEventBasicInfoFragment extends Fragment {
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_new_event_basic_info, container, false);
 
+        // Set up UI
         getActivity().setTitle(getString(R.string.new_event_action_bar_title));
 
         mEventTitleText = (EditText) view.findViewById(R.id.new_event_title_text);
         mEventIndustryText = (EditText) view.findViewById(R.id.new_event_industry_text);
         mEventTopicText = (EditText) view.findViewById(R.id.new_event_topic_text);
-        mNextButton = (Button) view.findViewById(R.id.event_basic_info_next_button);
+        Button nextButton = (Button) view.findViewById(R.id.event_basic_info_next_button);
 
-        mNextButton.setOnClickListener(new View.OnClickListener() {
+        nextButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                String eventTitle = mEventTitleText.getText().toString();
-                String eventIndustry = mEventIndustryText.getText().toString();
-                String eventTopic = mEventTopicText.getText().toString();
+                // Retrieve user inputted data
+                String eventTitle = mEventTitleText.getText().toString().trim();
+                String eventIndustry = mEventIndustryText.getText().toString().trim();
+                String eventTopic = mEventTopicText.getText().toString().trim();
 
+                // Perform basic input validation
                 if(areEntriesValid(eventTitle, eventIndustry, eventTopic)) {
                     if (mListener != null) {
+                        // Pass data to the CoreActivity to pass it to the next fragment
                         mListener.onNewEventInfoNextButtonPressed(eventTitle, eventIndustry, eventTopic);
                     }
                 }

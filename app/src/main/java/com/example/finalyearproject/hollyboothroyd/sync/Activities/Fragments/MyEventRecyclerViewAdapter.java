@@ -64,6 +64,7 @@ public class MyEventRecyclerViewAdapter extends RecyclerView.Adapter<MyEventRecy
 
     @Override
     public void onBindViewHolder(final ViewHolder holder, int position) {
+        // Populate holder with event information
         holder.mItem = mValues.get(position);
         Picasso.with(mContext).load(mValues.get(position).getImageId()).into(holder.mEventImage);
         holder.mEventTitle.setText(mValues.get(position).getTitle());
@@ -80,6 +81,7 @@ public class MyEventRecyclerViewAdapter extends RecyclerView.Adapter<MyEventRecy
                     // fragment is attached to one) that an item has been selected.
                     mListener.onListFragmentInteraction(holder.mItem);
                 }
+                // Open the event popup
                 eventPopupCreation(holder);
             }
         });
@@ -90,6 +92,7 @@ public class MyEventRecyclerViewAdapter extends RecyclerView.Adapter<MyEventRecy
         View view = LayoutInflater.from(mContext).inflate(R.layout.event_popup, null);
         final Event event = holder.mItem;
 
+        // Set up event popup UI
         Button dismissPopupButton = (Button) view.findViewById(R.id.dismiss_popup_button);
         ImageView eventImage = (ImageView) view.findViewById(R.id.popup_image);
         TextView eventTitle = (TextView) view.findViewById(R.id.popup_title);
@@ -193,68 +196,71 @@ public class MyEventRecyclerViewAdapter extends RecyclerView.Adapter<MyEventRecy
     }
 
     private void attendEvent(final Event event){
+        // Add user to event's attendee database
         mDatabaseManager.addUserAttendingEvent(event.getUid()).addOnCompleteListener(new OnCompleteListener<Void>() {
             @Override
             public void onComplete(@NonNull Task<Void> task) {
                 if (task.isSuccessful()) {
+                    // Add event to users event attending database
                     mDatabaseManager.addEventAttending(event.getUid()).addOnCompleteListener(new OnCompleteListener<Void>() {
                         @Override
                         public void onComplete(@NonNull Task<Void> task) {
                             if (task.isSuccessful()) {
                                 Toast.makeText(mContext, "You're attending " + event.getTitle() + "!", Toast.LENGTH_SHORT).show();
                                 mDialog.dismiss();
-                                Log.i(TAG, "Attend event successful");
+                                Log.i(TAG, mContext.getString(R.string.attend_event_successful));
                             } else {
                                 Toast.makeText(mContext, R.string.event_attendence_unsuccessful, Toast.LENGTH_SHORT).show();
-                                Log.e(TAG, "Attend event failed");
+                                Log.e(TAG, mContext.getString(R.string.event_attendence_unsuccessful));
                             }
                         }
                     });
                 } else {
                     Toast.makeText(mContext, R.string.event_attendence_unsuccessful, Toast.LENGTH_SHORT).show();
-                    Log.e(TAG, "User attend event failed");
+                    Log.e(TAG, mContext.getString(R.string.event_attendence_unsuccessful));
                 }
             }
         });
     }
 
     private void stopAttendingEvent(final Event event, final String userId, final ViewHolder holder){
-        // Delete attendee from event attending database
+        // Delete attendee from users event attending database
         mDatabaseManager.deleteUserAttendingEvent(event.getUid()).addOnCompleteListener(new OnCompleteListener<Void>() {
             @Override
             public void onComplete(@NonNull Task<Void> task) {
                 if(task.isSuccessful()){
+                    // Delete attendee from event attendee databases
                     mDatabaseManager.deleteEventAttending(event.getUid(), userId).addOnCompleteListener(new OnCompleteListener<Void>() {
                         @Override
                         public void onComplete(@NonNull Task<Void> task) {
                             if(task.isSuccessful()){
+                                // Remove event from the UI
                                 removeEvent(holder.getAdapterPosition());
                                 Toast.makeText(mContext, "You're no longer attending" + event.getTitle() + "!", Toast.LENGTH_SHORT).show();
                                 mDialog.dismiss();
-                                Log.i(TAG, "Stop attending even successful");
+                                Log.i(TAG, mContext.getString(R.string.stop_attending_event_successful));
                             } else {
                                 Toast.makeText(mContext, R.string.event_attendence_deletion_unsuccessful, Toast.LENGTH_SHORT).show();
-                                Log.e(TAG, "Stop attending event failed");
+                                Log.e(TAG, mContext.getString(R.string.stop_attending_event_error));
                             }
                         }
                     });
                 } else{
                     Toast.makeText(mContext, R.string.event_attendence_deletion_unsuccessful, Toast.LENGTH_SHORT).show();
-                    Log.e(TAG, "User delete attendance failed");
+                    Log.e(TAG, mContext.getString(R.string.stop_attending_event_error));
                 }
             }
         });
     }
 
     private void deleteEvent(final Event event, final ViewHolder holder){
-        // Delete attending references in user attending database
+        // Delete event references in all user attending database
         mDatabaseManager.getUsersAttendingEvent(event.getUid()).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 for(DataSnapshot snapshot : dataSnapshot.getChildren()){
                     String attendeeId = snapshot.getKey();
                     mDatabaseManager.deleteEventAttending(event.getUid(), attendeeId);
-                    // TODO How to check if the deletions all happened successfully
                 }
                 // Stop hosting the event
                 mDatabaseManager.deleteEventHosting(event.getUid()).addOnCompleteListener(new OnCompleteListener<Void>() {
@@ -266,19 +272,20 @@ public class MyEventRecyclerViewAdapter extends RecyclerView.Adapter<MyEventRecy
                                 @Override
                                 public void onComplete(@NonNull Task<Void> task) {
                                     if(task.isSuccessful()){
+                                        // Remove event from UI
                                         removeEvent(holder.getAdapterPosition());
                                         Toast.makeText(mContext, R.string.delete_event_successful, Toast.LENGTH_SHORT).show();
                                         mDialog.dismiss();
-                                        Log.i(TAG, "Delete event successful");
+                                        Log.i(TAG, mContext.getString(R.string.delete_event_successful));
                                     } else {
                                         Toast.makeText(mContext, R.string.delete_event_unsuccessful, Toast.LENGTH_SHORT).show();
-                                        Log.e(TAG, "Delete event failed");
+                                        Log.e(TAG, mContext.getString(R.string.delete_event_error));
                                     }
                                 }
                             });
                         } else {
                             Toast.makeText(mContext, R.string.delete_event_unsuccessful, Toast.LENGTH_SHORT).show();
-                            Log.e(TAG, "Delete hosting event failed");
+                            Log.e(TAG, mContext.getString(R.string.delete_hosting_event_error));
                         }
                     }
                 });
@@ -291,6 +298,7 @@ public class MyEventRecyclerViewAdapter extends RecyclerView.Adapter<MyEventRecy
     }
 
     private void removeEvent(int position) {
+        // Remove item from UI list
         notifyItemRemoved(position);
         notifyItemRangeChanged(position, mValues.size());
     }
@@ -313,6 +321,8 @@ public class MyEventRecyclerViewAdapter extends RecyclerView.Adapter<MyEventRecy
         public ViewHolder(View view) {
             super(view);
             mView = view;
+
+            // Set up event UI
             mEventImage = (ImageView) view.findViewById(R.id.event_image);
             mEventTitle = (TextView) view.findViewById(R.id.event_title_text);
             mEventTopic = (TextView) view.findViewById(R.id.event_topic_text);

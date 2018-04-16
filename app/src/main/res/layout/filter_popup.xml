@@ -42,7 +42,7 @@
                     android:labelFor="@+id/filter_position_entry"
                     android:text="@string/filter_position_text"
                     android:textAppearance="@style/TextAppearance.AppCompat.Medium"
-                    android:textColor="@color/dark_blue"/>
+                    android:textColor="@color/colorPrimary"/>
 
                 <EditText
                     android:id="@+id/filter_person_position_entry"
@@ -71,7 +71,7 @@
                     android:labelFor="@+id/filter_company_entry"
                     android:text="@string/filter_company_text"
                     android:textAppearance="@style/TextAppearance.AppCompat.Medium"
-                    android:textColor="@color/dark_blue"/>
+                    android:textColor="@color/colorPrimary"/>
 
                 <EditText
                     android:id="@+id/filter_person_company_entry"
@@ -100,7 +100,7 @@
                     android:labelFor="@+id/filter_industry_entry"
                     android:text="@string/filter_industry_text"
                     android:textAppearance="@style/TextAppearance.AppCompat.Medium"
-                    android:textColor="@color/dark_blue"/>
+                    android:textColor="@color/colorPrimary"/>
 
                 <EditText
                     android:id="@+id/filter_person_industry_entry"
@@ -137,7 +137,7 @@
                     android:labelFor="@+id/filter_position_entry"
                     android:text="@string/filter_topic_text"
                     android:textAppearance="@style/TextAppearance.AppCompat.Medium"
-                    android:textColor="@color/dark_blue"/>
+                    android:textColor="@color/colorPrimary"/>
 
                 <EditText
                     android:id="@+id/filter_event_topic_entry"
@@ -166,7 +166,7 @@
                     android:labelFor="@+id/filter_company_entry"
                     android:text="@string/filter_industry_text"
                     android:textAppearance="@style/TextAppearance.AppCompat.Medium"
-                    android:textColor="@color/dark_blue"/>
+                    android:textColor="@color/colorPrimary"/>
 
                 <EditText
                     android:id="@+id/filter_event_industry_entry"

@@ -48,7 +48,6 @@ public class MyNotificationRecyclerViewAdapter extends RecyclerView.Adapter<MyNo
 
     private final Context mContext;
     private final List<NotificationBase> mValues;
-    private final OnListFragmentInteractionListener mListener;
 
     private DatabaseManager mDatabaseManager;
     private AccountManager mAccountManager;
@@ -62,13 +61,13 @@ public class MyNotificationRecyclerViewAdapter extends RecyclerView.Adapter<MyNo
     public MyNotificationRecyclerViewAdapter(Context context, List<NotificationBase> items, OnListFragmentInteractionListener listener) {
         mContext = context;
         mValues = items;
-        mListener = listener;
         mDatabaseManager = new DatabaseManager();
         mAccountManager = new AccountManager();
     }
 
     @Override
     public int getItemViewType(int position) {
+        // Check which type of notification is at a position
         switch (mValues.get(position).getType()) {
             case CONNECTION_REQUEST:
                 return NOTIFICATION_CONNECTION_REQUEST_TYPE;
@@ -81,22 +80,22 @@ public class MyNotificationRecyclerViewAdapter extends RecyclerView.Adapter<MyNo
     @Override
     public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         View view = null;
+
+        // Set the correct UI for each notification for it's given view type
         switch (viewType) {
-            case 0:
+            case 0: // Notification error
                 view = LayoutInflater.from(parent.getContext())
                         .inflate(R.layout.fragment_notification_error, parent, false);
                 return new ErrorViewHolder(view);
-            case 1:
+            case 1: // Connection request notification
                 view = LayoutInflater.from(parent.getContext())
                         .inflate(R.layout.fragment_notification_connection_request, parent, false);
                 return new ConnectionRequestViewHolder(view);
-
-            case 2:
+            case 2:  // Profile view notification
                 view = LayoutInflater.from(parent.getContext())
                         .inflate(R.layout.fragment_notification_profile_view, parent, false);
                 return new ProfileViewViewHolder(view);
         }
-
         return null;
     }
 
@@ -108,12 +107,14 @@ public class MyNotificationRecyclerViewAdapter extends RecyclerView.Adapter<MyNo
 
         switch (notification.getType()) {
             case CONNECTION_REQUEST:
+
+                // Set up the view holders timestamp and the button actions
                 final ConnectionRequestViewHolder connectionRequestViewHolder = (ConnectionRequestViewHolder) holder;
                 connectionRequestViewHolder.mTimeStamp.setText(Util.getTimeDifference(notification.getTimeStamp()));
                 connectionRequestViewHolder.mConfirmButton.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        acceptConnectionRequest(notification, holder);
+                        addConnection(notification, holder);
                     }
                 });
                 connectionRequestViewHolder.mDenyButton.setOnClickListener(new View.OnClickListener() {
@@ -126,45 +127,54 @@ public class MyNotificationRecyclerViewAdapter extends RecyclerView.Adapter<MyNo
             case PROFILE_VIEW:
                 final ProfileViewViewHolder profileViewViewHolder = (ProfileViewViewHolder) holder;
                 profileViewViewHolder.mTimeStamp.setText(Util.getTimeDifference(notification.getTimeStamp()));
+
+                // Set up button actions
                 profileViewViewHolder.mViewProfileButton.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        profileViewPopupCreation(notification);
+                        profileViewPopupCreation(notification, holder);
                     }
                 });
                 profileViewViewHolder.mRemoveButton.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        mDatabaseManager.deleteUserNotification(notification.getDbRefKey()).addOnCompleteListener(new OnCompleteListener<Void>() {
-                            @Override
-                            public void onComplete(@NonNull Task<Void> task) {
-                                if (task.isSuccessful()) {
-                                    removeNotification(holder.getAdapterPosition());
-                                    Log.i(TAG, "Delete notification successful");
-                                } else {
-                                    Log.e(TAG, "Delete notification failed");
-                                }
-                            }
-                        });
+                        removeProfileView(notification, holder);
                     }
                 });
                 break;
             case ERROR:
                 // Add any additional view items. Currently there are none
-                Log.e(TAG, "Notification type not recognized");
+                Log.e(TAG, mContext.getString(R.string.notification_type_error));
         }
-        //TODO: test for error case
     }
 
-    private void profileViewPopupCreation(final NotificationBase notification) {
+    private void removeProfileView(final NotificationBase notification, final ViewHolder holder){
+        // Delete notification from the users database
+        mDatabaseManager.deleteUserNotification(notification.getDbRefKey()).addOnCompleteListener(new OnCompleteListener<Void>() {
+            @Override
+            public void onComplete(@NonNull Task<Void> task) {
+                if (task.isSuccessful()) {
+                    // Remove the notification from the UI
+                    removeNotification(holder.getAdapterPosition());
+                    Log.i(TAG, mContext.getString(R.string.delete_notification_successful));
+                } else {
+                    Log.e(TAG, mContext.getString(R.string.delete_notification_error));
+                }
+            }
+        });
+    }
+
+    private void profileViewPopupCreation(final NotificationBase notification, final ViewHolder holder) {
         mDialogBuilder = new AlertDialog.Builder(mContext);
         final View view = LayoutInflater.from(mContext).inflate(R.layout.person_popup, null);
+        // Get person data who viewed the current users profile
         mDatabaseManager.getPersonReference(notification.getId()).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 final Person person = dataSnapshot.getValue(Person.class);
                 if (person != null) {
 
+                    // Set up the UI
                     Button dismissPopupButton = (Button) view.findViewById(R.id.dismiss_popup_button);
                     ImageView personImage = (ImageView) view.findViewById(R.id.popup_image);
                     TextView personName = (TextView) view.findViewById(R.id.popup_name);
@@ -201,7 +211,7 @@ public class MyNotificationRecyclerViewAdapter extends RecyclerView.Adapter<MyNo
                         mPopupButton.setOnClickListener(new View.OnClickListener() {
                             @Override
                             public void onClick(View v) {
-                                addConnection(notification);
+                                addConnection(notification, holder);
                             }
                         });
                     } // Users are not connected and no connection requests have been sent
@@ -221,6 +231,7 @@ public class MyNotificationRecyclerViewAdapter extends RecyclerView.Adapter<MyNo
                         }
                     });
 
+                    // Send a profile view notification to the other user
                     DatabaseReference newNotificationRef = mDatabaseManager.getNewNotifcationReference(person.getUserId());
                     String refKey = newNotificationRef.getKey();
                     Notification notification = new Notification(refKey, mAccountManager.getCurrentUser().getUid(), NotificationType.PROFILE_VIEW);
@@ -228,9 +239,9 @@ public class MyNotificationRecyclerViewAdapter extends RecyclerView.Adapter<MyNo
                         @Override
                         public void onComplete(@NonNull Task<Void> task) {
                             if (task.isSuccessful()) {
-                                Log.i(TAG, "Send notification successful");
+                                Log.i(TAG, mContext.getString(R.string.send_notification_successful));
                             } else {
-                                Log.e(TAG, "Send notification failed");
+                                Log.e(TAG, mContext.getString(R.string.send_notification_error));
                             }
                         }
                     });
@@ -248,7 +259,7 @@ public class MyNotificationRecyclerViewAdapter extends RecyclerView.Adapter<MyNo
         });
     }
 
-    private void addConnection(final NotificationBase notification) {
+    private void addConnection(final NotificationBase notification, final ViewHolder holder) {
         mDatabaseManager.getUserPeopleDatabaseReference().addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
@@ -273,25 +284,26 @@ public class MyNotificationRecyclerViewAdapter extends RecyclerView.Adapter<MyNo
                                                         @Override
                                                         public void onComplete(@NonNull Task<Void> task) {
                                                             if (task.isSuccessful()) {
+                                                                removeNotification(holder.getAdapterPosition());
                                                                 Toast.makeText(mContext, R.string.connection_accepted_toast_text, Toast.LENGTH_SHORT).show();
-                                                                Log.i(TAG, "Connection made");
+                                                                Log.i(TAG, mContext.getString(R.string.connection_successful));
                                                             } else {
-                                                                Log.e(TAG, "Delete notification failed");
+                                                                Log.e(TAG, mContext.getString(R.string.delete_notification_error));
                                                             }
                                                         }
                                                     });
                                                 } else {
-                                                    Log.e(TAG, "Delete connection request failed");
+                                                    Log.e(TAG, mContext.getString(R.string.delete_connection_request_error));
                                                 }
                                             }
                                         });
                                     } else {
-                                        Log.e(TAG, "Add connection to other user failed");
+                                        Log.e(TAG, mContext.getString(R.string.add_connection_other_user_error));
                                     }
                                 }
                             });
                         } else {
-                            Log.e(TAG, "Add connection to current user failed");
+                            Log.e(TAG, mContext.getString(R.string.add_connection_current_user_error));
                         }
                     }
                 });
@@ -322,16 +334,16 @@ public class MyNotificationRecyclerViewAdapter extends RecyclerView.Adapter<MyNo
                                 mPopupButton.setVisibility(View.GONE);
                                 mConnectionPendingMessage.setVisibility(View.VISIBLE);
                                 Toast.makeText(mContext, R.string.connection_request_sent_success, Toast.LENGTH_SHORT).show();
-                                Log.i(TAG, "Connection request successful");
+                                Log.i(TAG, mContext.getString(R.string.connection_request_sent_success));
                             } else {
                                 Toast.makeText(mContext, R.string.connection_request_failed, Toast.LENGTH_SHORT).show();
-                                Log.e(TAG, "Connection request failed");
+                                Log.e(TAG, mContext.getString(R.string.connection_request_failed));
                             }
                         }
                     });
                 } else {
                     Toast.makeText(mContext, R.string.connection_request_failed, Toast.LENGTH_SHORT).show();
-                    Log.e(TAG, "Send notification failed");
+                    Log.e(TAG, mContext.getString(R.string.send_notification_error));
                 }
             }
         });
@@ -352,74 +364,15 @@ public class MyNotificationRecyclerViewAdapter extends RecyclerView.Adapter<MyNo
                             if (task.isSuccessful()) {
                                 Toast.makeText(mContext, "You're no longer connected with " + person.getFirstName(), Toast.LENGTH_SHORT).show();
                                 mDialog.dismiss();
-                                Log.i(TAG, "Delete connection successful");
+                                Log.i(TAG, mContext.getString(R.string.delete_connection_successful));
                             } else {
-                                Log.e(TAG, "Delete other users connection failed");
+                                Log.e(TAG, mContext.getString(R.string.delete_other_user_connection_error));
                             }
                         }
                     });
                 } else {
-                    Log.e(TAG, "Delete current users connection failed");
+                    Log.e(TAG, mContext.getString(R.string.delete_current_user_connection_error));
                 }
-            }
-        });
-    }
-
-
-    // TODO remove repeat
-    private void acceptConnectionRequest(final NotificationBase notification, final ViewHolder holder) {
-        mDatabaseManager.getUserPeopleDatabaseReference().addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                final String currentUserId = mAccountManager.getCurrentUser().getUid();
-                // Add connection to current users database
-                mDatabaseManager.addConnection(notification.getId(), currentUserId).addOnCompleteListener(new OnCompleteListener<Void>() {
-                    @Override
-                    public void onComplete(@NonNull Task<Void> task) {
-                        if (task.isSuccessful()) {
-                            // Add connection to other users database
-                            mDatabaseManager.addConnection(currentUserId, notification.getId()).addOnCompleteListener(new OnCompleteListener<Void>() {
-                                @Override
-                                public void onComplete(@NonNull Task<Void> task) {
-                                    if (task.isSuccessful()) {
-                                        // Delete connection request in the other users database
-                                        mDatabaseManager.deleteUserConnectionRequest(notification.getId()).addOnCompleteListener(new OnCompleteListener<Void>() {
-                                            @Override
-                                            public void onComplete(@NonNull Task<Void> task) {
-                                                if (task.isSuccessful()) {
-                                                    // Delete connection notification in the current users database
-                                                    mDatabaseManager.deleteUserNotification(notification.getDbRefKey()).addOnCompleteListener(new OnCompleteListener<Void>() {
-                                                        @Override
-                                                        public void onComplete(@NonNull Task<Void> task) {
-                                                            if (task.isSuccessful()) {
-                                                                removeNotification(holder.getAdapterPosition());
-                                                                Toast.makeText(mContext, R.string.connection_accepted_toast_text, Toast.LENGTH_SHORT).show();
-                                                                Log.i(TAG, "Connection made");
-                                                            } else {
-                                                                Log.e(TAG, "Delete notification failed");
-                                                            }
-                                                        }
-                                                    });
-                                                } else {
-                                                    Log.e(TAG, "Delete connection request failed");
-                                                }
-                                            }
-                                        });
-                                    } else {
-                                        Log.e(TAG, "Add connection to other user failed");
-                                    }
-                                }
-                            });
-                        } else {
-                            Log.e(TAG, "Add connection to current user failed");
-                        }
-                    }
-                });
-            }
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-                Log.e(TAG, databaseError.toString());
             }
         });
     }
@@ -431,26 +384,26 @@ public class MyNotificationRecyclerViewAdapter extends RecyclerView.Adapter<MyNo
             public void onComplete(@NonNull Task<Void> task) {
                 if (task.isSuccessful()) {
                     // Remove the connection request from other users (requestee) database
-                    Person person = UserConnections.CONNECTION_REQUEST_ITEM_MAP.get(notification.getId());
                     mDatabaseManager.deleteUserConnectionRequest(notification.getId()).addOnCompleteListener(new OnCompleteListener<Void>() {
                         @Override
                         public void onComplete(@NonNull Task<Void> task) {
                             if (task.isSuccessful()) {
                                 removeNotification(holder.getAdapterPosition());
                                 Toast.makeText(mContext, R.string.connection_denied_toast_text, Toast.LENGTH_SHORT).show();
-                                Log.i(TAG, "Delete connection request successful");
+                                Log.i(TAG, mContext.getString(R.string.delete_connection_request_successful));
                             }
                         }
                     });
                 } else {
                     Toast.makeText(mContext, R.string.generic_error_text, Toast.LENGTH_SHORT).show();
-                    Log.e(TAG, "Delete notification failed");
+                    Log.e(TAG, mContext.getString(R.string.delete_notification_error));
                 }
             }
         });
     }
 
     private void removeNotification(int position) {
+        // Remove item from the UI list
         notifyItemRemoved(position);
         notifyItemRangeChanged(position, mValues.size());
     }
@@ -469,6 +422,8 @@ public class MyNotificationRecyclerViewAdapter extends RecyclerView.Adapter<MyNo
         public ViewHolder(View view) {
             super(view);
             mView = view;
+
+            // Set up holder for basic notification UI
             mNotificationImage = (ImageView) view.findViewById(R.id.notification_image);
             mNotificationTitle = (TextView) view.findViewById(R.id.notification_title_text);
             mNotificationDescription = (TextView) view.findViewById(R.id.notification_description_text);
@@ -484,6 +439,8 @@ public class MyNotificationRecyclerViewAdapter extends RecyclerView.Adapter<MyNo
         public ConnectionRequestViewHolder(View view) {
             super(view);
             mView = view;
+
+            // Set up holder for connection request notification UI
             mTimeStamp = (TextView) view.findViewById(R.id.notification_timestamp_text);
             mConfirmButton = (Button) view.findViewById(R.id.notification_connection_accept_button);
             mDenyButton = (Button) view.findViewById(R.id.notification_connection_deny_button);
@@ -499,6 +456,8 @@ public class MyNotificationRecyclerViewAdapter extends RecyclerView.Adapter<MyNo
         public ProfileViewViewHolder(View view) {
             super(view);
             mView = view;
+
+            // Set up holder for profile view notification UI
             mTimeStamp = (TextView) view.findViewById(R.id.notification_timestamp_text);
             mViewProfileButton = (Button) view.findViewById(R.id.notification_profile_view_button);
             mRemoveButton = (Button) view.findViewById(R.id.notification_remove_button);
@@ -512,6 +471,8 @@ public class MyNotificationRecyclerViewAdapter extends RecyclerView.Adapter<MyNo
         public ErrorViewHolder(View view) {
             super(view);
             mView = view;
+
+            // Set up holder for error notification UI
         }
     }
 }

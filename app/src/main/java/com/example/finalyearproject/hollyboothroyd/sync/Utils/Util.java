@@ -39,7 +39,7 @@ import java.util.concurrent.TimeUnit;
  */
 
 public class Util {
-    //AccountManager mAccountManager = new AccountManager();
+
     private static AlertDialog mDialog;
 
     public static String getMapKeyFloat(HashMap map, float value) {

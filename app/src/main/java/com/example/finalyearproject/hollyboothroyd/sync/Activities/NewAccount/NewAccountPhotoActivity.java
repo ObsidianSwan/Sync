@@ -39,19 +39,24 @@ import java.util.HashMap;
 
 public class NewAccountPhotoActivity extends AppCompatActivity {
 
+    private static final String TAG = "NewAccountPhotoActivity";
+
     private AccountManager accountManager;
     private DatabaseManager databaseManager;
 
     private ImageButton mProfileImage;
     private Button mDoneButton;
+    private Button mRetryButton;
     private Uri mImageUri;
 
     private View mProgressView;
     private View mSignUpFormView;
+    private View mRetryView;
 
     Float personPinColor = Constants.personPinColorDefault;
     Float eventPinColor = Constants.eventPinColorDefault;
 
+    // Set up default settings map to be saved into new account database
     private HashMap<String, Integer> mDefaultSettingsMap = new HashMap<String, Integer>() {{
         put(Constants.personPinColorName, personPinColor.intValue());
         put(Constants.eventPinColorName, eventPinColor.intValue());
@@ -70,9 +75,12 @@ public class NewAccountPhotoActivity extends AppCompatActivity {
         accountManager = new AccountManager();
         databaseManager = new DatabaseManager();
 
+        // Set up UI
         mProfileImage = (ImageButton) findViewById(R.id.profile_photo_button);
         mDoneButton = (Button) findViewById(R.id.done_button);
+        mRetryButton = (Button) findViewById(R.id.retry_button);
 
+        // Open gallery to select profile image
         mProfileImage.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -86,7 +94,7 @@ public class NewAccountPhotoActivity extends AppCompatActivity {
         mDoneButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-
+                // Retrieve previously inputted account details
                 String firstName = getIntent().getStringExtra("firstName");
                 String lastName = getIntent().getStringExtra("lastName");
                 String email = getIntent().getStringExtra("email");
@@ -95,33 +103,37 @@ public class NewAccountPhotoActivity extends AppCompatActivity {
                 String company = getIntent().getStringExtra("company");
                 String industry = getIntent().getStringExtra("industry");
 
+                // Register user
                 registerUser(firstName, lastName, position, company, industry, mImageUri, email, password);
             }
         });
 
         mSignUpFormView = findViewById(R.id.sign_up_layout);
         mProgressView = findViewById(R.id.sign_up_progress);
+        mRetryView = findViewById(R.id.retry_layout);
     }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
+        // Open crop image page and set aspect ratio to 1:1
         if (requestCode == Constants.GALLERY_CODE && resultCode == RESULT_OK) {
             mImageUri = data.getData();
             CropImage.activity(mImageUri)
-                    .setAspectRatio(1,1)
+                    .setAspectRatio(1, 1)
                     .setGuidelines(CropImageView.Guidelines.ON)
                     .start(this);
         }
 
+        // Once the user is happy with their cropped image, save the image URI and set the profile image to the cropped image
         if (requestCode == CropImage.CROP_IMAGE_ACTIVITY_REQUEST_CODE) {
             CropImage.ActivityResult result = CropImage.getActivityResult(data);
             if (resultCode == RESULT_OK) {
                 mImageUri = result.getUri();
                 mProfileImage.setImageURI(mImageUri);
             } else if (resultCode == CropImage.CROP_IMAGE_ACTIVITY_RESULT_ERROR_CODE) {
-                Exception error = result.getError();
+                Log.e(TAG, result.getError().toString());
             }
         }
     }
@@ -129,79 +141,139 @@ public class NewAccountPhotoActivity extends AppCompatActivity {
     private void registerUser(final String firstName, final String lastName, final String position, final String company, final String industry, final Uri imageUri, final String email, final String password) {
         // Create and authenticate the new user.
         showProgress(true);
-            // Sign up a new user into the Firebase Authentication service
-            accountManager.signUpUser(email, password).addOnCompleteListener(new OnCompleteListener<AuthResult>() {
-                @Override
-                public void onComplete(@NonNull Task<AuthResult> task) {
-                    if (task.isSuccessful()) {
-                        // New user added
-                        // Sign in the new user into Firebase
-                        accountManager.signInUser(email, password).addOnCompleteListener(new OnCompleteListener<AuthResult>() {
-                            @Override
-                            public void onComplete(@NonNull Task<AuthResult> task) {
+        // Sign up a new user into the Firebase Authentication service
+        accountManager.signUpUser(email, password).addOnCompleteListener(new OnCompleteListener<AuthResult>() {
+            @Override
+            public void onComplete(@NonNull Task<AuthResult> task) {
+                if (task.isSuccessful()) {
+                    // New user added
+                    // Sign in the new user into Firebase
+                    signUpUser(email, password, imageUri, firstName, lastName, position, company, industry);
+                } else {
+                    //New user failed to be added
+                    Toast.makeText(NewAccountPhotoActivity.this, R.string.generic_sign_up_failed, Toast.LENGTH_SHORT).show();
+                    Log.e(TAG, getString(R.string.generic_sign_up_failed));
+                    // Allow the user to retry this sign up stage
+                    showRetryPage(true);
+                    mRetryButton.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            // Try to register account again
+                            // Close the retry page
+                            registerUser(firstName, lastName, position, company, industry, imageUri, email, password);
+                            showRetryPage(false);
+                        }
+                    });
+                }
+            }
+        });
+    }
 
-                                if (task.isSuccessful()) {
-                                    // Sign in was successful
-                                    // TODO add log
-                                    // Add the user to the people database that is accessible by all users.
-                                    // Add the user's image to the Firebase Storage
-                                    databaseManager.uploadPersonImage(imageUri).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
-                                        @Override
-                                        public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-                                            // Get a URL to the uploaded content
-                                            String downloadUrl = taskSnapshot.getDownloadUrl().toString();
-                                            String userId = accountManager.getCurrentUser().getUid();
-                                            // Add the user to the Firebase Database with the image storage reference
-                                            Person person = new Person(firstName, lastName, position, company, industry, downloadUrl, userId, mDefaultSettingsMap);
-                                            databaseManager.addPerson(person).addOnCompleteListener(new OnCompleteListener<Void>() {
-                                                @Override
-                                                public void onComplete(@NonNull Task<Void> task) {
-                                                    showProgress(false);
-                                                    if(task.isSuccessful())
-                                                    {
-                                                        if (ActivityCompat.checkSelfPermission(NewAccountPhotoActivity.this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(NewAccountPhotoActivity.this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                                                            // Request Location permissions
-                                                            ActivityCompat.requestPermissions(NewAccountPhotoActivity.this, new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION, android.Manifest.permission.ACCESS_COARSE_LOCATION}, 2);
-                                                        } else {
-                                                            startActivity(new Intent(NewAccountPhotoActivity.this, CoreActivity.class));
-                                                        }
-                                                        Toast.makeText(NewAccountPhotoActivity.this, R.string.sign_up_successful, Toast.LENGTH_SHORT).show();
-                                                    }
-                                                    else
-                                                    {
-                                                        //TODO: add logging tags. Debugging. Better retry
-                                                        Toast.makeText(NewAccountPhotoActivity.this, R.string.generic_sign_up_failed, Toast.LENGTH_SHORT).show();
-                                                        showProgress(false);
-                                                    }
-                                                }
-                                            });
-                                        }
-                                    })
-                                    .addOnFailureListener(new OnFailureListener() {
-                                        @Override
-                                        public void onFailure(@NonNull Exception exception) {
-                                            // Adding the user's image was not successful
-                                            //TODO: add logging tags. Debugging. Better retry
-                                            Toast.makeText(NewAccountPhotoActivity.this, R.string.generic_sign_up_failed, Toast.LENGTH_SHORT).show();
-                                            showProgress(false);
-                                        }
-                                    });
-                                } else {
-                                    // Sign in was not successful
-                                    //TODO: add logging tags. Debugging. Better retry
-                                    Toast.makeText(NewAccountPhotoActivity.this, R.string.generic_sign_up_failed, Toast.LENGTH_SHORT).show();
-                                    showProgress(false);
-                                }
+    private void signUpUser(final String email, final String password, final Uri imageUri, final String firstName, final String lastName, final String position, final String company, final String industry) {
+        accountManager.signInUser(email, password).addOnCompleteListener(new OnCompleteListener<AuthResult>() {
+            @Override
+            public void onComplete(@NonNull Task<AuthResult> task) {
+
+                if (task.isSuccessful()) {
+                    // Sign in was successful
+                    Log.i(TAG, getString(R.string.new_user_signed_in_successfully));
+                    // Add the user to the people database that is accessible by all users.
+                    // Add the user's image to the Firebase Storage
+                    addUserPhoto(imageUri, firstName, lastName, position, company, industry);
+                } else {
+                    // Sign in was not successful
+                    Toast.makeText(NewAccountPhotoActivity.this, R.string.generic_sign_up_failed, Toast.LENGTH_SHORT).show();
+                    showRetryPage(true);
+                    // Allow the user to retry this sign up stage
+                    Log.e(TAG, getString(R.string.generic_sign_up_failed));
+                    mRetryButton.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            // Try to sign into account again
+                            // Close the retry page
+                            signUpUser(email, password, imageUri, firstName, lastName, position, company, industry);
+                            showRetryPage(false);
+                        }
+                    });
+                }
+            }
+        });
+    }
+
+    private void addUserPhoto(final Uri imageUri, final String firstName, final String lastName, final String position, final String company, final String industry) {
+        databaseManager.uploadPersonImage(imageUri).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+            @Override
+            public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                // Get a URL to the uploaded content
+                String downloadUrl = taskSnapshot.getDownloadUrl().toString();
+                String userId = accountManager.getCurrentUser().getUid();
+                // Add the user to the Firebase Database with the image storage reference
+                Person person = new Person(firstName, lastName, position, company, industry, downloadUrl, userId, mDefaultSettingsMap);
+                addUser(person);
+
+            }
+        })
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception exception) {
+                        // Adding the user's image was not successful
+                        Toast.makeText(NewAccountPhotoActivity.this, R.string.generic_sign_up_failed, Toast.LENGTH_SHORT).show();
+                        // Allow the user to retry this sign up stage
+                        showRetryPage(true);
+                        Log.e(TAG, getString(R.string.generic_sign_up_failed));
+                        mRetryButton.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                // Try to add profile image again
+                                // Close the retry page
+                                addUserPhoto(imageUri, firstName, lastName, position, company, industry);
+                                showRetryPage(false);
                             }
                         });
-                    } else {
-                        //New user failed to be added
-                        //TODO: add logging tags. Debugging. Better retry
-                        Toast.makeText(NewAccountPhotoActivity.this, R.string.generic_sign_up_failed, Toast.LENGTH_SHORT).show();
-                        showProgress(false);
                     }
+                });
+    }
+
+    private void addUser(final Person person) {
+        databaseManager.addPerson(person).addOnCompleteListener(new OnCompleteListener<Void>() {
+            @Override
+            public void onComplete(@NonNull Task<Void> task) {
+                showProgress(false);
+                if (task.isSuccessful()) {
+                    if (ActivityCompat.checkSelfPermission(NewAccountPhotoActivity.this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(NewAccountPhotoActivity.this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                        // Request Location permissions
+                        ActivityCompat.requestPermissions(NewAccountPhotoActivity.this, new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION, android.Manifest.permission.ACCESS_COARSE_LOCATION}, 2);
+                    } else {
+                        // If location permissions are already granted, go to GMaps fragment
+                        startActivity(new Intent(NewAccountPhotoActivity.this, CoreActivity.class));
+                    }
+                    Toast.makeText(NewAccountPhotoActivity.this, R.string.sign_up_successful, Toast.LENGTH_SHORT).show();
+                    Log.i(TAG, getString(R.string.sign_up_successful));
+                } else {
+                    Toast.makeText(NewAccountPhotoActivity.this, R.string.generic_sign_up_failed, Toast.LENGTH_SHORT).show();
+                    // Allow the user to retry this sign up stage
+                    showRetryPage(true);
+                    Log.e(TAG, getString(R.string.generic_sign_up_failed));
+                    mRetryButton.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            // Try to add person to database again
+                            // Close the retry page
+                            addUser(person);
+                            showRetryPage(false);
+                        }
+                    });
                 }
-            });
+            }
+        });
+    }
+
+    private void showRetryPage(final boolean show) {
+        // Show/Hide retry view and conversely show/hide the other layouts
+        mRetryView.setVisibility(show ? View.VISIBLE : View.GONE);
+        mDoneButton.setVisibility(show ? View.GONE : View.VISIBLE);
+        mSignUpFormView.setVisibility(show ? View.GONE : View.VISIBLE);
+        mProgressView.setVisibility(show ? View.GONE : View.VISIBLE);
     }
 
     @Override
@@ -209,17 +281,16 @@ public class NewAccountPhotoActivity extends AppCompatActivity {
                                            @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
 
+        // Check if the location permissions have been granted
         if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
             if (ContextCompat.checkSelfPermission(NewAccountPhotoActivity.this, android.Manifest.permission.ACCESS_FINE_LOCATION)
                     == PackageManager.PERMISSION_GRANTED) {
+                // Open the GMaps fragment if the location permissions have been granted
                 startActivity(new Intent(NewAccountPhotoActivity.this, CoreActivity.class));
             }
         }
     }
 
-    /**
-     * Shows the progress UI and hides the login form.
-     */
     @TargetApi(Build.VERSION_CODES.HONEYCOMB_MR2)
     private void showProgress(final boolean show) {
         // On Honeycomb MR2 we have the ViewPropertyAnimator APIs, which allow
@@ -228,6 +299,7 @@ public class NewAccountPhotoActivity extends AppCompatActivity {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB_MR2) {
             int shortAnimTime = getResources().getInteger(android.R.integer.config_shortAnimTime);
 
+            // Shows the progress UI and hides the login form.
             mDoneButton.setVisibility(show ? View.GONE : View.VISIBLE);
             mSignUpFormView.setVisibility(show ? View.GONE : View.VISIBLE);
             mSignUpFormView.animate().setDuration(shortAnimTime).alpha(

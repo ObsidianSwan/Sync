@@ -28,7 +28,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="@string/notification_error_text"
-                android:textColor="@color/dark_blue"
+                android:textColor="@color/colorPrimary"
                 android:textAppearance="@style/TextAppearance.AppCompat.Medium" />
 
             <TextView

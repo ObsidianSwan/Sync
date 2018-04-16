@@ -51,13 +51,14 @@ public class LogoutFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-
-        getActivity().setTitle(R.string.logout_action_bar_title);
-
         mAccountManager = new AccountManager();
+
+        // Set up UI
+        getActivity().setTitle(R.string.logout_action_bar_title);
 
         View view = inflater.inflate(R.layout.fragment_logout, container, false);
         Button logoutButton = (Button) view.findViewById(R.id.logout_button);
+        // Handle logout functionality in the CoreActivity for proper cleanup
         logoutButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {

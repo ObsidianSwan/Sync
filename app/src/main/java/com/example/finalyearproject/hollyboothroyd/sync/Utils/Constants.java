@@ -30,6 +30,11 @@ public class Constants {
     public static final String personMarkerTag = "Person";
     public static final String eventMarkerTag = "Event";
 
+    public static final String geofenceLatitude = "latitude";
+    public static final String geofenceLongitude = "longitude";
+    public static final String geofenceUserId = "userId";
+    public static final String geofenceEnterTrigger = "geofenceEnterTriggered";
+
     // Location Privacy Names
 
 
@@ -67,6 +72,12 @@ public class Constants {
     public static final String userSettingsDatabaseRefName = "userSettings";
 
     public static final int GALLERY_CODE = 1;
+    public static final String userImgChildName = "imageId";
+    public static final String userFirstNameChildName = "firstName";
+    public static final String userLastNameChildName = "lastName";
+    public static final String userPositionChildName = "position";
+    public static final String userIndustryChildName = "company";
+    public static final String userCompanyChildName = "industry";
     public static final String personImgStorageName = "person_images";
     public static final String eventImgStorageName = "event_images";
     public static final String eventDefaultImgStorageUrl = "https://firebasestorage.googleapis.com/v0/b/sync-1a37a.appspot.com/o/Event_Images%2FLogoSqTransparent.png?alt=media&token=b45dc652-3b09-48a1-8371-31748e4967ac";

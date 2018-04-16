@@ -14,27 +14,23 @@ import com.example.finalyearproject.hollyboothroyd.sync.R;
 
 public class LoginActivity extends AppCompatActivity {
 
-    private Button mConnectWithLinkedInButton;
-    private Button mNewAccountButton;
-    private Button mLoginFormButton;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
 
-        mConnectWithLinkedInButton = (Button) findViewById(R.id.connect_linkedin_button);
-        mNewAccountButton = (Button) findViewById(R.id.new_account_button);
-        mLoginFormButton = (Button) findViewById(R.id.login_form_button);
+        Button connectWithLinkedInButton = (Button) findViewById(R.id.connect_linkedin_button);
+        Button newAccountButton = (Button) findViewById(R.id.new_account_button);
+        Button loginFormButton = (Button) findViewById(R.id.login_form_button);
 
-        mConnectWithLinkedInButton.setOnClickListener(new View.OnClickListener() {
+        connectWithLinkedInButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 // Show LinkedIn login
             }
         });
 
-        mNewAccountButton.setOnClickListener(new View.OnClickListener() {
+        newAccountButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 // Show New Account creation
@@ -42,7 +38,7 @@ public class LoginActivity extends AppCompatActivity {
             }
         });
 
-        mLoginFormButton.setOnClickListener(new View.OnClickListener() {
+        loginFormButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 // Show existing user Login form

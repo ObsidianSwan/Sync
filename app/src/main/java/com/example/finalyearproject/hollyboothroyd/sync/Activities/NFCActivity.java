@@ -15,7 +15,10 @@ import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.app.FragmentManager;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.view.GravityCompat;
+import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
@@ -23,6 +26,7 @@ import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.finalyearproject.hollyboothroyd.sync.Activities.Fragments.GMapFragment;
 import com.example.finalyearproject.hollyboothroyd.sync.Model.NotificationBase;
 import com.example.finalyearproject.hollyboothroyd.sync.R;
 import com.example.finalyearproject.hollyboothroyd.sync.Services.AccountManager;
@@ -36,7 +40,7 @@ import com.google.firebase.database.ValueEventListener;
 
 import static android.nfc.NdefRecord.createMime;
 
-public class NFCActivity extends AppCompatActivity implements NfcAdapter.CreateNdefMessageCallback {
+public class NFCActivity extends AppCompatActivity {
 
     private static final String TAG = "NFCActivity";
 
@@ -59,8 +63,9 @@ public class NFCActivity extends AppCompatActivity implements NfcAdapter.CreateN
 
         mNfcAdapter = NfcAdapter.getDefaultAdapter(this);
         if (mNfcAdapter == null) {
-            Toast.makeText(this, "NFC is not available", Toast.LENGTH_SHORT).show();
-            finish();
+            // NFC is not available on this device. Go back to GMaps fragment
+            Toast.makeText(this, R.string.NFC_unavailable_toast, Toast.LENGTH_SHORT).show();
+            startActivity(new Intent(NFCActivity.this, CoreActivity.class));
             return;
         }
 
@@ -69,6 +74,7 @@ public class NFCActivity extends AppCompatActivity implements NfcAdapter.CreateN
             // Request NFC permissions
             ActivityCompat.requestPermissions(NFCActivity.this, new String[]{android.Manifest.permission.NFC}, 2);
         } else {
+            // Set up NFC intents
             setUpNFC();
         }
     }
@@ -77,7 +83,52 @@ public class NFCActivity extends AppCompatActivity implements NfcAdapter.CreateN
     protected void onResume() {
         super.onResume();
 
+        // Set up NFC listener and message to deliver
         enableNdefExchangeMode();
+    }
+
+    @Override
+    public void onBackPressed() {
+        // Go to GMaps fragment if back button is pressed
+        startActivity(new Intent(NFCActivity.this, CoreActivity.class));
+        super.onBackPressed();
+    }
+
+    private void setUpNFC() {
+        mNfcAdapter = NfcAdapter.getDefaultAdapter(this);
+
+        // Generic PendingIntent that is delivered to the activity
+        // The intent is later filled with the tag's details before sending it to this activity
+        mNfcPendingIntent = PendingIntent.getActivity(this, 0,
+                new Intent(this, getClass()).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP), 0);
+
+        // Intent filters for exchanging over p2p.
+        // There is a dispatch to the foreground activity when Android receives
+        // an intent matching the IntentFilter created
+        IntentFilter ndefDetected = new IntentFilter(NfcAdapter.ACTION_NDEF_DISCOVERED);
+        try {
+            ndefDetected.addDataType("text/plain");
+        } catch (IntentFilter.MalformedMimeTypeException e) {
+            Log.e(TAG, e.toString());
+        }
+        mNdefExchangeFilters = new IntentFilter[]{ndefDetected};
+    }
+
+    private void enableNdefExchangeMode() {
+        // TODO: What if permissions are rejected. If they are later granted this is not called
+        if (ContextCompat.checkSelfPermission(NFCActivity.this, android.Manifest.permission.NFC)
+                == PackageManager.PERMISSION_GRANTED) {
+
+            String userId = mAccountManager.getCurrentUser().getUid();
+
+            // Create an NDEF message containing the user's ID
+            NdefMessage message = new NdefMessage(new NdefRecord[]{createMime("text/plain", userId.getBytes())});
+            mNfcAdapter.setNdefPushMessage(message, NFCActivity.this);
+
+            // Set up listener for the intent that is filtered for
+            mNfcAdapter.enableForegroundDispatch(this, mNfcPendingIntent,
+                    mNdefExchangeFilters, null);
+        }
     }
 
 
@@ -89,7 +140,6 @@ public class NFCActivity extends AppCompatActivity implements NfcAdapter.CreateN
             NdefMessage msg = (NdefMessage) msgs[0];
             String userId = new String(msg.getRecords()[0].getPayload());
             addConnection(userId);
-            Toast.makeText(this, R.string.nfc_connection_success_text, Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -108,57 +158,21 @@ public class NFCActivity extends AppCompatActivity implements NfcAdapter.CreateN
                 }
             } else {
                 // Unknown tag type
-                byte[] empty = new byte[] {};
+                byte[] empty = new byte[]{};
                 NdefRecord record =
                         new NdefRecord(NdefRecord.TNF_UNKNOWN, empty, empty, empty);
-                NdefMessage msg = new NdefMessage(new NdefRecord[] {
+                NdefMessage msg = new NdefMessage(new NdefRecord[]{
                         record
                 });
-                msgs = new NdefMessage[] {
+                msgs = new NdefMessage[]{
                         msg
                 };
             }
         } else {
-            Log.d(TAG, "Unknown intent.");
+            Log.d(TAG, getString(R.string.NFC_unknown_intent_error));
             finish();
         }
         return msgs;
-    }
-
-    private void setUpNFC(){
-        mNfcAdapter = NfcAdapter.getDefaultAdapter(this);
-
-        // Generic PendingIntent that is delivered to the activity
-        // The intent is later filled with the tag's details before sending it to this activity
-        mNfcPendingIntent = PendingIntent.getActivity(this, 0,
-                new Intent(this, getClass()).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP), 0);
-
-        // Intent filters for exchanging over p2p.
-        // There is a dispatch to the foreground activity when Android receives
-        // an intent matching the IntentFilter created
-        IntentFilter ndefDetected = new IntentFilter(NfcAdapter.ACTION_NDEF_DISCOVERED);
-        try {
-            ndefDetected.addDataType("text/plain");
-        } catch (IntentFilter.MalformedMimeTypeException e) {
-        }
-        mNdefExchangeFilters = new IntentFilter[]{ndefDetected};
-    }
-
-
-
-    private void enableNdefExchangeMode() {
-        if (ContextCompat.checkSelfPermission(NFCActivity.this, android.Manifest.permission.NFC)
-                == PackageManager.PERMISSION_GRANTED) {
-
-            String userId = mAccountManager.getCurrentUser().getUid();
-
-            NdefMessage message = new NdefMessage(new NdefRecord[]{createMime("text/plain", userId.getBytes())});
-            mNfcAdapter.setNdefPushMessage(message, NFCActivity.this);
-
-            // Set up listener for the intent that is filtered for
-            mNfcAdapter.enableForegroundDispatch(this, mNfcPendingIntent,
-                    mNdefExchangeFilters, null);
-        }
     }
 
     @Override
@@ -166,25 +180,15 @@ public class NFCActivity extends AppCompatActivity implements NfcAdapter.CreateN
                                            @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
 
+        // Check if NFC permissions have been granted
         if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
             if (ContextCompat.checkSelfPermission(NFCActivity.this, android.Manifest.permission.NFC)
                     == PackageManager.PERMISSION_GRANTED) {
+                // Set up NFC intents if NFC permissions have been granted
                 setUpNFC();
             }
         }
     }
-
-    @Override
-    public NdefMessage createNdefMessage(NfcEvent event) {
-        AccountManager accountManager = new AccountManager();
-        String userId = accountManager.getCurrentUser().getUid();
-
-        return new NdefMessage(
-                new NdefRecord[]{createMime(
-                        "text/plain", HexStringToByteArray(userId))});
-    }
-
-
 
     private void addConnection(final String otherUserId) {
         mDatabaseManager.getUserPeopleDatabaseReference().addListenerForSingleValueEvent(new ValueEventListener() {
@@ -201,34 +205,18 @@ public class NFCActivity extends AppCompatActivity implements NfcAdapter.CreateN
                                 @Override
                                 public void onComplete(@NonNull Task<Void> task) {
                                     if (task.isSuccessful()) {
-                                        // Delete connection request in the other users database
-                                        mDatabaseManager.deleteUserConnectionRequest(otherUserId).addOnCompleteListener(new OnCompleteListener<Void>() {
-                                            @Override
-                                            public void onComplete(@NonNull Task<Void> task) {
-                                                if (task.isSuccessful()) {
-                                                    // Delete connection notification in the current users database
-                                                    mDatabaseManager.deleteUserNotification(otherUserId).addOnCompleteListener(new OnCompleteListener<Void>() {
-                                                        @Override
-                                                        public void onComplete(@NonNull Task<Void> task) {
-                                                            if (task.isSuccessful()) {
-                                                                Toast.makeText(NFCActivity.this, R.string.connection_accepted_toast_text, Toast.LENGTH_SHORT).show();
-                                                            } else {
-                                                                Log.e(TAG, "Delete user notification failed");
-                                                            }
-                                                        }
-                                                    });
-                                                } else {
-                                                    Log.e(TAG, "Delete user connection request failed");
-                                                }
-                                            }
-                                        });
+                                        if (task.isSuccessful()) {
+                                            Toast.makeText(NFCActivity.this, R.string.connection_accepted_toast_text, Toast.LENGTH_SHORT).show();
+                                        } else {
+                                            Toast.makeText(NFCActivity.this, R.string.syncup_connection_error, Toast.LENGTH_SHORT).show();
+                                        }
                                     } else {
-                                        Log.e(TAG, "Add connection for other user failed");
+                                        Log.e(TAG, getString(R.string.add_connection_other_user_error));
                                     }
                                 }
                             });
                         } else {
-                            Log.e(TAG, "Add connection for current user failed");
+                            Log.e(TAG, getString(R.string.add_connection_current_user_error));
                         }
                     }
                 });
@@ -239,30 +227,5 @@ public class NFCActivity extends AppCompatActivity implements NfcAdapter.CreateN
                 Log.e(TAG, databaseError.toString());
             }
         });
-    }
-
-    /**
-     * Utility method to convert a hexadecimal string to a byte string.
-     *
-     * <p>Behavior with input strings containing non-hexadecimal characters is undefined.
-     *
-     * @param s String containing hexadecimal characters to convert
-     * @return Byte array generated from input
-     * @throws java.lang.IllegalArgumentException if input length is incorrect
-     */
-
-    // TODO Is this needed
-    public static byte[] HexStringToByteArray(String s) throws IllegalArgumentException {
-        int len = s.length();
-        if (len % 2 == 1) {
-            throw new IllegalArgumentException("Hex string must have even number of characters");
-        }
-        byte[] data = new byte[len / 2]; // Allocate 1 byte per 2 hex characters
-        for (int i = 0; i < len; i += 2) {
-            // Convert each character into a integer (base-16), then bit-shift into place
-            data[i / 2] = (byte) ((Character.digit(s.charAt(i), 16) << 4)
-                    + Character.digit(s.charAt(i+1), 16));
-        }
-        return data;
     }
 }

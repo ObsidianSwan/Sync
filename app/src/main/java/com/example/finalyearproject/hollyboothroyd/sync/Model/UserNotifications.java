@@ -4,8 +4,11 @@ package com.example.finalyearproject.hollyboothroyd.sync.Model;
  * Created by hollyboothroyd on 2/25/2018.
  */
 
+import android.content.Context;
+import android.util.Log;
 import android.widget.Switch;
 
+import com.example.finalyearproject.hollyboothroyd.sync.R;
 import com.example.finalyearproject.hollyboothroyd.sync.Services.DatabaseManager;
 import com.example.finalyearproject.hollyboothroyd.sync.Utils.NotificationType;
 import com.google.firebase.database.DataSnapshot;
@@ -21,45 +24,46 @@ import java.util.Map;
  * Helper class for providing content for NotificationFragment
  */
 public class UserNotifications {
+    private static final String TAG = "UserNotifications";
 
     private DatabaseManager mDatabaseManager;
 
     public static final List<NotificationBase> ITEMS = new ArrayList<NotificationBase>();
-    //public static final Map<String, NotificationBase> ITEM_MAP = new HashMap<String, NotificationBase>();
-
-    // Different lists are needed to make sure the correct item is being retrieved when there are multiple
-    // types of notifications that may have the same key
     public static final Map<String, NotificationBase> CONNECTION_REQUEST_ITEMS_MAP = new HashMap<String, NotificationBase>();
 
     private ValueEventListener mUserNotificationsListener;
 
-    // TODO: Convert into singleton
-    public UserNotifications(){
+    public UserNotifications(final Context context){
         mDatabaseManager = new DatabaseManager();
 
+        // Listen for changes in the users notification database
         mUserNotificationsListener = mDatabaseManager.getNotifications().addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 ITEMS.clear();
-                //ITEM_MAP.clear();
                 for(DataSnapshot snapshot : dataSnapshot.getChildren()){
                     final Notification notification = snapshot.getValue(Notification.class);
                     if(notification != null) {
+
+                        // Sort the notifications by type
                         switch (notification.getType()) {
                             case CONNECTION_REQUEST:
                                 mDatabaseManager.getPeopleDatabaseReference().child(notification.getItemId()).addListenerForSingleValueEvent(new ValueEventListener() {
                                     @Override
                                     public void onDataChange(DataSnapshot dataSnapshot) {
                                         Person person = dataSnapshot.getValue(Person.class);
+                                        // Create a notification with the necessary information
                                         NotificationBase connectionRequest = new NotificationBase(notification.getDbRefKey(), person.getUserId(), person.getFirstName() + " " + person.getLastName() + ": " + person.getPosition(),
                                                 person.getImageId(), NotificationType.CONNECTION_REQUEST, notification.getTimeStampDate());
+                                        // Add the notification to the list to be displayed in the notification fragment
                                         ITEMS.add(connectionRequest);
+                                        // Add the connection request item to the map for use in GMaps fragment
                                         CONNECTION_REQUEST_ITEMS_MAP.put(connectionRequest.getId(), connectionRequest);
                                     }
 
                                     @Override
                                     public void onCancelled(DatabaseError databaseError) {
-
+                                        Log.e(TAG, context.getString(R.string.location_not_found_error));
                                     }
                                 });
                                 break;
@@ -68,14 +72,16 @@ public class UserNotifications {
                                     @Override
                                     public void onDataChange(DataSnapshot dataSnapshot) {
                                         Person person = dataSnapshot.getValue(Person.class);
+                                        // Create a notification with the necessary information
                                         NotificationBase profileView = new NotificationBase(notification.getDbRefKey(), person.getUserId(), person.getFirstName() + " " + person.getLastName() + ": " + person.getPosition(),
                                                 person.getImageId(), NotificationType.PROFILE_VIEW, notification.getTimeStampDate());
+                                        // Add the notification to the list to be displayed in the notification fragment
                                         ITEMS.add(profileView);
                                     }
 
                                     @Override
                                     public void onCancelled(DatabaseError databaseError) {
-
+                                        Log.e(TAG, context.getString(R.string.location_not_found_error));
                                     }
                                 });
                                 break;
@@ -86,12 +92,13 @@ public class UserNotifications {
 
             @Override
             public void onCancelled(DatabaseError databaseError) {
-
+                Log.e(TAG, context.getString(R.string.location_not_found_error));
             }
         });
     }
 
     public void clearListeners(){
+        // Clear the notification listeners
         mDatabaseManager.getNotifications().removeEventListener(mUserNotificationsListener);
     }
 

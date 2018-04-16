@@ -54,16 +54,15 @@ public class SettingsFragment extends Fragment {
     private Spinner mEventPinColorSpinner;
     private Spinner mPrivacyIntensitySpinner;
     private Button mDeleteAccountButton;
-    private Button mCommitChangesButton;
 
 
-    private int mZoomValue;
-    private int mTimeRefreshRateValue;
-    private int mDisRefreshRateValue;
-    private int mSearchRadiusValue;
-    private String mPrivacyIntensityValue;
-    private String mPersonPinColorValue;
-    private String mEventPinColorValue;
+    private int mZoomValue = Constants.mapZoomLevelDefault;
+    private int mTimeRefreshRateValue = Constants.locationTimeUpdateIntervalDefault;
+    private int mDisRefreshRateValue = Constants.locationDistanceUpdateIntervalDefault;
+    private int mSearchRadiusValue = Constants.obfuscationRadiusDefault;
+    private String mPrivacyIntensityValue = String.valueOf(Constants.privacyIntensityDefault);
+    private String mPersonPinColorValue = String.valueOf(Constants.personPinColorDefault);
+    private String mEventPinColorValue = String.valueOf(Constants.eventPinColorDefault);
 
     public SettingsFragment() {
         // Required empty public constructor
@@ -115,6 +114,7 @@ public class SettingsFragment extends Fragment {
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_settings, container, false);
 
+        // Set up UI
         getActivity().setTitle(R.string.settings_action_bar_title);
 
         mZoomPicker = (NumberPicker) view.findViewById(R.id.settings_map_zoom_number_picker);
@@ -125,26 +125,21 @@ public class SettingsFragment extends Fragment {
         mEventPinColorSpinner = (Spinner) view.findViewById(R.id.settings_event_color_spinner);
         mPrivacyIntensitySpinner = (Spinner) view.findViewById(R.id.settings_privacy_intensity_spinner);
         mDeleteAccountButton = (Button) view.findViewById(R.id.delete_account_button);
-        mCommitChangesButton = (Button) view.findViewById(R.id.commit_settings_button);
+        Button commitChangesButton = (Button) view.findViewById(R.id.commit_settings_button);
 
         setUpZoomPicker();
         setUpTimeRefreshRatePicker();
         setUpDisRefreshRatePicker();
         setUpSearchRadiusPicker();
+        setUpPinColorSpinner();
+        setUpPrivacyIntensitySpinner();
 
-        final ArrayAdapter<CharSequence> pinArrayAdapter = ArrayAdapter.createFromResource(getActivity(), R.array.pin_color_array, android.R.layout.simple_spinner_item);
-        pinArrayAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        setupPersonPinColorSpinner(pinArrayAdapter);
-        setupEventPinColorSpinner(pinArrayAdapter);
-
-        final ArrayAdapter<CharSequence> privacyArrayAdapter = ArrayAdapter.createFromResource(getActivity(), R.array.privacy_intensity_array, android.R.layout.simple_spinner_item);
-        privacyArrayAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        setupPrivacyIntensitySpinner(privacyArrayAdapter);
-
-        mCommitChangesButton.setOnClickListener(new View.OnClickListener() {
+        // For each settings value, check if the current value is different from the original local value
+        // Then set the new value in the user's setting database
+        // Then set the local value with the new value
+        commitChangesButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
                 if (mZoomValue != mZoomPicker.getValue()) {
                     mDatabaseManager.setUserSettings(Constants.mapZoomLevelName, mZoomPicker.getValue()).addOnCompleteListener(new OnCompleteListener<Void>() {
                         @Override
@@ -205,6 +200,7 @@ public class SettingsFragment extends Fragment {
                     });
                 }
                 if (!mPersonPinColorValue.equals(mPersonPinColorSpinner.getSelectedItem().toString())) {
+                    // Get pin color from the pin color map
                     float color = pinColorMap.get(mPersonPinColorSpinner.getSelectedItem().toString());
                     mDatabaseManager.setUserSettings(Constants.personPinColorName, color).addOnCompleteListener(new OnCompleteListener<Void>() {
                         @Override
@@ -221,6 +217,7 @@ public class SettingsFragment extends Fragment {
                     });
                 }
                 if (!mEventPinColorValue.equals(mEventPinColorSpinner.getSelectedItem().toString())) {
+                    // Get pin color from the pin color map
                     float color = pinColorMap.get(mEventPinColorSpinner.getSelectedItem().toString());
                     mDatabaseManager.setUserSettings(Constants.eventPinColorName, color).addOnCompleteListener(new OnCompleteListener<Void>() {
                         @Override
@@ -259,6 +256,8 @@ public class SettingsFragment extends Fragment {
         mDeleteAccountButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                // Make the user press the delete account button multiple times
+                // to reduce the likelihood of an accidental deletion
                 if (mDeleteAccountButton.getText().toString().equals(getString(R.string.delete_account_button))) {
                     mDeleteAccountButton.setText(R.string.verify_account_deletion_text_button);
                 } else if (mDeleteAccountButton.getText().toString().equals(getString(R.string.verify_account_deletion_text_button))) {
@@ -297,30 +296,34 @@ public class SettingsFragment extends Fragment {
 
     private void stopAttendingEvent(final String eventId) {
         final String userId = mAccountManager.getCurrentUser().getUid();
+        // Remove event from user's attending DB
         mDatabaseManager.deleteUserAttendingEvent(eventId).addOnCompleteListener(new OnCompleteListener<Void>() {
             @Override
             public void onComplete(@NonNull Task<Void> task) {
                 if (task.isSuccessful()) {
+                    // Remove user from event attendee DB
                     mDatabaseManager.deleteEventAttending(eventId, userId);
-                    Log.i(TAG, "Stop attending event successful");
+                    Log.i(TAG, getString(R.string.stop_attending_event_successful));
                 } else {
-                    Log.e(TAG, "Stop attending event failed");
+                    Log.e(TAG, getString(R.string.stop_attending_event_error));
                 }
             }
         });
     }
 
     private void deleteEvent(final String eventId) {
-        // Delete attending references in user attending database
+        // Get all users attending an event
         mDatabaseManager.getUsersAttendingEvent(eventId).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
                     String attendeeId = snapshot.getKey();
+                    // Remove users from event attendee DB
+                    // TODO: check the event is no longer in other users DB
                     mDatabaseManager.deleteEventAttending(eventId, attendeeId);
-                    // TODO How to check if the deletions all happened successfully
                 }
                 // Stop hosting the event
+                // TODO: Is this necessary if the person is being deleted
                 mDatabaseManager.deleteEventHosting(eventId).addOnCompleteListener(new OnCompleteListener<Void>() {
                     @Override
                     public void onComplete(@NonNull Task<Void> task) {
@@ -330,15 +333,14 @@ public class SettingsFragment extends Fragment {
                                 @Override
                                 public void onComplete(@NonNull Task<Void> task) {
                                     if (task.isSuccessful()) {
-                                        Log.i(TAG, "Delete event successful");
+                                        Log.i(TAG, getString(R.string.delete_event_successful));
                                     } else {
-                                        Log.e(TAG, "Delete event unsuccessful");
+                                        Log.e(TAG, getString(R.string.delete_event_error));
                                     }
                                 }
                             });
-                            // TODO how to check if deletion happened successfully
                         } else {
-                            Log.e(TAG, "Delete hosting event failed");
+                            Log.e(TAG, getString(R.string.delete_hosting_event_error));
                         }
                     }
                 });
@@ -355,6 +357,7 @@ public class SettingsFragment extends Fragment {
         final String currentUserId = mAccountManager.getCurrentUser().getUid();
 
         // Remove the connection reference from the current users database
+        // TODO is this necessary if the whole person is being deleted
         mDatabaseManager.deleteConnection(currentUserId, connectionId).addOnCompleteListener(new OnCompleteListener<Void>() {
             @Override
             public void onComplete(@NonNull Task<Void> task) {
@@ -364,14 +367,14 @@ public class SettingsFragment extends Fragment {
                         @Override
                         public void onComplete(@NonNull Task<Void> task) {
                             if(task.isSuccessful()){
-                                Log.i(TAG, "Delete connection successful");
+                                Log.i(TAG, getString(R.string.delete_connection_successful));
                             } else{
-                                Log.e(TAG, "Delete other user connection failed");
+                                Log.e(TAG, getString(R.string.delete_other_user_connection_error));
                             }
                         }
                     });
                 } else {
-                    Log.e(TAG, "Delete current user connection failed");
+                    Log.e(TAG, getString(R.string.delete_current_user_connection_error));
                 }
             }
         });
@@ -387,7 +390,7 @@ public class SettingsFragment extends Fragment {
             public void onDataChange(DataSnapshot dataSnapshot) {
                 mZoomValue = 0;
                 if (dataSnapshot.getValue(Integer.class) != null) {
-                    mZoomValue = dataSnapshot.getValue(Integer.class);
+                        mZoomValue = dataSnapshot.getValue(Integer.class);
                 }
                 mZoomPicker.setValue(mZoomValue);
             }
@@ -508,8 +511,17 @@ public class SettingsFragment extends Fragment {
         });
     }
 
-    private void setupPrivacyIntensitySpinner(final ArrayAdapter arrayAdapter) {
-        mPrivacyIntensitySpinner.setAdapter(arrayAdapter);
+    private void setUpPinColorSpinner() {
+        final ArrayAdapter<CharSequence> pinArrayAdapter = ArrayAdapter.createFromResource(getActivity(), R.array.pin_color_array, android.R.layout.simple_spinner_item);
+        pinArrayAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        setupPersonPinColorSpinner(pinArrayAdapter);
+        setupEventPinColorSpinner(pinArrayAdapter);
+    }
+
+    private void setUpPrivacyIntensitySpinner() {
+        final ArrayAdapter<CharSequence> privacyArrayAdapter = ArrayAdapter.createFromResource(getActivity(), R.array.privacy_intensity_array, android.R.layout.simple_spinner_item);
+        privacyArrayAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        mPrivacyIntensitySpinner.setAdapter(privacyArrayAdapter);
         // During initialization, set the spinner to select the users saved settings
         mDatabaseManager.getUserSettings(Constants.privacyIntensityName).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
@@ -518,7 +530,7 @@ public class SettingsFragment extends Fragment {
                     int privacyIntensity = dataSnapshot.getValue(Integer.class);
                     mPrivacyIntensityValue = Util.getMapKeyInt(privacyIntensityMap, privacyIntensity);
                     if (mPrivacyIntensityValue != null) {
-                        int position = arrayAdapter.getPosition(mPrivacyIntensityValue);
+                        int position = privacyArrayAdapter.getPosition(mPrivacyIntensityValue);
                         mPrivacyIntensitySpinner.setSelection(position, false);
                     }
                 }
@@ -553,10 +565,6 @@ public class SettingsFragment extends Fragment {
      * fragment to allow an interaction in this fragment to be communicated
      * to the activity and potentially other fragments contained in that
      * activity.
-     * <p>
-     * See the Android Training lesson <a href=
-     * "http://developer.android.com/training/basics/fragments/communicating.html"
-     * >Communicating with Other Fragments</a> for more information.
      */
     public interface OnFragmentInteractionListener {
         void onSettingsInteraction();

@@ -19,30 +19,33 @@ public class NewAccountBasicInfoActivity extends AppCompatActivity {
     private EditText mEmailText;
     private EditText mPasswordText;
     private EditText mVerifyPasswordText;
-    private Button mNextButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_new_account_basic_info);
 
+        // Set up UI
         mFirstNameText = (EditText) findViewById(R.id.first_name_text);
         mLastNameText = (EditText) findViewById(R.id.last_name_text);
         mEmailText = (EditText) findViewById(R.id.email_text);
         mPasswordText = (EditText) findViewById(R.id.password_text);
         mVerifyPasswordText = (EditText) findViewById(R.id.verify_password_text);
-        mNextButton = (Button) findViewById(R.id.basic_info_next_button);
+        Button nextButton = (Button) findViewById(R.id.basic_info_next_button);
 
-        mNextButton.setOnClickListener(new View.OnClickListener() {
+        nextButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                String firstName = mFirstNameText.getText().toString();
-                String lastName = mLastNameText.getText().toString();
-                String email = mEmailText.getText().toString();
-                String password = mPasswordText.getText().toString();
-                String verifyPassword = mVerifyPasswordText.getText().toString();
+                // Retrieve text from inputs
+                String firstName = mFirstNameText.getText().toString().trim();
+                String lastName = mLastNameText.getText().toString().trim();
+                String email = mEmailText.getText().toString().trim();
+                String password = mPasswordText.getText().toString().trim();
+                String verifyPassword = mVerifyPasswordText.getText().toString().trim();
 
+                // Check if the user inputs pass basic validations
                 if(areCredentialsValid(firstName, lastName, email, password, verifyPassword)) {
+                    // Save the inputted data to be sent to the next account creation activity
                     Intent intent = new Intent(NewAccountBasicInfoActivity.this, NewAccountJobInfoActivity.class);
                     intent.putExtra("firstName", firstName);
                     intent.putExtra("lastName", lastName);
@@ -76,6 +79,7 @@ public class NewAccountBasicInfoActivity extends AppCompatActivity {
             focusView = mLastNameText;
         }
         // Check for a valid email address.
+        // TODO better email check
         if (TextUtils.isEmpty(email)) {
             mEmailText.setError(getString(R.string.error_field_required));
             focusView = mEmailText;
