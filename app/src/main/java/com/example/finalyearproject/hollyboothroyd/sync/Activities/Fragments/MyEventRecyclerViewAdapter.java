@@ -68,7 +68,6 @@ public class MyEventRecyclerViewAdapter extends RecyclerView.Adapter<MyEventRecy
         holder.mItem = mValues.get(position);
         Picasso.with(mContext).load(mValues.get(position).getImageId()).into(holder.mEventImage);
         holder.mEventTitle.setText(mValues.get(position).getTitle());
-        holder.mEventTopic.setText(mValues.get(position).getTopic());
         holder.mEventIndustry.setText(mValues.get(position).getIndustry());
         holder.mEventDate.setText(mValues.get(position).getDate());
         holder.mEventTime.setText(mValues.get(position).getTime());
@@ -96,7 +95,6 @@ public class MyEventRecyclerViewAdapter extends RecyclerView.Adapter<MyEventRecy
         Button dismissPopupButton = (Button) view.findViewById(R.id.dismiss_popup_button);
         ImageView eventImage = (ImageView) view.findViewById(R.id.popup_image);
         TextView eventTitle = (TextView) view.findViewById(R.id.popup_title);
-        TextView eventTopic = (TextView) view.findViewById(R.id.popup_topic);
         TextView eventIndustry = (TextView) view.findViewById(R.id.popup_industry);
         TextView eventDate = (TextView) view.findViewById(R.id.popup_date);
         TextView eventTime = (TextView) view.findViewById(R.id.popup_time);
@@ -109,7 +107,6 @@ public class MyEventRecyclerViewAdapter extends RecyclerView.Adapter<MyEventRecy
         }
 
         eventTitle.setText(event.getTitle());
-        eventTopic.setText("Topic: " + event.getTopic());
         eventIndustry.setText("Industry: " + event.getIndustry());
         eventDate.setText("Date: " + event.getDate());
         eventTime.setText("Time: " + event.getTime());

@@ -228,4 +228,5 @@
     <string name="geofence_max_error">Your app has registered too many geofences.</string>
     <string name="max_pending_intents_error">You have provided too many PendingIntents!</string>
     <string name="location_not_found_error">Location not found</string>
+    <string name="current_fragment_saved_instance">currentFragment</string>
 </resources>

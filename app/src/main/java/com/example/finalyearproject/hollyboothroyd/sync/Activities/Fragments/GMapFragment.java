@@ -348,8 +348,12 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
         super.onDestroyView();
 
         // Remove the listeners
-        mPeopleDBRef.removeEventListener(mPeopleDBListener);
-        mLocationDBRef.removeEventListener(mLocationDBListener);
+        if(mPeopleDBRef != null) {
+            mPeopleDBRef.removeEventListener(mPeopleDBListener);
+        }
+        if(mLocationDBRef != null) {
+            mLocationDBRef.removeEventListener(mLocationDBListener);
+        }
         mLocationListener = null;
         LocalBroadcastManager.getInstance(getActivity()).unregisterReceiver(mMessageReceiver);
     }
@@ -760,7 +764,7 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
             meetsFilteringRequirements = true;
         } // If the person position filter has been specified and the person matches that position, then the person meets the requirements
         else if (!mPersonPositionFilter.equals("") && person.getPosition().toLowerCase().trim().equals(mPersonPositionFilter)) {
-
+            meetsFilteringRequirements = true;
         } // If the person company filter has been specified and the person matches that company, then the person meets the requirements
         else if (!mPersonCompanyFilter.equals("") && person.getCompany().toLowerCase().trim().equals(mPersonCompanyFilter)) {
             meetsFilteringRequirements = true;
@@ -820,8 +824,7 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
         markerOptions.icon(BitmapDescriptorFactory.defaultMarker(mEventPinColor));
         markerOptions.title(event.getTitle());
         markerOptions.position(eventLocation);
-        markerOptions.snippet("Topic: " + event.getTopic() +
-                "\nIndustry: " + event.getIndustry() +
+        markerOptions.snippet("Industry: " + event.getIndustry() +
                 "\n\nTime: " + event.getTime() +
                 "\nDate: " + event.getDate());
 
@@ -853,9 +856,6 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
         // If there are no filtering requirements, then the event automatically meets the requirements
         if (mEventTopicFilter.equals("") && mEventIndustryFilter.equals("")) {
             meetsFilteringRequirements = true;
-        } // If the event topic filter has been specified and the event matches that topic, then the event meets the requirements
-        else if (!mEventTopicFilter.equals("") && event.getTopic().toLowerCase().equals(mEventTopicFilter)) {
-            meetsFilteringRequirements = true;
         } // If the event industry filter has been specified and the event matches that industry, then the event meets the requirements
         else if (!mEventIndustryFilter.equals("") && event.getIndustry().toLowerCase().equals(mEventIndustryFilter)) {
             meetsFilteringRequirements = true;
@@ -885,10 +885,10 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
         Button dismissPopupButton = (Button) view.findViewById(R.id.dismiss_popup_button);
         ImageView eventImage = (ImageView) view.findViewById(R.id.popup_image);
         TextView eventTitle = (TextView) view.findViewById(R.id.popup_title);
-        TextView eventTopic = (TextView) view.findViewById(R.id.popup_topic);
         TextView eventIndustry = (TextView) view.findViewById(R.id.popup_industry);
         TextView eventDate = (TextView) view.findViewById(R.id.popup_date);
         TextView eventTime = (TextView) view.findViewById(R.id.popup_time);
+        TextView eventAddress = (TextView) view.findViewById(R.id.popup_address);
         TextView eventDescription = (TextView) view.findViewById(R.id.popup_description);
         Button eventButton = (Button) view.findViewById(R.id.popup_event_button);
         Button eventButton2 = (Button) view.findViewById(R.id.popup_event_button2);
@@ -900,10 +900,13 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
 
         // Populate the UI with the event information
         eventTitle.setText(event.getTitle());
-        eventTopic.setText("Topic: " + event.getTopic());
         eventIndustry.setText("Industry: " + event.getIndustry());
-        eventDate.setText("Date: " + event.getDate());
-        eventTime.setText("Time: " + event.getTime());
+        eventDate.setText(event.getDate());
+        eventTime.setText(event.getTime());
+
+        String address = event.getStreet() + ", \n" + event.getCity() + ", " + event.getState() + ", \n" +
+                event.getZipCode() + ", " + event.getCountry();
+        eventAddress.setText(address);
         eventDescription.setText(event.getDescription());
 
         // The user is both hosting and attending the event
@@ -1302,7 +1305,6 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
         final EditText personPosition = (EditText) view.findViewById(R.id.filter_person_position_entry);
         final EditText personCompany = (EditText) view.findViewById(R.id.filter_person_company_entry);
         final EditText personIndustry = (EditText) view.findViewById(R.id.filter_person_industry_entry);
-        final EditText eventTopic = (EditText) view.findViewById(R.id.filter_event_topic_entry);
         final EditText eventIndustry = (EditText) view.findViewById(R.id.filter_event_industry_entry);
         Button filterButton = (Button) view.findViewById(R.id.filter_button);
 
@@ -1314,13 +1316,12 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
                 mPersonPositionFilter = personPosition.getText().toString().toLowerCase().trim();
                 mPersonCompanyFilter = personCompany.getText().toString().toLowerCase().trim();
                 mPersonIndustryFilter = personIndustry.getText().toString().toLowerCase().trim();
-                mEventTopicFilter = eventTopic.getText().toString().toLowerCase().trim();
                 mEventIndustryFilter = eventIndustry.getText().toString().toLowerCase().trim();
 
                 if (!mPersonPositionFilter.equals("") || !mPersonCompanyFilter.equals("") || !mPersonIndustryFilter.equals("")) {
                     getPeople();
                 }
-                if (!mEventTopicFilter.equals("") || !mEventIndustryFilter.equals("")) {
+                if (!mEventIndustryFilter.equals("")) {
                     getEvents();
                 }
 

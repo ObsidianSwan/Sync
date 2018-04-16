@@ -25,18 +25,6 @@
             style="@style/RoundedOutline" />
 
         <EditText
-            android:id="@+id/new_event_topic_text"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginEnd="@dimen/entry_side_margin"
-            android:layout_marginStart="@dimen/entry_side_margin"
-            android:layout_marginTop="@dimen/entry_top_margin"
-            android:ems="10"
-            android:hint="@string/New_Event_Topic"
-            android:inputType="textPersonName"
-            style="@style/RoundedOutline" />
-
-        <EditText
             android:id="@+id/new_event_industry_text"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

@@ -29,15 +29,6 @@ public class Notification {
         this.mTimeStamp = ServerValue.TIMESTAMP;
     }
 
-    // TODO remove
-
-    public Notification(String dbRefKey, String itemId, NotificationType type, Object timeStamp) {
-        this.mDbRefKey = dbRefKey;
-        this.mItemId = itemId;
-        this.mType = type;
-        this.mTimeStamp = timeStamp;
-    }
-
     public String getDbRefKey() {
         return mDbRefKey;
     }

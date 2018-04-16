@@ -12,7 +12,6 @@ public class Event {
     private String mUid;
     private String mTitle;
     private String mIndustry;
-    private String mTopic;
     private String mDate;
     private String mTime;
     private String mStreet;
@@ -33,14 +32,13 @@ public class Event {
     }
 
     // Used when creating a new event without any attendees
-    public Event(String uid, String title, String industry, String topic, String date, String time,
+    public Event(String uid, String title, String industry, String date, String time,
                  String street, String city, String state, String zipCode, String country,
                  Double longitude, Double latitude, String description, String imageId, String creator) {
 
         this.mUid = uid;
         this.mTitle = title;
         this.mIndustry = industry;
-        this.mTopic = topic;
         this.mDate = date;
         this.mTime = time;
         this.mStreet = street;
@@ -56,14 +54,13 @@ public class Event {
         this.mAttendees = new ArrayList<String>();
     }
 
-    public Event(String uid, String title, String industry, String topic, String date, String time,
+    public Event(String uid, String title, String industry, String date, String time,
                  String street, String city, String state, String zipCode, String country,
                  Double longitude, Double latitude, String description, String imageId, String creator, List<String> attendees) {
 
         this.mUid = uid;
         this.mTitle = title;
         this.mIndustry = industry;
-        this.mTopic = topic;
         this.mDate = date;
         this.mTime = time;
         this.mStreet = street;
@@ -97,14 +94,6 @@ public class Event {
 
     public void setIndustry(String mIndustry) {
         this.mIndustry = mIndustry;
-    }
-
-    public String getTopic() {
-        return mTopic;
-    }
-
-    public void setTopic(String mTopic) {
-        this.mTopic = mTopic;
     }
 
     public String getDate() {

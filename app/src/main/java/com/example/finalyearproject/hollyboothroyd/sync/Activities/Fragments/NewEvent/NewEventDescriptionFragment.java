@@ -48,9 +48,7 @@ import static android.app.Activity.RESULT_OK;
  * A simple {@link Fragment} subclass.
  * Activities that contain this fragment must implement the
  * {@link NewEventDescriptionFragment.OnFragmentInteractionListener} interface
- * to handle interaction events.
- * Use the {@link NewEventDescriptionFragment#newInstance} factory method to
- * create an instance of this fragment.
+ * to handle interaction events..
  */
 public class NewEventDescriptionFragment extends Fragment {
 
@@ -58,7 +56,6 @@ public class NewEventDescriptionFragment extends Fragment {
 
     public static final String ARG_TITLE = "title";
     public static final String ARG_INDUSTRY = "industry";
-    public static final String ARG_TOPIC = "topic";
     public static final String ARG_DATE = "date";
     public static final String ARG_TIME = "time";
     public static final String ARG_STREET = "street";
@@ -71,7 +68,6 @@ public class NewEventDescriptionFragment extends Fragment {
 
     private String mTitle;
     private String mIndustry;
-    private String mTopic;
     private String mDate;
     private String mTime;
     private String mStreet;
@@ -99,34 +95,6 @@ public class NewEventDescriptionFragment extends Fragment {
         // Required empty public constructor
     }
 
-    // TODO remove
-
-    /**
-     * Use this factory method to create a new instance of
-     * this fragment using the provided parameters.
-     *
-     * @return A new instance of fragment NewEventDescriptionFragment.
-     */
-    public static NewEventDescriptionFragment newInstance(String title, String industry, String topic, String date, String time,
-                                                          String street, String city, String state, String zipcode, String country, LatLng position) {
-        NewEventDescriptionFragment fragment = new NewEventDescriptionFragment();
-        Bundle args = new Bundle();
-        args.putString(ARG_TITLE, title);
-        args.putString(ARG_INDUSTRY, industry);
-        args.putString(ARG_TOPIC, topic);
-        args.putString(ARG_DATE, date);
-        args.putString(ARG_TIME, time);
-        args.putString(ARG_STREET, street);
-        args.putString(ARG_CITY, city);
-        args.putString(ARG_STATE, state);
-        args.putString(ARG_ZIPCODE, zipcode);
-        args.putString(ARG_COUNTRY, country);
-        args.putDouble(ARG_LONGITUDE, position.longitude);
-        args.putDouble(ARG_LATITUDE, position.latitude);
-        fragment.setArguments(args);
-        return fragment;
-    }
-
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -134,7 +102,6 @@ public class NewEventDescriptionFragment extends Fragment {
             // Retrieve previously inputted event data
             mTitle = getArguments().getString(ARG_TITLE);
             mIndustry = getArguments().getString(ARG_INDUSTRY);
-            mTopic = getArguments().getString(ARG_TOPIC);
             mDate = getArguments().getString(ARG_DATE);
             mTime = getArguments().getString(ARG_TIME);
             mStreet = getArguments().getString(ARG_STREET);
@@ -254,7 +221,7 @@ public class NewEventDescriptionFragment extends Fragment {
         // TODO why am i saving the ref
         DatabaseReference newEventRef = databaseManager.getNewEventReference();
         final String refKey = newEventRef.getKey();
-        Event event = new Event(refKey, mTitle, mIndustry, mTopic, mDate, mTime, mStreet,
+        Event event = new Event(refKey, mTitle, mIndustry, mDate, mTime, mStreet,
                 mCity, mState, mZipCode, mCountry, mLongitude, mLatitude, description, downloadUrl, userId);
 
         // Add the event to the event database
