@@ -126,34 +126,6 @@
                 android:layout_height="wrap_content"
                 android:layout_marginEnd="@dimen/entry_side_margin"
                 android:layout_marginStart="@dimen/entry_side_margin"
-                android:layout_marginTop="@dimen/entry_top_margin">
-
-                <TextView
-                    android:id="@+id/filter_event_topic_text"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_alignParentStart="true"
-                    android:layout_centerVertical="true"
-                    android:labelFor="@+id/filter_position_entry"
-                    android:text="@string/filter_topic_text"
-                    android:textAppearance="@style/TextAppearance.AppCompat.Medium"
-                    android:textColor="@color/colorPrimary"/>
-
-                <EditText
-                    android:id="@+id/filter_event_topic_entry"
-                    android:layout_width="250dp"
-                    android:layout_height="wrap_content"
-                    android:layout_alignParentEnd="true"
-                    android:inputType="text"
-                    style="@style/RoundedOutline"/>
-
-            </RelativeLayout>
-
-            <RelativeLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginEnd="@dimen/entry_side_margin"
-                android:layout_marginStart="@dimen/entry_side_margin"
                 android:layout_marginTop="@dimen/entry_top_margin"
                 android:orientation="horizontal">
 

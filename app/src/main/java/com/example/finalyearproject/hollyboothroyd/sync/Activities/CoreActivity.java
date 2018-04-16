@@ -79,9 +79,49 @@ public class CoreActivity extends AppCompatActivity
 
         mSupportFragmentManager = getSupportFragmentManager();
 
-        // Go to the GMaps fragment on start
-        mSupportFragmentManager.beginTransaction().replace(R.id.content_frame, new GMapFragment(), getString(R.string.gmaps_tag)).commit();
-        mCurrentFragment = R.string.gmaps_tag;
+        // This is needed to set the correct fragment when the orientation changes
+        // If the savedInstanceState has not been set, it is the first creation of the CoreActivity
+        if (savedInstanceState == null) {
+            mSupportFragmentManager.beginTransaction().replace(R.id.content_frame, new GMapFragment(), getString(R.string.gmaps_tag)).commit();
+            mCurrentFragment = R.string.gmaps_tag;
+        } else {
+            // Otherwise set the last known fragment
+            mCurrentFragment = savedInstanceState.getInt(getString(R.string.current_fragment_saved_instance));
+            switch (mCurrentFragment) {
+                case R.string.gmaps_tag:
+                    mSupportFragmentManager.beginTransaction().replace(R.id.content_frame, new GMapFragment(), getString(R.string.gmaps_tag)).commit();
+                    mCurrentFragment = R.string.gmaps_tag;
+                    break;
+                case R.string.notifications_tag:
+                    mSupportFragmentManager.beginTransaction().replace(R.id.content_frame, new NotificationFragment(), getString(R.string.notifications_tag)).commit();
+                    mCurrentFragment = R.string.notifications_tag;
+                    break;
+                case R.string.view_connections_tag:
+                    mSupportFragmentManager.beginTransaction().replace(R.id.content_frame, new ConnectionFragment(), getString(R.string.view_connections_tag)).commit();
+                    mCurrentFragment = R.string.view_connections_tag;
+                    break;
+                case R.string.view_events_tag:
+                    mSupportFragmentManager.beginTransaction().replace(R.id.content_frame, new ViewEventsFragment(), getString(R.string.view_events_tag)).commit();
+                    mCurrentFragment = R.string.view_events_tag;
+                    break;
+                case R.string.create_event_basic_info_tag:
+                    mSupportFragmentManager.beginTransaction().replace(R.id.content_frame, new NewEventBasicInfoFragment(), getString(R.string.create_event_basic_info_tag)).commit();
+                    mCurrentFragment = R.string.create_event_basic_info_tag;
+                    break;
+                case R.string.edit_profile_tag:
+                    mSupportFragmentManager.beginTransaction().replace(R.id.content_frame, new EditProfileFragment(), getString(R.string.edit_profile_tag)).commit();
+                    mCurrentFragment = R.string.edit_profile_tag;
+                    break;
+                case R.string.settings_tag:
+                    mSupportFragmentManager.beginTransaction().replace(R.id.content_frame, new SettingsFragment(), getString(R.string.settings_tag)).commit();
+                    mCurrentFragment = R.string.settings_tag;
+                    break;
+                case R.string.logout_tag:
+                    mSupportFragmentManager.beginTransaction().replace(R.id.content_frame, new LogoutFragment(), getString(R.string.logout_tag)).commit();
+                    mCurrentFragment = R.string.logout_tag;
+                    break;
+            }
+        }
 
         // Set up the navigation drawer and the tool bar
         setContentView(R.layout.activity_navigation_drawer);
@@ -109,6 +149,7 @@ public class CoreActivity extends AppCompatActivity
 
         setDrawerHeaderText(profileImage, userNameText, userPositionText, userConnectionsText);
     }
+
 
     private void setDrawerHeaderText(final ImageView profileImage, final TextView userNameText, final TextView userPositionText, final TextView userConnectionsText) {
         mDatabaseManager.getUserPeopleDatabaseReference().addValueEventListener(new ValueEventListener() {
@@ -158,22 +199,28 @@ public class CoreActivity extends AppCompatActivity
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         if (drawer.isDrawerOpen(GravityCompat.START)) {
             drawer.closeDrawer(GravityCompat.START);
-        } else if(mCurrentFragment == R.string.gmaps_tag){
+        } else if (mCurrentFragment == R.string.gmaps_tag) {
             // Do nothing if the GMaps fragment is showing
         }
         // Pressing the back button does not explicitly tell which fragment originated the back button or the destination fragment
         // To keep the mCurrentFragment variable accurate, when back is pressed, the nested fragments need to be checked and mCurrentFragment reassigned
-        else if (mCurrentFragment == R.string.create_event_logistics_tag){
+        else if (mCurrentFragment == R.string.create_event_logistics_tag) {
             mSupportFragmentManager.beginTransaction().replace(R.id.content_frame, new NewEventBasicInfoFragment(), getString(R.string.create_event_basic_info_tag)).commit();
             mCurrentFragment = R.string.create_event_basic_info_tag;
         } else if (mCurrentFragment == R.string.create_event_description_tag) {
             mSupportFragmentManager.beginTransaction().replace(R.id.content_frame, new NewEventLogisticsFragment(), getString(R.string.create_event_logistics_tag)).commit();
             mCurrentFragment = R.string.create_event_logistics_tag;
-        } else if (mCurrentFragment != 0){
+        } else if (mCurrentFragment != 0) {
             // Return to the GMaps fragment, if one of the non-nested menu fragments is showing
             mSupportFragmentManager.beginTransaction().replace(R.id.content_frame, new GMapFragment(), getString(R.string.gmaps_tag)).commit();
             mCurrentFragment = R.string.gmaps_tag;
         }
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle savedInstanceState) {
+        savedInstanceState.putInt("currentFragment", mCurrentFragment);
+        super.onSaveInstanceState(savedInstanceState);
     }
 
     @Override
@@ -257,13 +304,12 @@ public class CoreActivity extends AppCompatActivity
     }
 
     @Override
-    public void onNewEventInfoNextButtonPressed(String eventTitle, String eventIndustry, String eventTopic) {
+    public void onNewEventInfoNextButtonPressed(String eventTitle, String eventIndustry) {
         // Pass new event basic info data to next fragment
         NewEventLogisticsFragment eventLogisticsFragment = new NewEventLogisticsFragment();
         Bundle args = new Bundle();
         args.putString(NewEventLogisticsFragment.ARG_TITLE, eventTitle);
         args.putString(NewEventLogisticsFragment.ARG_INDUSTRY, eventIndustry);
-        args.putString(NewEventLogisticsFragment.ARG_TOPIC, eventTopic);
         eventLogisticsFragment.setArguments(args);
 
         FragmentTransaction transaction = mSupportFragmentManager.beginTransaction();
@@ -280,14 +326,13 @@ public class CoreActivity extends AppCompatActivity
     }
 
     @Override
-    public void onNewEventLogisticsNextButtonPressed(String eventTitle, String eventIndustry, String eventTopic, String date, String time,
+    public void onNewEventLogisticsNextButtonPressed(String eventTitle, String eventIndustry, String date, String time,
                                                      String street, String city, String state, String zipcode, String country, LatLng position) {
         // Pass new event logistics and basic info data to next fragment
         NewEventDescriptionFragment eventDescriptionFragment = new NewEventDescriptionFragment();
         Bundle args = new Bundle();
         args.putString(NewEventDescriptionFragment.ARG_TITLE, eventTitle);
         args.putString(NewEventDescriptionFragment.ARG_INDUSTRY, eventIndustry);
-        args.putString(NewEventDescriptionFragment.ARG_TOPIC, eventTopic);
         args.putString(NewEventDescriptionFragment.ARG_DATE, date);
         args.putString(NewEventDescriptionFragment.ARG_TIME, time);
         args.putString(NewEventDescriptionFragment.ARG_STREET, street);
@@ -334,7 +379,7 @@ public class CoreActivity extends AppCompatActivity
     }
 
     // TODO call this on OnDestroy
-    private void clearListeners(){
+    private void clearListeners() {
         // Clear out all listeners and saved data
         mUserEvents.clearEvents();
         mUserEvents.clearListeners();

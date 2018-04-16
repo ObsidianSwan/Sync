@@ -37,8 +37,6 @@ import java.util.regex.Pattern;
  * Activities that contain this fragment must implement the
  * {@link NewEventLogisticsFragment.OnFragmentInteractionListener} interface
  * to handle interaction events.
- * Use the {@link NewEventLogisticsFragment#newInstance} factory method to
- * create an instance of this fragment.
  */
 public class NewEventLogisticsFragment extends Fragment {
     public static final String ARG_TITLE = "title";
@@ -52,7 +50,6 @@ public class NewEventLogisticsFragment extends Fragment {
 
     private String mTitle;
     private String mIndustry;
-    private String mTopic;
 
     private EditText mDate;
     private EditText mTime;
@@ -77,7 +74,6 @@ public class NewEventLogisticsFragment extends Fragment {
             // Retrieve previously inputted event data
             mTitle = getArguments().getString(ARG_TITLE);
             mIndustry = getArguments().getString(ARG_INDUSTRY);
-            mTopic = getArguments().getString(ARG_TOPIC);
         }
     }
 
@@ -133,8 +129,7 @@ public class NewEventLogisticsFragment extends Fragment {
                                 } else {
                                     monthString = Integer.toString(monthOfYear + 1);
                                 }
-                                mDate.setText(dayString + "-"
-                                        + monthString + "-" + year);
+                                mDate.setText(dayString + "-" + monthString + "-" + year);
 
                             }
                         }, mYear, mMonth, mDay);
@@ -233,16 +228,20 @@ public class NewEventLogisticsFragment extends Fragment {
                 String zipcode = mZipCode.getText().toString().trim();
                 String country = mCountry.getText().toString().trim();
 
-                String completeAddress = street + ", " + city + ", " + state + ", " + zipcode + ", " + country;
-
                 // Find coordinates of location to be able to place location on map
+                String completeAddress = street + ", " + city + ", " + state + ", " + zipcode + ", " + country;
                 LatLng position = getLocationFromAddress(completeAddress);
 
                 // Perform basic input validation
                 if (areEntriesValid(date, time, street, city, state, zipcode, country, position)) {
+                    if(time.startsWith("0") || time.startsWith("10") || time.startsWith("11")){
+                        time += " a.m.";
+                    } else {
+                        time += " p.m.";
+                    }
                     if (mListener != null) {
                         // Pass data to the next fragment via the CoreActivity
-                        mListener.onNewEventLogisticsNextButtonPressed(mTitle, mIndustry, mTopic, date, time, street, city, state, zipcode, country, position);
+                        mListener.onNewEventLogisticsNextButtonPressed(mTitle, mIndustry, date, time, street, city, state, zipcode, country, position);
                     }
                 }
             }
@@ -387,7 +386,7 @@ public class NewEventLogisticsFragment extends Fragment {
      * activity.
      */
     public interface OnFragmentInteractionListener {
-        void onNewEventLogisticsNextButtonPressed(String eventTitle, String eventIndustry, String eventTopic, String date, String time, String street,
+        void onNewEventLogisticsNextButtonPressed(String eventTitle, String eventIndustry, String date, String time, String street,
                                                   String city, String state, String zipcode, String country, LatLng position);
     }
 }

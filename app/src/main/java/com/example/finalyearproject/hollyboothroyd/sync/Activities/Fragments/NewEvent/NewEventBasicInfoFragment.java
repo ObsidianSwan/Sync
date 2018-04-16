@@ -62,7 +62,6 @@ public class NewEventBasicInfoFragment extends Fragment {
 
         mEventTitleText = (EditText) view.findViewById(R.id.new_event_title_text);
         mEventIndustryText = (EditText) view.findViewById(R.id.new_event_industry_text);
-        mEventTopicText = (EditText) view.findViewById(R.id.new_event_topic_text);
         Button nextButton = (Button) view.findViewById(R.id.event_basic_info_next_button);
 
         nextButton.setOnClickListener(new View.OnClickListener() {
@@ -71,13 +70,12 @@ public class NewEventBasicInfoFragment extends Fragment {
                 // Retrieve user inputted data
                 String eventTitle = mEventTitleText.getText().toString().trim();
                 String eventIndustry = mEventIndustryText.getText().toString().trim();
-                String eventTopic = mEventTopicText.getText().toString().trim();
 
                 // Perform basic input validation
-                if(areEntriesValid(eventTitle, eventIndustry, eventTopic)) {
+                if(areEntriesValid(eventTitle, eventIndustry)) {
                     if (mListener != null) {
                         // Pass data to the CoreActivity to pass it to the next fragment
-                        mListener.onNewEventInfoNextButtonPressed(eventTitle, eventIndustry, eventTopic);
+                        mListener.onNewEventInfoNextButtonPressed(eventTitle, eventIndustry);
                     }
                 }
             }
@@ -85,11 +83,10 @@ public class NewEventBasicInfoFragment extends Fragment {
         return view;
     }
 
-    private boolean areEntriesValid(String eventTitle, String eventIndustry, String eventTopic) {
+    private boolean areEntriesValid(String eventTitle, String eventIndustry) {
         // Reset errors.
         mEventTitleText.setError(null);
         mEventIndustryText.setError(null);
-        mEventTopicText.setError(null);
 
         View focusView = null;
 
@@ -102,11 +99,6 @@ public class NewEventBasicInfoFragment extends Fragment {
         if (TextUtils.isEmpty(eventIndustry)) {
             mEventIndustryText.setError(getString(R.string.error_field_required));
             focusView = mEventIndustryText;
-        }
-        // Check for a valid event topic
-        if (TextUtils.isEmpty(eventTopic)) {
-            mEventTopicText.setError(getString(R.string.error_field_required));
-            focusView = mEventTopicText;
         }
 
         if (focusView != null) {
@@ -137,6 +129,6 @@ public class NewEventBasicInfoFragment extends Fragment {
     }
 
     public interface OnFragmentInteractionListener {
-        void onNewEventInfoNextButtonPressed(String eventTitle, String eventIndustry, String eventTopic);
+        void onNewEventInfoNextButtonPressed(String eventTitle, String eventIndustry);
     }
 }

@@ -66,4 +66,5 @@
 
     // Filter
     <dimen name="filter_dimen">50dp</dimen>
+    <dimen name="small_popup_margin">3dp</dimen>
 </resources>
