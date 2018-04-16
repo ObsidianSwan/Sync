@@ -1,6 +1,7 @@
 package com.example.finalyearproject.hollyboothroyd.sync.Services;
 
 import android.net.Uri;
+import android.util.Log;
 
 import com.example.finalyearproject.hollyboothroyd.sync.Model.Event;
 import com.example.finalyearproject.hollyboothroyd.sync.Model.Notification;
@@ -23,6 +24,8 @@ import java.util.HashMap;
 
 public class DatabaseManager {
 
+    private static final String TAG = "DatabaseManager";
+
     private FirebaseDatabase mDatabase;
     private StorageReference mStorage;
     private DatabaseReference mPeopleDatabaseReference;
@@ -43,9 +46,6 @@ public class DatabaseManager {
         if(mAccountManager.getCurrentUser() != null) {
             mCurrentUserId = mAccountManager.getCurrentUser().getUid();
         }
-
-        //TODO: when DMMan and AccountMan is put into utils return this to be here.
-        //mUserNotificationDatabaseReference = mPeopleDatabaseReference.child(mCurrentUserId).child(Constants.userNotificationDatabaseRefName);
     }
 
     // Users
@@ -91,7 +91,9 @@ public class DatabaseManager {
         currentPersonLocation.updateChildren(personLocationHash, new DatabaseReference.CompletionListener() {
             @Override
             public void onComplete(DatabaseError databaseError, DatabaseReference databaseReference) {
-                //TODO Add logging
+                if(databaseError != null) {
+                    Log.e(TAG, databaseError.toString());
+                }
             }
         });
     }

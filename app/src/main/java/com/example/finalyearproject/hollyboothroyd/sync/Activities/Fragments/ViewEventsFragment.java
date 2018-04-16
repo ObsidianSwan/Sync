@@ -18,7 +18,7 @@ import com.example.finalyearproject.hollyboothroyd.sync.R;
 import com.example.finalyearproject.hollyboothroyd.sync.Utils.Constants;
 
 /**
- * A fragment representing a list of Items.
+ * A fragment representing a list of Event items.
  * <p/>
  * Activities containing this fragment MUST implement the {@link OnListFragmentInteractionListener}
  * interface.
@@ -29,7 +29,6 @@ public class ViewEventsFragment extends Fragment {
     private int mColumnCount = 1;
     private OnListFragmentInteractionListener mListener;
 
-    private FragmentTabHost mTabHost;
     private RecyclerView mAllEvents;
     private RecyclerView mEventsAttending;
     private RecyclerView mEventsHosting;
@@ -65,16 +64,18 @@ public class ViewEventsFragment extends Fragment {
                              Bundle savedInstanceState) {
         final View view = inflater.inflate(R.layout.fragment_view_events, container, false);
 
+        // Set up UI
         getActivity().setTitle(R.string.view_events_action_bar_title);
 
         mAllEvents = (RecyclerView) view.findViewById(R.id.all_events_recycler_view);
         mEventsAttending = (RecyclerView) view.findViewById(R.id.events_attending_recycler_view);
         mEventsHosting = (RecyclerView) view.findViewById(R.id.events_hosting_recycler_view);
 
-        mTabHost = (FragmentTabHost) view.findViewById(R.id.tab_host);
-        mTabHost.setup(getActivity(), getChildFragmentManager(), R.id.tab_content);
+        FragmentTabHost tabHost = (FragmentTabHost) view.findViewById(R.id.tab_host);
+        tabHost.setup(getActivity(), getChildFragmentManager(), R.id.tab_content);
 
-        mTabHost.addTab(mTabHost.newTabSpec(Constants.allEventsTab).setIndicator(Constants.allEventsTabName).setContent(new TabHost.TabContentFactory() {
+        // Set up All Events tab
+        tabHost.addTab(tabHost.newTabSpec(Constants.allEventsTab).setIndicator(Constants.allEventsTabName).setContent(new TabHost.TabContentFactory() {
             @Override
             public View createTabContent(String tag) {
                 Context context = view.getContext();
@@ -83,13 +84,15 @@ public class ViewEventsFragment extends Fragment {
                 } else {
                     mAllEvents.setLayoutManager(new GridLayoutManager(context, mColumnCount));
                 }
+                // Populate tab with all events list
                 mAllEvents.setAdapter(new MyEventRecyclerViewAdapter(getActivity(), UserEvents.ALL_EVENTS, mListener));
 
                 return mAllEvents;
             }
         }));
 
-        mTabHost.addTab(mTabHost.newTabSpec(Constants.eventsAttendingTab).setIndicator(Constants.eventsAttendingTabName).setContent(new TabHost.TabContentFactory() {
+        // Set up Events Attending tab
+        tabHost.addTab(tabHost.newTabSpec(Constants.eventsAttendingTab).setIndicator(Constants.eventsAttendingTabName).setContent(new TabHost.TabContentFactory() {
             @Override
             public View createTabContent(String tag) {
                 Context context = view.getContext();
@@ -98,13 +101,15 @@ public class ViewEventsFragment extends Fragment {
                 } else {
                     mEventsAttending.setLayoutManager(new GridLayoutManager(context, mColumnCount));
                 }
+                // Populate tab with events attending list
                 mEventsAttending.setAdapter(new MyEventRecyclerViewAdapter(getActivity(), UserEvents.EVENTS_ATTENDING, mListener));
 
                 return mEventsAttending;
             }
         }));
 
-        mTabHost.addTab(mTabHost.newTabSpec(Constants.eventsHostingTab).setIndicator(Constants.eventsHostingTabName).setContent(new TabHost.TabContentFactory() {
+        // Set up Events Hosting tab
+        tabHost.addTab(tabHost.newTabSpec(Constants.eventsHostingTab).setIndicator(Constants.eventsHostingTabName).setContent(new TabHost.TabContentFactory() {
             @Override
             public View createTabContent(String tag) {
                 Context context = view.getContext();
@@ -113,6 +118,7 @@ public class ViewEventsFragment extends Fragment {
                 } else {
                     mEventsHosting.setLayoutManager(new GridLayoutManager(context, mColumnCount));
                 }
+                // Populate tab with events hosting list
                 mEventsHosting.setAdapter(new MyEventRecyclerViewAdapter(getActivity(), UserEvents.EVENTS_HOSTING, mListener));
 
                 return mEventsHosting;

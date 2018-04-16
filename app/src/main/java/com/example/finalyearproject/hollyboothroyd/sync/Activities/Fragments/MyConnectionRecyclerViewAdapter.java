@@ -63,6 +63,7 @@ public class MyConnectionRecyclerViewAdapter extends RecyclerView.Adapter<MyConn
     @Override
     public void onBindViewHolder(final ViewHolder holder, int position) {
         holder.mItem = mValues.get(position);
+        // Populate holder with connection information
         Picasso.with(mContext).load(mValues.get(position).getImageId()).into(holder.mConnectionProfileImage);
         String connectionName = mValues.get(position).getFirstName() + " " + mValues.get(position).getLastName();
         holder.mConnectionNameText.setText(connectionName);
@@ -78,6 +79,7 @@ public class MyConnectionRecyclerViewAdapter extends RecyclerView.Adapter<MyConn
                     // fragment is attached to one) that an item has been selected.
                     mListener.onListFragmentInteraction(holder.mItem);
                 }
+                // Open connection popup
                 connectionPopupCreation(holder);
             }
         });
@@ -88,6 +90,7 @@ public class MyConnectionRecyclerViewAdapter extends RecyclerView.Adapter<MyConn
         View view = LayoutInflater.from(mContext).inflate(R.layout.person_popup, null);
         final Person person = holder.mItem;
 
+        // Set up UI
         Button dismissPopupButton = (Button) view.findViewById(R.id.dismiss_popup_button);
         ImageView personImage = (ImageView) view.findViewById(R.id.popup_image);
         TextView personName = (TextView) view.findViewById(R.id.popup_name);
@@ -119,6 +122,7 @@ public class MyConnectionRecyclerViewAdapter extends RecyclerView.Adapter<MyConn
             }
         });
 
+        // Send profile view to viewed user
         DatabaseReference newNotificationRef = mDatabaseManager.getNewNotifcationReference(person.getUserId());
         String refKey = newNotificationRef.getKey();
         Notification notification = new Notification(refKey, mAccountManager.getCurrentUser().getUid(), NotificationType.PROFILE_VIEW);
@@ -126,9 +130,9 @@ public class MyConnectionRecyclerViewAdapter extends RecyclerView.Adapter<MyConn
             @Override
             public void onComplete(@NonNull Task<Void> task) {
                 if (task.isSuccessful()) {
-                    Log.i(TAG, "Send notification successful");
+                    Log.i(TAG, mContext.getString(R.string.send_notification_successful));
                 } else {
-                    Log.e(TAG, "Send notification failed");
+                    Log.e(TAG, mContext.getString(R.string.send_notification_error));
                 }
             }
         });
@@ -151,16 +155,17 @@ public class MyConnectionRecyclerViewAdapter extends RecyclerView.Adapter<MyConn
                         @Override
                         public void onComplete(@NonNull Task<Void> task) {
                             if (task.isSuccessful()) {
+                                // Remove connection from the UI
                                 removeConnectionItem(holder.getAdapterPosition());
                                 Toast.makeText(mContext, "You're no longer connected with " + person.getFirstName(), Toast.LENGTH_SHORT).show();
                                 mDialog.dismiss();
                             } else {
-                                Log.e(TAG, "Delete other user connection failed");
+                                Log.e(TAG, mContext.getString(R.string.delete_other_user_connection_error));
                             }
                         }
                     });
                 } else {
-                    Log.e(TAG, "Delete current user connection failed");
+                    Log.e(TAG, mContext.getString(R.string.delete_current_user_connection_error));
                 }
             }
         });
@@ -168,6 +173,7 @@ public class MyConnectionRecyclerViewAdapter extends RecyclerView.Adapter<MyConn
     }
 
     private void removeConnectionItem(int position) {
+        // Remove item from UI list
         notifyItemRemoved(position);
         notifyItemRangeChanged(position, mValues.size());
     }
@@ -189,6 +195,8 @@ public class MyConnectionRecyclerViewAdapter extends RecyclerView.Adapter<MyConn
         public ViewHolder(View view) {
             super(view);
             mView = view;
+
+            // Set up connection UI
             mConnectionProfileImage = (ImageView) view.findViewById(R.id.connection_profile_image);
             mConnectionNameText = (TextView) view.findViewById(R.id.connection_user_name);
             mConnectionPositionText = (TextView) view.findViewById(R.id.connection_position);

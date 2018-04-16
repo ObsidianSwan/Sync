@@ -23,6 +23,7 @@ import android.support.v4.app.FragmentManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.FragmentTransaction;
+import android.util.Log;
 import android.view.View;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
@@ -53,6 +54,8 @@ public class CoreActivity extends AppCompatActivity
         NewEventLogisticsFragment.OnFragmentInteractionListener, NewEventDescriptionFragment.OnFragmentInteractionListener, ViewEventsFragment.OnListFragmentInteractionListener,
         EditProfileFragment.OnFragmentInteractionListener, NotificationFragment.OnListFragmentInteractionListener {
 
+    private static final String TAG = "CoreActivity";
+
     private DatabaseManager mDatabaseManager;
     private AccountManager mAccountManager;
     private FragmentManager mSupportFragmentManager;
@@ -69,53 +72,18 @@ public class CoreActivity extends AppCompatActivity
         mDatabaseManager = new DatabaseManager();
         mAccountManager = new AccountManager();
 
+        // Instantiate these so the database listener is set up and the user connections, events, and notifications lists stay up to date
         mUserConnections = new UserConnections();
         mUserEvents = new UserEvents(this);
-        mUserNotifications = new UserNotifications();
+        mUserNotifications = new UserNotifications(this);
 
         mSupportFragmentManager = getSupportFragmentManager();
 
-        if (savedInstanceState == null) {
-            mSupportFragmentManager.beginTransaction().replace(R.id.content_frame, new GMapFragment(), getString(R.string.gmaps_tag)).commit();
-            mCurrentFragment = R.string.gmaps_tag;
-        } else {
-            mCurrentFragment = savedInstanceState.getInt("currentFragment");
-            switch (mCurrentFragment) {
-                case R.string.gmaps_tag:
-                    mSupportFragmentManager.beginTransaction().replace(R.id.content_frame, new GMapFragment(), getString(R.string.gmaps_tag)).commit();
-                    mCurrentFragment = R.string.gmaps_tag;
-                    break;
-                case R.string.notifications_tag:
-                    mSupportFragmentManager.beginTransaction().replace(R.id.content_frame, new NotificationFragment(), getString(R.string.notifications_tag)).commit();
-                    mCurrentFragment = R.string.notifications_tag;
-                    break;
-                case R.string.view_connections_tag:
-                    mSupportFragmentManager.beginTransaction().replace(R.id.content_frame, new ConnectionFragment(), getString(R.string.view_connections_tag)).commit();
-                    mCurrentFragment = R.string.view_connections_tag;
-                    break;
-                case R.string.view_events_tag:
-                    mSupportFragmentManager.beginTransaction().replace(R.id.content_frame, new ViewEventsFragment(), getString(R.string.view_events_tag)).commit();
-                    mCurrentFragment = R.string.view_events_tag;
-                    break;
-                case R.string.create_event_basic_info_tag:
-                    mSupportFragmentManager.beginTransaction().replace(R.id.content_frame, new NewEventBasicInfoFragment(), getString(R.string.create_event_basic_info_tag)).commit();
-                    mCurrentFragment = R.string.create_event_basic_info_tag;
-                    break;
-                case R.string.edit_profile_tag:
-                    mSupportFragmentManager.beginTransaction().replace(R.id.content_frame, new EditProfileFragment(), getString(R.string.edit_profile_tag)).commit();
-                    mCurrentFragment = R.string.edit_profile_tag;
-                    break;
-                case R.string.settings_tag:
-                    mSupportFragmentManager.beginTransaction().replace(R.id.content_frame, new SettingsFragment(), getString(R.string.settings_tag)).commit();
-                    mCurrentFragment = R.string.settings_tag;
-                    break;
-                case R.string.logout_tag:
-                    mSupportFragmentManager.beginTransaction().replace(R.id.content_frame, new LogoutFragment(), getString(R.string.logout_tag)).commit();
-                    mCurrentFragment = R.string.logout_tag;
-                    break;
-            }
-        }
+        // Go to the GMaps fragment on start
+        mSupportFragmentManager.beginTransaction().replace(R.id.content_frame, new GMapFragment(), getString(R.string.gmaps_tag)).commit();
+        mCurrentFragment = R.string.gmaps_tag;
 
+        // Set up the navigation drawer and the tool bar
         setContentView(R.layout.activity_navigation_drawer);
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
@@ -142,22 +110,18 @@ public class CoreActivity extends AppCompatActivity
         setDrawerHeaderText(profileImage, userNameText, userPositionText, userConnectionsText);
     }
 
-    @Override
-    public void onSaveInstanceState(Bundle savedInstanceState) {
-        savedInstanceState.putInt("currentFragment", mCurrentFragment);
-        super.onSaveInstanceState(savedInstanceState);
-    }
-
     private void setDrawerHeaderText(final ImageView profileImage, final TextView userNameText, final TextView userPositionText, final TextView userConnectionsText) {
         mDatabaseManager.getUserPeopleDatabaseReference().addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 Person currentUser = dataSnapshot.getValue(Person.class);
                 if (currentUser != null) {
+                    // Set the header text to be the users information
                     Picasso.with(CoreActivity.this).load(currentUser.getImageId()).into(profileImage);
                     userNameText.setText(currentUser.getFirstName() + " " + currentUser.getLastName());
                     userPositionText.setText(currentUser.getPosition());
 
+                    // Retrieve and set the number of connections the user has
                     mDatabaseManager.getUserConnectionsDatabaseReference().addValueEventListener(new ValueEventListener() {
                         @Override
                         public void onDataChange(DataSnapshot dataSnapshot) {
@@ -175,7 +139,7 @@ public class CoreActivity extends AppCompatActivity
 
                         @Override
                         public void onCancelled(DatabaseError databaseError) {
-                            // TODO LOG
+                            Log.e(TAG, databaseError.toString());
                         }
                     });
                 }
@@ -183,7 +147,7 @@ public class CoreActivity extends AppCompatActivity
 
             @Override
             public void onCancelled(DatabaseError databaseError) {
-                // TODO LOG
+                Log.e(TAG, databaseError.toString());
             }
         });
 
@@ -194,35 +158,22 @@ public class CoreActivity extends AppCompatActivity
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         if (drawer.isDrawerOpen(GravityCompat.START)) {
             drawer.closeDrawer(GravityCompat.START);
-        } else if (isMenuFragmentShowing()) {
+        } else if(mCurrentFragment == R.string.gmaps_tag){
+            // Do nothing if the GMaps fragment is showing
+        }
+        // Pressing the back button does not explicitly tell which fragment originated the back button or the destination fragment
+        // To keep the mCurrentFragment variable accurate, when back is pressed, the nested fragments need to be checked and mCurrentFragment reassigned
+        else if (mCurrentFragment == R.string.create_event_logistics_tag){
+            mSupportFragmentManager.beginTransaction().replace(R.id.content_frame, new NewEventBasicInfoFragment(), getString(R.string.create_event_basic_info_tag)).commit();
+            mCurrentFragment = R.string.create_event_basic_info_tag;
+        } else if (mCurrentFragment == R.string.create_event_description_tag) {
+            mSupportFragmentManager.beginTransaction().replace(R.id.content_frame, new NewEventLogisticsFragment(), getString(R.string.create_event_logistics_tag)).commit();
+            mCurrentFragment = R.string.create_event_logistics_tag;
+        } else if (mCurrentFragment != 0){
+            // Return to the GMaps fragment, if one of the non-nested menu fragments is showing
             mSupportFragmentManager.beginTransaction().replace(R.id.content_frame, new GMapFragment(), getString(R.string.gmaps_tag)).commit();
             mCurrentFragment = R.string.gmaps_tag;
-        } else if (mSupportFragmentManager.findFragmentByTag(getString(R.string.gmaps_tag)) != null && mSupportFragmentManager.findFragmentByTag(getString(R.string.gmaps_tag)).isVisible()) {
-            // Do nothing
-        } else {
-            // Bug fix: Pressing the back button does not explicitly tell which fragment originated the back button or the destination fragment
-            // To keep the mCurrentFragment variable accurate, when back is pressed, the nested fragments need to be explicitly checked and mCurrentFragment reassigned
-            if (mCurrentFragment == R.string.create_event_logistics_tag) {
-                mCurrentFragment = R.string.create_event_basic_info_tag;
-            } else if (mCurrentFragment == R.string.create_event_description_tag) {
-                mCurrentFragment = R.string.create_event_logistics_tag;
-            }
-            super.onBackPressed();
         }
-    }
-
-    // This is needed for the custom back button behaviour.
-    // It checks if one of the menu fragments (view connections, view events, create event, settings, or logout) is showing
-    // If it is then return true
-    private boolean isMenuFragmentShowing() {
-        // Check if the fragment is not null first or the app will crash. If the fragment is not null, check if it is visible
-        // TODO: add syncup
-        if (mCurrentFragment == R.string.view_connections_tag || mCurrentFragment == R.string.view_events_tag ||
-                mCurrentFragment == R.string.create_event_basic_info_tag || mCurrentFragment == R.string.settings_tag ||
-                mCurrentFragment == R.string.logout_tag || mCurrentFragment == R.string.edit_profile_tag) {
-            return true;
-        }
-        return false;
     }
 
     @Override
@@ -235,17 +186,16 @@ public class CoreActivity extends AppCompatActivity
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
+        // automatically handle clicks on the Home/Up button
         return super.onOptionsItemSelected(item);
     }
 
-    @SuppressWarnings("StatementWithEmptyBody")
     @Override
     public boolean onNavigationItemSelected(MenuItem item) {
         // Handle navigation view item clicks here.
         int id = item.getItemId();
 
+        // Go to fragment or SyncUp activity and save which fragment the user is on
         if (id == R.id.nav_menu_map && mCurrentFragment != R.string.gmaps_tag) {
             mSupportFragmentManager.beginTransaction().replace(R.id.content_frame, new GMapFragment(), getString(R.string.gmaps_tag)).commit();
             mCurrentFragment = R.string.gmaps_tag;
@@ -281,25 +231,16 @@ public class CoreActivity extends AppCompatActivity
 
     @Override
     public void onListFragmentInteraction(Person connection) {
-        // When user has selected a connection in the ConnectionsFragment
-        // Do something to display that article
     }
 
     @Override
     public void onPointerCaptureChanged(boolean hasCapture) {
-
     }
 
     @Override
     public void onSettingsInteraction() {
-        mUserEvents.clearEvents();
-        mUserEvents.clearListeners();
-
-        mUserNotifications.clearNotifications();
-        mUserNotifications.clearListeners();
-
-        mUserConnections.clearConnections();
-        mUserConnections.clearListeners();
+        // The user has decided to delete their account. Clear out all listeners and saved data
+        clearListeners();
 
         // TODO delete account bug
         mAccountManager.getCurrentUser().delete().addOnCompleteListener(new OnCompleteListener<Void>() {
@@ -317,9 +258,7 @@ public class CoreActivity extends AppCompatActivity
 
     @Override
     public void onNewEventInfoNextButtonPressed(String eventTitle, String eventIndustry, String eventTopic) {
-        // New event basic info data pass to next fragment
-        // TODO: Check if fragment is open before
-
+        // Pass new event basic info data to next fragment
         NewEventLogisticsFragment eventLogisticsFragment = new NewEventLogisticsFragment();
         Bundle args = new Bundle();
         args.putString(NewEventLogisticsFragment.ARG_TITLE, eventTitle);
@@ -343,9 +282,7 @@ public class CoreActivity extends AppCompatActivity
     @Override
     public void onNewEventLogisticsNextButtonPressed(String eventTitle, String eventIndustry, String eventTopic, String date, String time,
                                                      String street, String city, String state, String zipcode, String country, LatLng position) {
-        // New event logistics data pass to next fragment
-        // TODO: Check if fragment is open before
-
+        // Pass new event logistics and basic info data to next fragment
         NewEventDescriptionFragment eventDescriptionFragment = new NewEventDescriptionFragment();
         Bundle args = new Bundle();
         args.putString(NewEventDescriptionFragment.ARG_TITLE, eventTitle);
@@ -376,7 +313,8 @@ public class CoreActivity extends AppCompatActivity
     }
 
     @Override
-    public void onNewEventDescriptionDoneButtonPressed(Double longitude, Double latitude) {
+    public void onNewEventDescriptionDoneButtonPressed() {
+        // After the event has been created, load up the GMaps fragment
         mSupportFragmentManager.beginTransaction().replace(R.id.content_frame, new GMapFragment(), getString(R.string.gmaps_tag)).commit();
         mCurrentFragment = R.string.gmaps_tag;
     }
@@ -387,6 +325,17 @@ public class CoreActivity extends AppCompatActivity
 
     @Override
     public void onLogoutInteraction() {
+        // The user has decided to logout of their account. Clear out all listeners and saved data
+        clearListeners();
+
+        mAccountManager.signUserOut();
+        startActivity(new Intent(this, LoginActivity.class));
+        mCurrentFragment = 0;
+    }
+
+    // TODO call this on OnDestroy
+    private void clearListeners(){
+        // Clear out all listeners and saved data
         mUserEvents.clearEvents();
         mUserEvents.clearListeners();
 
@@ -395,14 +344,10 @@ public class CoreActivity extends AppCompatActivity
 
         mUserConnections.clearConnections();
         mUserConnections.clearListeners();
-
-        mAccountManager.signUserOut();
-        startActivity(new Intent(this, LoginActivity.class));
-        mCurrentFragment = 0;
     }
 
     @Override
-    public void onEditProfileInteraction(Uri uri) {
+    public void onEditProfileInteraction() {
 
     }
 

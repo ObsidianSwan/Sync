@@ -9,6 +9,7 @@ import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
 import com.example.finalyearproject.hollyboothroyd.sync.R;
+import com.example.finalyearproject.hollyboothroyd.sync.Utils.Constants;
 import com.google.android.gms.location.Geofence;
 import com.google.android.gms.location.GeofenceStatusCodes;
 import com.google.android.gms.location.GeofencingEvent;
@@ -69,18 +70,18 @@ public class GeofenceTransitionsIntentService extends IntentService {
             // Send details to GMapFragment to display/remove local user
             geofenceTriggeredMessageToMaps(geofenceEnterTransitionDetails);
 
-            //Log.i(TAG, geofenceTransitionDetails);
+            Log.i(TAG, String.valueOf(geofenceTransition));
         } else {
             // Log the error.
-            //Log.e(TAG, getString(R.string.geofence_transition_invalid_type,
-                    //geofenceTransition));
+            Log.e(TAG, getString(R.string.geofence_transition_invalid_type) + ": " + geofenceTransition);
         }
     }
 
     private void geofenceTriggeredMessageToMaps(List<String> geofenceEnterTransitionDetails){
+        // Send the geofence trigger message to the GMaps fragment
         for(String id : geofenceEnterTransitionDetails){
-            Intent intent = new Intent("geofenceEnterTriggered");
-            intent.putExtra("userId", id);
+            Intent intent = new Intent(Constants.geofenceEnterTrigger);
+            intent.putExtra(Constants.geofenceUserId, id);
             LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
         }
 
@@ -89,19 +90,13 @@ public class GeofenceTransitionsIntentService extends IntentService {
 
     private List<String> getGeofenceEnterTransitionDetails(int geofenceTransition, List<Geofence> triggeringGeofences){
         List<String> geofenceRequestIds = new ArrayList<>();
+        // Return the request ids of the geofences that triggered with enter and dwell
         if(geofenceTransition == Geofence.GEOFENCE_TRANSITION_ENTER || geofenceTransition == Geofence.GEOFENCE_TRANSITION_DWELL) {
             for (Geofence geofence : triggeringGeofences) {
                 geofenceRequestIds.add(geofence.getRequestId());
             }
         }
         return geofenceRequestIds;
-    }
-
-    private String getTransitionString(int transitionType) {
-        return "";
-    }
-
-    private void sendNotification(String notificationDetails) {
     }
 }
 
@@ -111,16 +106,15 @@ class GeofenceErrorMessages {
     }
 
     public static String getErrorString(Context context, int errorCode) {
-        Resources mResources = context.getResources();
         switch (errorCode) {
             case GeofenceStatusCodes.GEOFENCE_NOT_AVAILABLE:
-                return "Geofence service is not available now.";
+                return context.getString(R.string.geofence_service_unavailable_error);
             case GeofenceStatusCodes.GEOFENCE_TOO_MANY_GEOFENCES:
-                return "Your app has registered too many geofences.";
+                return context.getString(R.string.geofence_max_error);
             case GeofenceStatusCodes.GEOFENCE_TOO_MANY_PENDING_INTENTS:
-                return "You have provided too many PendingIntents!";
+                return context.getString(R.string.max_pending_intents_error);
             default:
-                return "Unknown error.";
+                return context.getString(R.string.generic_error_text);
         }
     }
 }

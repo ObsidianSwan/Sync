@@ -58,6 +58,7 @@ public class NotificationFragment extends Fragment {
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_notification_list, container, false);
 
+        // Set up UI
         getActivity().setTitle(getString(R.string.notifications_action_bar_title));
 
         // Set the adapter
@@ -69,6 +70,7 @@ public class NotificationFragment extends Fragment {
             } else {
                 recyclerView.setLayoutManager(new GridLayoutManager(context, mColumnCount));
             }
+            // Populate the list with user notifications
             recyclerView.setAdapter(new MyNotificationRecyclerViewAdapter(getContext(), UserNotifications.ITEMS, mListener));
         }
         return view;
@@ -97,10 +99,6 @@ public class NotificationFragment extends Fragment {
      * fragment to allow an interaction in this fragment to be communicated
      * to the activity and potentially other fragments contained in that
      * activity.
-     * <p/>
-     * See the Android Training lesson <a href=
-     * "http://developer.android.com/training/basics/fragments/communicating.html"
-     * >Communicating with Other Fragments</a> for more information.
      */
     public interface OnListFragmentInteractionListener {
         void onListFragmentInteraction(NotificationBase item);

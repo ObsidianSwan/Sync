@@ -36,7 +36,7 @@
                     android:layout_height="wrap_content"
                     android:text="@string/notification_profile_view_text"
                     android:textAppearance="@style/TextAppearance.AppCompat.Medium"
-                    android:textColor="@color/dark_blue" />
+                    android:textColor="@color/colorPrimary" />
 
                 <TextView
                     android:id="@+id/notification_description_text"

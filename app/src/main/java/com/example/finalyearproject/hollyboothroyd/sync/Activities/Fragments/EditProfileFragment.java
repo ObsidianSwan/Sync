@@ -40,8 +40,6 @@ import static android.app.Activity.RESULT_OK;
  * Activities that contain this fragment must implement the
  * {@link EditProfileFragment.OnFragmentInteractionListener} interface
  * to handle interaction events.
- * Use the {@link EditProfileFragment#newInstance} factory method to
- * create an instance of this fragment.
  */
 public class EditProfileFragment extends Fragment {
 
@@ -74,19 +72,6 @@ public class EditProfileFragment extends Fragment {
         // Required empty public constructor
     }
 
-    /**
-     * Use this factory method to create a new instance of
-     * this fragment using the provided parameters.
-     *
-     * @return A new instance of fragment EditProfileFragment.
-     */
-    public static EditProfileFragment newInstance() {
-        EditProfileFragment fragment = new EditProfileFragment();
-        Bundle args = new Bundle();
-        fragment.setArguments(args);
-        return fragment;
-    }
-
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -99,7 +84,8 @@ public class EditProfileFragment extends Fragment {
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_edit_profile, container, false);
 
-        getActivity().setTitle("Edit Profile");
+        // Set up the UI
+        getActivity().setTitle(getString(R.string.edit_profile_title));
 
         mProfileImage = (ImageButton) view.findViewById(R.id.edit_profile_photo_button);
         mFirstName = (EditText) view.findViewById(R.id.edit_first_name_text);
@@ -109,6 +95,7 @@ public class EditProfileFragment extends Fragment {
         mIndustry = (EditText) view.findViewById(R.id.edit_industry_text);
         mCommitButton = (Button) view.findViewById(R.id.edit_profile_commit_button);
 
+        // Open the gallery to select the profile image
         mProfileImage.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -123,6 +110,7 @@ public class EditProfileFragment extends Fragment {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 if (dataSnapshot != null) {
+                    // Populate page with users information
                     Person currentUser = dataSnapshot.getValue(Person.class);
                     if (currentUser.getImageId() != null) {
                         mOriginalProfileImageUri = currentUser.getImageId();
@@ -153,55 +141,70 @@ public class EditProfileFragment extends Fragment {
             @Override
             public void onClick(View v) {
                 mProfileChanged = false;
+
+                String mInputtedFirstName = mFirstName.getText().toString().trim();
+                String mInputtedLastName = mLastName.getText().toString().trim();
+                String mInputtedPosition = mPosition.getText().toString().trim();
+                String mInputtedCompany = mCompany.getText().toString().trim();
+                String mInputtedIndustry = mIndustry.getText().toString().trim();
+
+                // Check if the user's profile image has been changed
                 if (mProfileImageUri != null && !mOriginalProfileImageUri.equals(mProfileImageUri.toString())) {
                     mProfileChanged = true;
+                    // Delete the user's old image from the database
                     mDatabaseManager.deletePersonImage(mOriginalProfileImageUri).addOnCompleteListener(new OnCompleteListener<Void>() {
                         @Override
                         public void onComplete(@NonNull Task<Void> task) {
                             if (task.isSuccessful()) {
+                                // Upload the user's new image to the database
                                 mDatabaseManager.uploadPersonImage(mProfileImageUri).addOnCompleteListener(new OnCompleteListener<UploadTask.TaskSnapshot>() {
                                     @Override
                                     public void onComplete(@NonNull Task<UploadTask.TaskSnapshot> task) {
                                         if (task.isSuccessful()) {
                                             // Get a URL to the uploaded content
                                             mProfileImageUri = task.getResult().getDownloadUrl();
-                                            mDatabaseManager.getUserPeopleDatabaseReference().child("imageId").setValue(mProfileImageUri.toString());
+                                            mDatabaseManager.getUserPeopleDatabaseReference().child(Constants.userImgChildName).setValue(mProfileImageUri.toString());
                                             mOriginalProfileImageUri = mProfileImageUri.toString();
                                         } else {
-                                            Log.e(TAG, "Upload person image failed");
+                                            Log.e(TAG, getString(R.string.upload_image_error));
                                         }
                                     }
                                 });
                             } else {
-                                Log.e(TAG, "Delete person image failed");
+                                Log.e(TAG, getString(R.string.delete_image_error));
                             }
                         }
                     });
 
                 }
-                if (mFirstName != null && !mOriginalFirstName.equals(mFirstName.getText().toString())) {
-                    mDatabaseManager.getUserPeopleDatabaseReference().child("firstName").setValue(mFirstName.getText().toString());
-                    mOriginalFirstName = mFirstName.getText().toString();
+                // Update the database if the users first name has changed
+                if (mFirstName != null && !mOriginalFirstName.equals(mInputtedFirstName)) {
+                    mDatabaseManager.getUserPeopleDatabaseReference().child(Constants.userFirstNameChildName).setValue(mInputtedFirstName);
+                    mOriginalFirstName = mInputtedFirstName;
                     mProfileChanged = true;
                 }
-                if (mLastName != null && !mOriginalLastName.equals(mLastName.getText().toString())) {
-                    mDatabaseManager.getUserPeopleDatabaseReference().child("lastName").setValue(mLastName.getText().toString());
-                    mOriginalLastName = mLastName.getText().toString();
+                // Update the database if the users last name has changed
+                if (mLastName != null && !mOriginalLastName.equals(mInputtedLastName)) {
+                    mDatabaseManager.getUserPeopleDatabaseReference().child(Constants.userLastNameChildName).setValue(mInputtedLastName);
+                    mOriginalLastName = mInputtedLastName;
                     mProfileChanged = true;
                 }
-                if (mPosition != null && !mOriginalPosition.equals(mPosition.getText().toString())) {
-                    mDatabaseManager.getUserPeopleDatabaseReference().child("position").setValue(mPosition.getText().toString());
-                    mOriginalPosition = mPosition.getText().toString();
+                // Update the database if the users position has changed
+                if (mPosition != null && !mOriginalPosition.equals(mInputtedPosition)) {
+                    mDatabaseManager.getUserPeopleDatabaseReference().child(Constants.userPositionChildName).setValue(mInputtedPosition);
+                    mOriginalPosition = mInputtedPosition;
                     mProfileChanged = true;
                 }
-                if (mCompany != null && !mOriginalCompany.equals(mCompany.getText().toString())) {
-                    mDatabaseManager.getUserPeopleDatabaseReference().child("company").setValue(mCompany.getText().toString());
-                    mOriginalCompany = mCompany.getText().toString();
+                // Update the database if the users company has changed
+                if (mCompany != null && !mOriginalCompany.equals(mInputtedCompany)) {
+                    mDatabaseManager.getUserPeopleDatabaseReference().child(Constants.userCompanyChildName).setValue(mInputtedCompany);
+                    mOriginalCompany = mInputtedCompany;
                     mProfileChanged = true;
                 }
-                if (mIndustry != null && !mOriginalIndustry.equals(mIndustry.getText().toString())) {
-                    mDatabaseManager.getUserPeopleDatabaseReference().child("industry").setValue(mIndustry.getText().toString());
-                    mOriginalIndustry = mIndustry.getText().toString();
+                // Update the database if the users industry has changed
+                if (mIndustry != null && !mOriginalIndustry.equals(mInputtedIndustry)) {
+                    mDatabaseManager.getUserPeopleDatabaseReference().child(Constants.userIndustryChildName).setValue(mInputtedIndustry);
+                    mOriginalIndustry = mInputtedIndustry;
                     mProfileChanged = true;
                 }
                 if (mProfileChanged) {
@@ -218,6 +221,7 @@ public class EditProfileFragment extends Fragment {
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
+        // Open crop image page and set aspect ratio to 1:1
         if (requestCode == Constants.GALLERY_CODE && resultCode == RESULT_OK) {
             mProfileImageUri = data.getData();
             CropImage.activity(mProfileImageUri)
@@ -226,6 +230,7 @@ public class EditProfileFragment extends Fragment {
                     .start(getActivity(), this);
         }
 
+        // Once the user is happy with their cropped image, save the image URI and set the profile image to the cropped image
         if (requestCode == CropImage.CROP_IMAGE_ACTIVITY_REQUEST_CODE) {
             CropImage.ActivityResult result = CropImage.getActivityResult(data);
             if (resultCode == RESULT_OK) {
@@ -235,12 +240,6 @@ public class EditProfileFragment extends Fragment {
                 Exception error = result.getError();
                 Log.e(TAG, error.toString());
             }
-        }
-    }
-
-    public void onButtonPressed(Uri uri) {
-        if (mListener != null) {
-            mListener.onEditProfileInteraction(uri);
         }
     }
 
@@ -268,6 +267,6 @@ public class EditProfileFragment extends Fragment {
      * activity.
      */
     public interface OnFragmentInteractionListener {
-        void onEditProfileInteraction(Uri uri);
+        void onEditProfileInteraction();
     }
 }

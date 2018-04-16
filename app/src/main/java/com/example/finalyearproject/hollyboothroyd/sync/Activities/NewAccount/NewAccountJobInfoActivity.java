@@ -15,7 +15,6 @@ public class NewAccountJobInfoActivity extends AppCompatActivity {
     private EditText mPositionText;
     private EditText mCompanyText;
     private EditText mIndustryText;
-    private Button mNextButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -25,19 +24,21 @@ public class NewAccountJobInfoActivity extends AppCompatActivity {
         mPositionText = (EditText)findViewById(R.id.position_text);
         mCompanyText = (EditText)findViewById(R.id.company_text);
         mIndustryText = (EditText)findViewById(R.id.industry_text);
-        mNextButton = (Button) findViewById(R.id.job_info_next_button);
+        Button nextButton = (Button) findViewById(R.id.job_info_next_button);
 
-        mNextButton.setOnClickListener(new View.OnClickListener() {
+        nextButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
 
-                String position = mPositionText.getText().toString();
-                String company = mCompanyText.getText().toString();
-                String industry = mIndustryText.getText().toString();
+                // Retrieve text from inputs
+                String position = mPositionText.getText().toString().trim();
+                String company = mCompanyText.getText().toString().trim();
+                String industry = mIndustryText.getText().toString().trim();
 
+                // Check if the user inputs pass basic validations
                 if(areCredentialsValid(position, company, industry))
                 {
-                    // Add interests page in between add photo page
+                    // Save the inputted data to be sent to the next account creation activity
                     Intent intent = new Intent(NewAccountJobInfoActivity.this, NewAccountPhotoActivity.class);
                     intent.putExtra("firstName", getIntent().getStringExtra("firstName"));
                     intent.putExtra("lastName", getIntent().getStringExtra("lastName"));

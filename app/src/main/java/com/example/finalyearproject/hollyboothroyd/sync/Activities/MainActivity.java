@@ -19,10 +19,8 @@ import com.google.firebase.database.FirebaseDatabase;
 
 public class MainActivity extends AppCompatActivity {
 
-    private static final String TAG = "";
-    private FirebaseAuth mAuth;
+    private static final String TAG = "MainActivity";
 
-    public DatabaseManager databaseManager;
     public AccountManager accountManager;
 
     @Override
@@ -30,50 +28,15 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        FirebaseDatabase database = FirebaseDatabase.getInstance();
-
-        mAuth = FirebaseAuth.getInstance();
-
-        // TODO: Place these into utils. Access one central DBMan and AccountMan.
-        databaseManager = new DatabaseManager();
         accountManager = new AccountManager();
 
         if (accountManager.isUserSignedIn()) {
-            // Show CoreActivity
-            accountManager.signUserOut();
-            startActivity(new Intent(MainActivity.this, LoginActivity.class));
+            // Show CoreActivity if the user is still logged in
+            startActivity(new Intent(MainActivity.this, CoreActivity.class));
 
         } else {
-            // Show LoginActivity
+            // Show LoginActivity if the user needs to log in
             startActivity(new Intent(MainActivity.this, LoginActivity.class));
         }
     }
-
-   /* @Override
-    public void onStart() {
-        super.onStart();
-        // Check if user is signed in (non-null) and update UI accordingly.
-
-            mAuth.createUserWithEmailAndPassword("hb@surrey.ac.uk", "Hb333221")
-                    .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
-                        @Override
-                        public void onComplete(@NonNull Task<AuthResult> task) {
-                            if (task.isSuccessful()) {
-                                // Sign in success, update UI with the signed-in user's information
-                                //Log.d(TAG, "createUserWithEmail:success");
-                                FirebaseUser user = mAuth.getCurrentUser();
-                            } else {
-                                // If sign in fails, display a message to the user.
-                                //Log.w(TAG, "createUserWithEmail:failure", task.getException());
-                                Toast.makeText(MainActivity.this, "Authentication failed.", Toast.LENGTH_SHORT).show();
-                            }
-
-                            // ...
-                        }
-                    });
-        //}
-
-    }
-*/
-
 }

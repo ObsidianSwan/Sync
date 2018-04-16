@@ -99,6 +99,8 @@ public class NewEventDescriptionFragment extends Fragment {
         // Required empty public constructor
     }
 
+    // TODO remove
+
     /**
      * Use this factory method to create a new instance of
      * this fragment using the provided parameters.
@@ -129,6 +131,7 @@ public class NewEventDescriptionFragment extends Fragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if (getArguments() != null) {
+            // Retrieve previously inputted event data
             mTitle = getArguments().getString(ARG_TITLE);
             mIndustry = getArguments().getString(ARG_INDUSTRY);
             mTopic = getArguments().getString(ARG_TOPIC);
@@ -150,6 +153,7 @@ public class NewEventDescriptionFragment extends Fragment {
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_new_event_description, container, false);
 
+        // Set up UI
         getActivity().setTitle(getString(R.string.new_event_action_bar_title));
 
         accountManager = new AccountManager();
@@ -161,6 +165,7 @@ public class NewEventDescriptionFragment extends Fragment {
         mDescription = (EditText) view.findViewById(R.id.new_event_description_text);
         mEventImage = (ImageButton) view.findViewById(R.id.new_event_image_button);
 
+        // Open gallery to select event image
         mEventImage.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -175,7 +180,8 @@ public class NewEventDescriptionFragment extends Fragment {
         mDoneButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                String description = mDescription.getText().toString();
+                // Get user input and register the event
+                String description = mDescription.getText().toString().trim();
                 registerEvent(description);
 
 
@@ -188,6 +194,7 @@ public class NewEventDescriptionFragment extends Fragment {
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
+        // Open crop image page and set aspect ratio to 1:1
         if (requestCode == Constants.GALLERY_CODE && resultCode == RESULT_OK) {
             mImageUri = data.getData();
             CropImage.activity(mImageUri)
@@ -196,6 +203,7 @@ public class NewEventDescriptionFragment extends Fragment {
                     .start(getActivity(), this);
         }
 
+        // Once the user is happy with their cropped image, save the image URI and set the profile image to the cropped image
         if (requestCode == CropImage.CROP_IMAGE_ACTIVITY_REQUEST_CODE) {
             CropImage.ActivityResult result = CropImage.getActivityResult(data);
             if (resultCode == RESULT_OK) {
@@ -216,12 +224,14 @@ public class NewEventDescriptionFragment extends Fragment {
             // If there is no user provided image, use default event image url.
             registerEventInternal(description, Constants.eventDefaultImgStorageUrl);
         } else {
+            // Upload the event image to the database
             databaseManager.uploadEventImage(mImageUri).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
                 @Override
                 public void onSuccess(final UploadTask.TaskSnapshot taskSnapshot) {
                     // Get a URL to the uploaded content
                     if(taskSnapshot.getDownloadUrl() != null) {
                         String downloadUrl = taskSnapshot.getDownloadUrl().toString();
+                        // Register the event
                         registerEventInternal(description, downloadUrl);
                     }
                 }
@@ -241,34 +251,39 @@ public class NewEventDescriptionFragment extends Fragment {
         final String userId = accountManager.getCurrentUser().getUid();
         // Add the event to the Firebase Database with the image storage reference
 
+        // TODO why am i saving the ref
         DatabaseReference newEventRef = databaseManager.getNewEventReference();
         final String refKey = newEventRef.getKey();
         Event event = new Event(refKey, mTitle, mIndustry, mTopic, mDate, mTime, mStreet,
                 mCity, mState, mZipCode, mCountry, mLongitude, mLatitude, description, downloadUrl, userId);
+
+        // Add the event to the event database
         databaseManager.addEvent(newEventRef, event).addOnCompleteListener(new OnCompleteListener<Void>() {
             @Override
             public void onComplete(@NonNull Task<Void> task) {
                 showProgress(false);
                 if (task.isSuccessful()) {
+                    // Add the event to the user's events created database
                     databaseManager.addEventCreator(refKey, userId).addOnCompleteListener(new OnCompleteListener<Void>() {
                         @Override
                         public void onComplete(@NonNull Task<Void> task) {
                             if (task.isSuccessful()) {
                                 Toast.makeText(getActivity(), R.string.event_creation_successful, Toast.LENGTH_SHORT).show();
                                 if (mListener != null) {
-                                    mListener.onNewEventDescriptionDoneButtonPressed(mLongitude, mLatitude);
+                                    // Inform the CoreActivity to handle the remainder of the event creation
+                                    mListener.onNewEventDescriptionDoneButtonPressed();
                                 }
                             } else {
                                 Toast.makeText(getActivity(), R.string.generic_event_creation_failed, Toast.LENGTH_SHORT).show();
                                 showProgress(false);
-                                Log.e(TAG, "Add event creator failed");
+                                Log.e(TAG, getString(R.string.add_event_creator_failed));
                             }
                         }
                     });
                 } else {
                     Toast.makeText(getActivity(), R.string.generic_event_creation_failed, Toast.LENGTH_SHORT).show();
                     showProgress(false);
-                    Log.e(TAG, "Add event failed");
+                    Log.e(TAG, getString(R.string.add_event_failed));
                 }
             }
         });
@@ -296,18 +311,11 @@ public class NewEventDescriptionFragment extends Fragment {
      * fragment to allow an interaction in this fragment to be communicated
      * to the activity and potentially other fragments contained in that
      * activity.
-     * <p>
-     * See the Android Training lesson <a href=
-     * "http://developer.android.com/training/basics/fragments/communicating.html"
-     * >Communicating with Other Fragments</a> for more information.
      */
     public interface OnFragmentInteractionListener {
-        void onNewEventDescriptionDoneButtonPressed(Double longitude, Double Latitude);
+        void onNewEventDescriptionDoneButtonPressed();
     }
 
-    /**
-     * Shows the progress UI and hides the login form.
-     */
     @TargetApi(Build.VERSION_CODES.HONEYCOMB_MR2)
     private void showProgress(final boolean show) {
         // On Honeycomb MR2 we have the ViewPropertyAnimator APIs, which allow
@@ -315,7 +323,7 @@ public class NewEventDescriptionFragment extends Fragment {
         // the progress spinner.
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB_MR2) {
             int shortAnimTime = getResources().getInteger(android.R.integer.config_shortAnimTime);
-
+            //Shows the progress UI and hides the event creation form.
             mDoneButton.setVisibility(show ? View.GONE : View.VISIBLE);
             mEventDescriptionView.setVisibility(show ? View.GONE : View.VISIBLE);
             mEventDescriptionView.animate().setDuration(shortAnimTime).alpha(

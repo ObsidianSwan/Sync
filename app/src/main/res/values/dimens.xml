@@ -18,6 +18,11 @@
     <dimen name="number_picker_dim">50dp</dimen>
     <dimen name="dismiss_button_small">20dp</dimen>
 
+    <dimen name="fragment_top_item_margin">20dp</dimen>
+    <dimen name="double_button_padding">5dp</dimen>
+    <dimen name="fab_margin">16dp</dimen>
+    <dimen name="edit_text_padding">10dp</dimen>
+
     // Events
     <dimen name="event_square">50dp</dimen>
     <dimen name="event_image_dim">200dp</dimen>
@@ -45,7 +50,7 @@
     // New Account
     <dimen name="new_account_profile_img_dimen">300dp</dimen>
 
-    // Person Popup
+    // Popup
     <dimen name="person_popup_image">250</dimen>
     <dimen name="text_margin">16dp</dimen>
     <dimen name="custom_info_window_image_dimen">100dp</dimen>
@@ -53,13 +58,12 @@
     <dimen name="popup_margin">6dp</dimen>
     <dimen name="popup_content_bottom_margin">16dp</dimen>
     <dimen name="popup_title_top_margin">16dp</dimen>
-    <dimen name="fragment_top_item_margin">20dp</dimen>
-    <dimen name="double_button_padding">5dp</dimen>
-    <dimen name="fab_margin">16dp</dimen>
-    <dimen name="edit_text_padding">10dp</dimen>
+
+
+    // Notifications
     <dimen name="notification_button_margin">5dp</dimen>
     <dimen name="notification_button_width">125dp</dimen>
+
+    // Filter
     <dimen name="filter_dimen">50dp</dimen>
-
-
 </resources>

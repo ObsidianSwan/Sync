@@ -16,10 +16,10 @@
         android:id="@+id/person_popup"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:gravity="center_horizontal"
-        android:orientation="vertical"
         android:layout_below="@+id/dismiss_popup_button"
-        android:layout_marginBottom="@dimen/popup_content_bottom_margin">
+        android:layout_marginBottom="@dimen/popup_content_bottom_margin"
+        android:gravity="center_horizontal"
+        android:orientation="vertical">
 
         <ImageView
             android:id="@+id/popup_image"
@@ -38,7 +38,7 @@
             android:layout_marginTop="@dimen/popup_title_top_margin"
             android:text="TextView"
             android:textAppearance="@style/TextAppearance.AppCompat.Large"
-            android:textColor="@color/dark_blue"/>
+            android:textColor="@color/colorPrimary" />
 
         <TextView
             android:id="@+id/popup_position"
@@ -67,41 +67,42 @@
 
     </LinearLayout>
 
-    <Button
-        android:id="@+id/popup_button"
-        android:layout_width="@dimen/button_width"
+    <RelativeLayout
+        android:id="@+id/popup_interaction"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_below="@+id/person_popup"
-        android:layout_centerHorizontal="true"
-        android:layout_marginBottom="@dimen/button_margin"
-        android:text="@string/Connect_Button"
-        style="@style/PrimaryButton"/>
+        android:layout_marginTop="15dp"
+        android:layout_marginBottom="15dp"
+        android:layout_centerHorizontal="true">
 
-    <TextView
-        android:id="@+id/popup_connected"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/person_popup"
-        android:layout_centerHorizontal="true"
-        android:layout_margin="@dimen/popup_margin"
-        android:paddingBottom="16dp"
-        android:text="@string/popup_connected_text"
-        android:textAppearance="@style/TextAppearance.AppCompat.Large"
-        android:visibility="invisible"
-        android:textColor="@color/dark_blue"/>
+        <Button
+            android:id="@+id/popup_button"
+            style="@style/PrimaryButton"
+            android:layout_width="@dimen/button_width"
+            android:layout_height="wrap_content"
+            android:text="@string/Connect_Button"
+            android:layout_centerHorizontal="true"
+            android:visibility="visible" />
 
-    <TextView
-        android:id="@+id/popup_connection_pending"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignStart="@+id/popup_connected"
-        android:layout_below="@+id/dismiss_popup_button"
-        android:layout_marginStart="152dp"
-        android:layout_marginTop="111dp"
-        android:paddingBottom="16dp"
-        android:text="@string/popup_connection_pending_text"
-        android:textAppearance="@style/TextAppearance.AppCompat.Large"
-        android:textColor="@color/dark_blue"
-        android:visibility="invisible" />
+        <TextView
+            android:id="@+id/popup_connected"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/popup_connected_text"
+            android:layout_centerHorizontal="true"
+            android:textAppearance="@style/TextAppearance.AppCompat.Large"
+            android:textColor="@color/colorPrimary"
+            android:visibility="invisible" />
 
+        <TextView
+            android:id="@+id/popup_connection_pending"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/popup_connection_pending_text"
+            android:layout_centerHorizontal="true"
+            android:textAppearance="@style/TextAppearance.AppCompat.Large"
+            android:textColor="@color/colorPrimary"
+            android:visibility="invisible" />
+    </RelativeLayout>
 </RelativeLayout>

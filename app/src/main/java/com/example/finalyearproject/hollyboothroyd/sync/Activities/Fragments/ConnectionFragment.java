@@ -33,15 +33,6 @@ public class ConnectionFragment extends Fragment {
     public ConnectionFragment() {
     }
 
-    @SuppressWarnings("unused")
-    public static ConnectionFragment newInstance(int columnCount) {
-        ConnectionFragment fragment = new ConnectionFragment();
-        Bundle args = new Bundle();
-        args.putInt(ARG_COLUMN_COUNT, columnCount);
-        fragment.setArguments(args);
-        return fragment;
-    }
-
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -66,6 +57,7 @@ public class ConnectionFragment extends Fragment {
             } else {
                 recyclerView.setLayoutManager(new GridLayoutManager(context, mColumnCount));
             }
+            // Populate the list with the users connections
             recyclerView.setAdapter(new MyConnectionRecyclerViewAdapter(getActivity(), UserConnections.CONNECTION_ITEMS, mListener));
         }
         return view;
@@ -97,10 +89,6 @@ public class ConnectionFragment extends Fragment {
      * fragment to allow an interaction in this fragment to be communicated
      * to the activity and potentially other fragments contained in that
      * activity.
-     * <p/>
-     * See the Android Training lesson <a href=
-     * "http://developer.android.com/training/basics/fragments/communicating.html"
-     * >Communicating with Other Fragments</a> for more information.
      */
     public interface OnListFragmentInteractionListener {
         void onListFragmentInteraction(Person connection);

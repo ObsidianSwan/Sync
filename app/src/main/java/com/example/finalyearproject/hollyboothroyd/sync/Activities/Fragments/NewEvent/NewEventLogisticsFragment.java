@@ -24,6 +24,7 @@ import com.example.finalyearproject.hollyboothroyd.sync.R;
 import com.google.android.gms.maps.model.LatLng;
 
 import java.io.IOException;
+import java.sql.Time;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -55,8 +56,6 @@ public class NewEventLogisticsFragment extends Fragment {
 
     private EditText mDate;
     private EditText mTime;
-    private Button mDatePicker;
-    private Button mTimePicker;
     private int mDay, mMonth, mYear, mMinute, mHour;
 
     private EditText mStreet;
@@ -65,37 +64,17 @@ public class NewEventLogisticsFragment extends Fragment {
     private EditText mZipCode;
     private EditText mCountry;
 
-    private Button mNextButton;
-
     private OnFragmentInteractionListener mListener;
 
     public NewEventLogisticsFragment() {
         // Required empty public constructor
     }
 
-    /**
-     * Use this factory method to create a new instance of
-     * this fragment using the provided parameters.
-     *
-     * @param title
-     * @param industry
-     * @param topic
-     * @return A new instance of fragment NewEventLogisticsFragment.
-     */
-    public static NewEventLogisticsFragment newInstance(String title, String industry, String topic) {
-        NewEventLogisticsFragment fragment = new NewEventLogisticsFragment();
-        Bundle args = new Bundle();
-        args.putString(ARG_TITLE, title);
-        args.putString(ARG_INDUSTRY, industry);
-        args.putString(ARG_TOPIC, topic);
-        fragment.setArguments(args);
-        return fragment;
-    }
-
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if (getArguments() != null) {
+            // Retrieve previously inputted event data
             mTitle = getArguments().getString(ARG_TITLE);
             mIndustry = getArguments().getString(ARG_INDUSTRY);
             mTopic = getArguments().getString(ARG_TOPIC);
@@ -108,10 +87,11 @@ public class NewEventLogisticsFragment extends Fragment {
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_new_event_logistics, container, false);
 
+        // Set up UI
         getActivity().setTitle(getString(R.string.new_event_action_bar_title));
 
-        mDatePicker = (Button) view.findViewById(R.id.new_event_date_button);
-        mTimePicker = (Button) view.findViewById(R.id.new_event_time_button);
+        Button datePicker = (Button) view.findViewById(R.id.new_event_date_button);
+        Button timePicker = (Button) view.findViewById(R.id.new_event_time_button);
 
         mDate = (EditText) view.findViewById(R.id.new_event_date_input_text);
         mTime = (EditText) view.findViewById(R.id.new_event_time_input_text);
@@ -122,9 +102,9 @@ public class NewEventLogisticsFragment extends Fragment {
         mZipCode = (EditText) view.findViewById(R.id.new_event_location_zipcode);
         mCountry = (EditText) view.findViewById(R.id.new_event_location_country);
 
-        mNextButton = (Button) view.findViewById(R.id.event_logistics_next_button);
+        Button nextButton = (Button) view.findViewById(R.id.event_logistics_next_button);
 
-        mDatePicker.setOnClickListener(new View.OnClickListener() {
+        datePicker.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 final Calendar calendar = Calendar.getInstance();
@@ -142,6 +122,7 @@ public class NewEventLogisticsFragment extends Fragment {
                                 // Display Selected date in textbox
                                 String dayString;
                                 String monthString;
+                                // Format date in desired format
                                 if(dayOfMonth < 10){
                                     dayString = "0" + Integer.toString(dayOfMonth);
                                 } else {
@@ -177,13 +158,14 @@ public class NewEventLogisticsFragment extends Fragment {
             @Override
             public void afterTextChanged(Editable s) {
                 int length = s.length();
+                // Format date in desired format
                 if ((previousLength < length) && (length == 2 || length == 5)) {
                     s.append("-");
                 }
             }
         });
 
-        mTimePicker.setOnClickListener(new View.OnClickListener() {
+        timePicker.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 final Calendar calendar = Calendar.getInstance();
@@ -200,6 +182,7 @@ public class NewEventLogisticsFragment extends Fragment {
                                 // Display Selected time in textbox
                                 String hourString;
                                 String minuteString;
+                                // Format time in desired format
                                 if(hourOfDay < 10){
                                     hourString = "0" + Integer.toString(hourOfDay);
                                 } else {
@@ -227,34 +210,38 @@ public class NewEventLogisticsFragment extends Fragment {
 
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
-
             }
 
             @Override
             public void afterTextChanged(Editable s) {
                 int length = s.length();
+                // Format date in desired format
                 if ((previousLength < length) && (length == 2)) {
                     s.append(":");
                 }
             }
         });
 
-        mNextButton.setOnClickListener(new View.OnClickListener() {
+        nextButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                String date = mDate.getText().toString();
-                String time = mTime.getText().toString();
-                String street = mStreet.getText().toString();
-                String city = mCity.getText().toString();
-                String state = mState.getText().toString();
-                String zipcode = mZipCode.getText().toString();
-                String country = mCountry.getText().toString();
+                String date = mDate.getText().toString().trim();
+                String time = mTime.getText().toString().trim();
+                String street = mStreet.getText().toString().trim();
+                String city = mCity.getText().toString().trim();
+                String state = mState.getText().toString().trim();
+                String zipcode = mZipCode.getText().toString().trim();
+                String country = mCountry.getText().toString().trim();
 
                 String completeAddress = street + ", " + city + ", " + state + ", " + zipcode + ", " + country;
+
+                // Find coordinates of location to be able to place location on map
                 LatLng position = getLocationFromAddress(completeAddress);
 
+                // Perform basic input validation
                 if (areEntriesValid(date, time, street, city, state, zipcode, country, position)) {
                     if (mListener != null) {
+                        // Pass data to the next fragment via the CoreActivity
                         mListener.onNewEventLogisticsNextButtonPressed(mTitle, mIndustry, mTopic, date, time, street, city, state, zipcode, country, position);
                     }
                 }
@@ -275,7 +262,6 @@ public class NewEventLogisticsFragment extends Fragment {
 
         View focusView = null;
 
-        // TODO: Turn this into a loop
         // Check for a valid date
         if (TextUtils.isEmpty(date)) {
             mDate.setError(getString(R.string.error_field_required));
@@ -332,6 +318,7 @@ public class NewEventLogisticsFragment extends Fragment {
     }
 
     private boolean isDateValid(String date) {
+        // Verify date is in the valid format
         if(!sDatePattern.matcher(date).matches()){
             return false;
         }
@@ -356,6 +343,7 @@ public class NewEventLogisticsFragment extends Fragment {
         LatLng position = null;
 
         try {
+            // Get location coordinates from the user inputted address
             // May throw an IOException
             address = coder.getFromLocationName(inputtedAddress, 5);
             if (address.isEmpty()) {
@@ -397,10 +385,6 @@ public class NewEventLogisticsFragment extends Fragment {
      * fragment to allow an interaction in this fragment to be communicated
      * to the activity and potentially other fragments contained in that
      * activity.
-     * <p>
-     * See the Android Training lesson <a href=
-     * "http://developer.android.com/training/basics/fragments/communicating.html"
-     * >Communicating with Other Fragments</a> for more information.
      */
     public interface OnFragmentInteractionListener {
         void onNewEventLogisticsNextButtonPressed(String eventTitle, String eventIndustry, String eventTopic, String date, String time, String street,
