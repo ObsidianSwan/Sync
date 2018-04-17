@@ -5,7 +5,10 @@ import android.animation.AnimatorListenerAdapter;
 import android.annotation.TargetApi;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
@@ -25,15 +28,25 @@ import com.example.finalyearproject.hollyboothroyd.sync.R;
 import com.example.finalyearproject.hollyboothroyd.sync.Services.AccountManager;
 import com.example.finalyearproject.hollyboothroyd.sync.Services.DatabaseManager;
 import com.example.finalyearproject.hollyboothroyd.sync.Utils.Constants;
+import com.example.finalyearproject.hollyboothroyd.sync.Utils.DownloadImageTask;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.storage.UploadTask;
+import com.linkedin.platform.APIHelper;
+import com.linkedin.platform.errors.LIApiError;
+import com.linkedin.platform.listeners.ApiListener;
+import com.linkedin.platform.listeners.ApiResponse;
 import com.theartofdev.edmodo.cropper.CropImage;
 import com.theartofdev.edmodo.cropper.CropImageView;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.InputStream;
 import java.util.HashMap;
 
 
@@ -48,6 +61,8 @@ public class NewAccountPhotoActivity extends AppCompatActivity {
     private Button mDoneButton;
     private Button mRetryButton;
     private Uri mImageUri;
+
+    private final String profileImageUrl = "https://api.linkedin.com/v1/people/~:(picture-urls::(original))?format=json";
 
     private View mProgressView;
     private View mSignUpFormView;
@@ -80,6 +95,29 @@ public class NewAccountPhotoActivity extends AppCompatActivity {
         mDoneButton = (Button) findViewById(R.id.done_button);
         mRetryButton = (Button) findViewById(R.id.retry_button);
 
+        if(getIntent().getBooleanExtra("isLinkedInConnected", false)){
+            APIHelper apiHelper = APIHelper.getInstance(getApplicationContext());
+            apiHelper.getRequest(NewAccountPhotoActivity.this, profileImageUrl, new ApiListener() {
+                @Override
+                public void onApiSuccess(ApiResponse s) {
+                    JSONObject result = s.getResponseDataAsJson();
+                    Log.i(TAG, getString(R.string.retrieve_linkedin_profile_image_successful));
+                    try {
+                        JSONArray array = result.getJSONObject("pictureUrls").getJSONArray("values");
+                        new DownloadImageTask(mProfileImage).execute(array.getString(0));
+                        mImageUri = Uri.parse(array.getString(0));
+                    } catch (JSONException e) {
+                        Log.e(TAG, e.toString());
+                    }
+                }
+
+                @Override
+                public void onApiError(LIApiError error) {
+                    Log.e(TAG, error.toString());
+                }
+            });
+        }
+
         // Open gallery to select profile image
         mProfileImage.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -102,9 +140,10 @@ public class NewAccountPhotoActivity extends AppCompatActivity {
                 String position = getIntent().getStringExtra("position");
                 String company = getIntent().getStringExtra("company");
                 String industry = getIntent().getStringExtra("industry");
+                boolean isLinkedInConnected = getIntent().getBooleanExtra("isLinkedInConnected", false);
 
                 // Register user
-                registerUser(firstName, lastName, position, company, industry, mImageUri, email, password);
+                registerUser(firstName, lastName, position, company, industry, mImageUri, email, password, isLinkedInConnected);
             }
         });
 
@@ -138,7 +177,8 @@ public class NewAccountPhotoActivity extends AppCompatActivity {
         }
     }
 
-    private void registerUser(final String firstName, final String lastName, final String position, final String company, final String industry, final Uri imageUri, final String email, final String password) {
+    private void registerUser(final String firstName, final String lastName, final String position, final String company,
+                              final String industry, final Uri imageUri, final String email, final String password, final boolean isLinkedInConnected) {
         // Create and authenticate the new user.
         showProgress(true);
         // Sign up a new user into the Firebase Authentication service
@@ -148,7 +188,7 @@ public class NewAccountPhotoActivity extends AppCompatActivity {
                 if (task.isSuccessful()) {
                     // New user added
                     // Sign in the new user into Firebase
-                    signUpUser(email, password, imageUri, firstName, lastName, position, company, industry);
+                    signUpUser(email, password, imageUri, firstName, lastName, position, company, industry, isLinkedInConnected);
                 } else {
                     //New user failed to be added
                     Toast.makeText(NewAccountPhotoActivity.this, R.string.generic_sign_up_failed, Toast.LENGTH_SHORT).show();
@@ -160,7 +200,7 @@ public class NewAccountPhotoActivity extends AppCompatActivity {
                         public void onClick(View v) {
                             // Try to register account again
                             // Close the retry page
-                            registerUser(firstName, lastName, position, company, industry, imageUri, email, password);
+                            registerUser(firstName, lastName, position, company, industry, imageUri, email, password, isLinkedInConnected);
                             showRetryPage(false);
                         }
                     });
@@ -169,7 +209,8 @@ public class NewAccountPhotoActivity extends AppCompatActivity {
         });
     }
 
-    private void signUpUser(final String email, final String password, final Uri imageUri, final String firstName, final String lastName, final String position, final String company, final String industry) {
+    private void signUpUser(final String email, final String password, final Uri imageUri, final String firstName, final String lastName,
+                            final String position, final String company, final String industry, final boolean isLinkedInConnected) {
         accountManager.signInUser(email, password).addOnCompleteListener(new OnCompleteListener<AuthResult>() {
             @Override
             public void onComplete(@NonNull Task<AuthResult> task) {
@@ -179,7 +220,14 @@ public class NewAccountPhotoActivity extends AppCompatActivity {
                     Log.i(TAG, getString(R.string.new_user_signed_in_successfully));
                     // Add the user to the people database that is accessible by all users.
                     // Add the user's image to the Firebase Storage
-                    addUserPhoto(imageUri, firstName, lastName, position, company, industry);
+                    if(!isLinkedInConnected) {
+                        addUserPhoto(imageUri, firstName, lastName, position, company, industry, isLinkedInConnected);
+                    } else {
+                        String userId = accountManager.getCurrentUser().getUid();
+                        // Add the user to the Firebase Database with the image storage reference
+                        Person person = new Person(firstName, lastName, position, company, industry, imageUri.toString(), userId, mDefaultSettingsMap, isLinkedInConnected);
+                        addUser(person);
+                    }
                 } else {
                     // Sign in was not successful
                     Toast.makeText(NewAccountPhotoActivity.this, R.string.generic_sign_up_failed, Toast.LENGTH_SHORT).show();
@@ -191,7 +239,7 @@ public class NewAccountPhotoActivity extends AppCompatActivity {
                         public void onClick(View v) {
                             // Try to sign into account again
                             // Close the retry page
-                            signUpUser(email, password, imageUri, firstName, lastName, position, company, industry);
+                            signUpUser(email, password, imageUri, firstName, lastName, position, company, industry, isLinkedInConnected);
                             showRetryPage(false);
                         }
                     });
@@ -200,7 +248,8 @@ public class NewAccountPhotoActivity extends AppCompatActivity {
         });
     }
 
-    private void addUserPhoto(final Uri imageUri, final String firstName, final String lastName, final String position, final String company, final String industry) {
+    private void addUserPhoto(final Uri imageUri, final String firstName, final String lastName, final String position, final String company,
+                              final String industry, final boolean isLinkedInConnected) {
         databaseManager.uploadPersonImage(imageUri).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
             @Override
             public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
@@ -208,7 +257,7 @@ public class NewAccountPhotoActivity extends AppCompatActivity {
                 String downloadUrl = taskSnapshot.getDownloadUrl().toString();
                 String userId = accountManager.getCurrentUser().getUid();
                 // Add the user to the Firebase Database with the image storage reference
-                Person person = new Person(firstName, lastName, position, company, industry, downloadUrl, userId, mDefaultSettingsMap);
+                Person person = new Person(firstName, lastName, position, company, industry, downloadUrl, userId, mDefaultSettingsMap, isLinkedInConnected);
                 addUser(person);
 
             }
@@ -226,7 +275,7 @@ public class NewAccountPhotoActivity extends AppCompatActivity {
                             public void onClick(View v) {
                                 // Try to add profile image again
                                 // Close the retry page
-                                addUserPhoto(imageUri, firstName, lastName, position, company, industry);
+                                addUserPhoto(imageUri, firstName, lastName, position, company, industry, isLinkedInConnected);
                                 showRetryPage(false);
                             }
                         });
@@ -328,6 +377,7 @@ public class NewAccountPhotoActivity extends AppCompatActivity {
         }
     }
 }
+
 
 
 

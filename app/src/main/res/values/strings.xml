@@ -13,7 +13,7 @@
     <string name="error_invalid_verify_password">Passwords do not match</string>
     <string name="error_incorrect_password">This password is incorrect</string>
     <string name="error_field_required">This field is required</string>
-    <string name="Connect_With_LinkedIn">Connect with LinkedIn</string>
+    <string name="Connect_With_LinkedIn">New Account using LinkedIn</string>
     <string name="New_Account">New Account</string>
     <string name="Login_Existing_Account">Already have an account?</string>
     <string name="New_Account_Basic_Info_Title">New Account</string>
@@ -31,6 +31,9 @@
     <string name="Register_New_Account_Progress_Dialog">Creating account&#8230;</string>
     <string name="Register_New_Account_Success">Account created</string>
     <string name="Register_New_Account_Failure">Account creation failed</string>
+    <string name="retrieve_linkedin_basic_info_successful">Retrieve LinkedIn basic info successful"</string>
+    <string name="retrieve_linkedin_job_info_successful">Retrieve LinkedIn job info successful"</string>
+    <string name="retrieve_linkedin_profile_image_successful">Retrieve LinkedIn profile image successful"</string>
 
     <string name="title_activity_login_form">Log in</string>
     <string name="title_activity_new_account_basic_info">New Account</string>
@@ -229,4 +232,6 @@
     <string name="max_pending_intents_error">You have provided too many PendingIntents!</string>
     <string name="location_not_found_error">Location not found</string>
     <string name="current_fragment_saved_instance">currentFragment</string>
+    <string name="linkedin_auth_error_toast">LinkedIn connection failed Try again or create account manually</string>
+    <string name="linkedin_authentication_successful">LinkedIn authentication successful</string>
 </resources>
