@@ -69,6 +69,7 @@ public class Constants {
     public static final String peopleEventsCreatedDatabaseRefName = "events_created";
     public static final String peopleEventsAttendingDatabaseRefName = "events_attending";
     public static final String eventAttendeesDatabaseRefName = "event_attendees";
+
     public static final String userSettingsDatabaseRefName = "userSettings";
 
     public static final int GALLERY_CODE = 1;
@@ -78,6 +79,7 @@ public class Constants {
     public static final String userPositionChildName = "position";
     public static final String userIndustryChildName = "industry";
     public static final String userCompanyChildName = "company";
+    public static final String userLinkedInChildName = "linkedin";
     public static final String personImgStorageName = "person_images";
     public static final String eventImgStorageName = "event_images";
     public static final String eventDefaultImgStorageUrl = "https://firebasestorage.googleapis.com/v0/b/sync-1a37a.appspot.com/o/Event_Images%2FLogoSqTransparent.png?alt=media&token=b45dc652-3b09-48a1-8371-31748e4967ac";

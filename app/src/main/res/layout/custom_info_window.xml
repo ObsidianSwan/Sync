@@ -14,6 +14,7 @@
             android:layout_height="@dimen/custom_info_window_image_dimen"
             android:layout_gravity="center"
             android:layout_margin="10dp"
+            android:scaleType="centerCrop"
             android:src="@mipmap/ic_launcher_foreground" />
 
         <RelativeLayout

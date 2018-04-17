@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -11,14 +12,25 @@ import android.widget.TextView;
 
 import com.example.finalyearproject.hollyboothroyd.sync.R;
 import com.example.finalyearproject.hollyboothroyd.sync.Services.AccountManager;
+import com.linkedin.platform.APIHelper;
+import com.linkedin.platform.errors.LIApiError;
+import com.linkedin.platform.listeners.ApiListener;
+import com.linkedin.platform.listeners.ApiResponse;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 public class NewAccountBasicInfoActivity extends AppCompatActivity {
+
+    private static final String TAG = "NewAccountBasicInfo";
 
     private EditText mFirstNameText;
     private EditText mLastNameText;
     private EditText mEmailText;
     private EditText mPasswordText;
     private EditText mVerifyPasswordText;
+
+    private final String basicInfoUrl = "https://api.linkedin.com/v1/people/~:(first-name,last-name,email-address)?format=json";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -32,6 +44,29 @@ public class NewAccountBasicInfoActivity extends AppCompatActivity {
         mPasswordText = (EditText) findViewById(R.id.password_text);
         mVerifyPasswordText = (EditText) findViewById(R.id.verify_password_text);
         Button nextButton = (Button) findViewById(R.id.basic_info_next_button);
+
+        if(getIntent().getBooleanExtra("isLinkedInConnected", false)){
+            APIHelper apiHelper = APIHelper.getInstance(getApplicationContext());
+            apiHelper.getRequest(NewAccountBasicInfoActivity.this, basicInfoUrl, new ApiListener() {
+                @Override
+                public void onApiSuccess(ApiResponse s) {
+                    JSONObject result = s.getResponseDataAsJson();
+                    Log.i(TAG, getString(R.string.retrieve_linkedin_basic_info_successful));
+                    try {
+                        mFirstNameText.setText(result.get("firstName").toString());
+                        mLastNameText.setText(result.get("lastName").toString());
+                        mEmailText.setText(result.get("emailAddress").toString());
+                    } catch (JSONException e) {
+                        Log.e(TAG, e.toString());
+                    }
+                }
+
+                @Override
+                public void onApiError(LIApiError error) {
+                    Log.e(TAG, error.toString());
+                }
+            });
+        }
 
         nextButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -51,6 +86,7 @@ public class NewAccountBasicInfoActivity extends AppCompatActivity {
                     intent.putExtra("lastName", lastName);
                     intent.putExtra("email", email);
                     intent.putExtra("password", password);
+                    intent.putExtra("isLinkedInConnected", getIntent().getBooleanExtra("isLinkedInConnected", false));
 
                     startActivity(intent);
                 }

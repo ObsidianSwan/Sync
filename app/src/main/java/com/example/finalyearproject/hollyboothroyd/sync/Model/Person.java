@@ -14,6 +14,7 @@ public class Person {
     private String mIndustry;
     private String mImageId;
     private String mUserId;
+    private boolean mIsLinkedInConnected;
 
     private HashMap<String, Integer> mUserSettings;
 
@@ -23,7 +24,7 @@ public class Person {
 
     // Used during account creation. Location permissions requested after login.
     public Person(String firstName, String lastName, String position, String company,
-                  String industry, String imageId, String userId, HashMap<String, Integer> defaultUserSettings) {
+                  String industry, String imageId, String userId, HashMap<String, Integer> defaultUserSettings, boolean isLinkedInConnected) {
         this.mFirstName = firstName;
         this.mLastName = lastName;
         this.mPosition = position;
@@ -32,6 +33,7 @@ public class Person {
         this.mImageId = imageId;
         this.mUserId = userId;
         this.mUserSettings = defaultUserSettings;
+        this.mIsLinkedInConnected = isLinkedInConnected;
     }
 
     public String getFirstName() {
@@ -89,4 +91,8 @@ public class Person {
     public HashMap<String, Integer> getUserSettings() { return mUserSettings; }
 
     public void setUserSettings(HashMap<String, Integer> userSettings) { this.mUserSettings = userSettings; }
+
+    public boolean getIsLinkedInConnected() { return mIsLinkedInConnected; }
+
+    public void setIsLinkedInConnected(boolean isLinkedInConnected) { this.mIsLinkedInConnected = isLinkedInConnected; }
 }
