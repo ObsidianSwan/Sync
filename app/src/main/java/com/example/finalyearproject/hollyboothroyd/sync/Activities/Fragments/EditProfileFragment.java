@@ -142,17 +142,17 @@ public class EditProfileFragment extends Fragment {
             public void onClick(View v) {
                 mProfileChanged = false;
 
-                String mInputtedFirstName = mFirstName.getText().toString().trim();
-                String mInputtedLastName = mLastName.getText().toString().trim();
-                String mInputtedPosition = mPosition.getText().toString().trim();
-                String mInputtedCompany = mCompany.getText().toString().trim();
-                String mInputtedIndustry = mIndustry.getText().toString().trim();
+                String inputtedFirstName = mFirstName.getText().toString().trim();
+                String inputtedLastName = mLastName.getText().toString().trim();
+                String inputtedPosition = mPosition.getText().toString().trim();
+                String inputtedCompany = mCompany.getText().toString().trim();
+                String inputtedIndustry = mIndustry.getText().toString().trim();
 
                 // Check if the user's profile image has been changed
                 if (mProfileImageUri != null && !mOriginalProfileImageUri.equals(mProfileImageUri.toString())) {
                     mProfileChanged = true;
                     // Delete the user's old image from the database
-                    mDatabaseManager.deletePersonImage(mOriginalProfileImageUri).addOnCompleteListener(new OnCompleteListener<Void>() {
+                    mDatabaseManager.deleteImage(mOriginalProfileImageUri).addOnCompleteListener(new OnCompleteListener<Void>() {
                         @Override
                         public void onComplete(@NonNull Task<Void> task) {
                             if (task.isSuccessful()) {
@@ -178,33 +178,33 @@ public class EditProfileFragment extends Fragment {
 
                 }
                 // Update the database if the users first name has changed
-                if (mFirstName != null && !mOriginalFirstName.equals(mInputtedFirstName)) {
-                    mDatabaseManager.getUserPeopleDatabaseReference().child(Constants.userFirstNameChildName).setValue(mInputtedFirstName);
-                    mOriginalFirstName = mInputtedFirstName;
+                if (mFirstName != null && !mOriginalFirstName.equals(inputtedFirstName)) {
+                    mDatabaseManager.getUserPeopleDatabaseReference().child(Constants.userFirstNameChildName).setValue(inputtedFirstName);
+                    mOriginalFirstName = inputtedFirstName;
                     mProfileChanged = true;
                 }
                 // Update the database if the users last name has changed
-                if (mLastName != null && !mOriginalLastName.equals(mInputtedLastName)) {
-                    mDatabaseManager.getUserPeopleDatabaseReference().child(Constants.userLastNameChildName).setValue(mInputtedLastName);
-                    mOriginalLastName = mInputtedLastName;
+                if (mLastName != null && !mOriginalLastName.equals(inputtedLastName)) {
+                    mDatabaseManager.getUserPeopleDatabaseReference().child(Constants.userLastNameChildName).setValue(inputtedLastName);
+                    mOriginalLastName = inputtedLastName;
                     mProfileChanged = true;
                 }
                 // Update the database if the users position has changed
-                if (mPosition != null && !mOriginalPosition.equals(mInputtedPosition)) {
-                    mDatabaseManager.getUserPeopleDatabaseReference().child(Constants.userPositionChildName).setValue(mInputtedPosition);
-                    mOriginalPosition = mInputtedPosition;
+                if (mPosition != null && !mOriginalPosition.equals(inputtedPosition)) {
+                    mDatabaseManager.getUserPeopleDatabaseReference().child(Constants.userPositionChildName).setValue(inputtedPosition);
+                    mOriginalPosition = inputtedPosition;
                     mProfileChanged = true;
                 }
                 // Update the database if the users company has changed
-                if (mCompany != null && !mOriginalCompany.equals(mInputtedCompany)) {
-                    mDatabaseManager.getUserPeopleDatabaseReference().child(Constants.userCompanyChildName).setValue(mInputtedCompany);
-                    mOriginalCompany = mInputtedCompany;
+                if (mCompany != null && !mOriginalCompany.equals(inputtedCompany)) {
+                    mDatabaseManager.getUserPeopleDatabaseReference().child(Constants.userCompanyChildName).setValue(inputtedCompany);
+                    mOriginalCompany = inputtedCompany;
                     mProfileChanged = true;
                 }
                 // Update the database if the users industry has changed
-                if (mIndustry != null && !mOriginalIndustry.equals(mInputtedIndustry)) {
-                    mDatabaseManager.getUserPeopleDatabaseReference().child(Constants.userIndustryChildName).setValue(mInputtedIndustry);
-                    mOriginalIndustry = mInputtedIndustry;
+                if (mIndustry != null && !mOriginalIndustry.equals(inputtedIndustry)) {
+                    mDatabaseManager.getUserPeopleDatabaseReference().child(Constants.userIndustryChildName).setValue(inputtedIndustry);
+                    mOriginalIndustry = inputtedIndustry;
                     mProfileChanged = true;
                 }
                 if (mProfileChanged) {

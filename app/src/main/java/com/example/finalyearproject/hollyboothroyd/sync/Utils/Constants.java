@@ -80,6 +80,21 @@ public class Constants {
     public static final String userIndustryChildName = "industry";
     public static final String userCompanyChildName = "company";
     public static final String userLinkedInChildName = "linkedin";
+
+    public static final String eventTitleChildName = "title";
+    public static final String eventIndustryChildName = "industry";
+    public static final String eventDateChildName = "date";
+    public static final String eventTimeChildName = "time";
+    public static final String eventStreetChildName = "street";
+    public static final String eventCityChildName = "city";
+    public static final String eventStateChildName = "state";
+    public static final String eventZipCodeChildName = "zipCode";
+    public static final String eventCountryChildName = "country";
+    public static final String eventDescriptionChildName = "description";
+    public static final String eventImgChildName = "imageId";
+    public static final String eventLongitudeChildName = "longitude";
+    public static final String eventLatitudeChildName = "latitude";
+
     public static final String personImgStorageName = "person_images";
     public static final String eventImgStorageName = "event_images";
     public static final String eventDefaultImgStorageUrl = "https://firebasestorage.googleapis.com/v0/b/sync-1a37a.appspot.com/o/Event_Images%2FLogoSqTransparent.png?alt=media&token=b45dc652-3b09-48a1-8371-31748e4967ac";
