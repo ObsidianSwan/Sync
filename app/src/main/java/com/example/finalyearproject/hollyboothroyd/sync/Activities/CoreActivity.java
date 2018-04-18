@@ -1,10 +1,10 @@
 package com.example.finalyearproject.hollyboothroyd.sync.Activities;
 
 import com.example.finalyearproject.hollyboothroyd.sync.Activities.Fragments.ConnectionFragment;
+import com.example.finalyearproject.hollyboothroyd.sync.Activities.Fragments.EditEventFragment;
 import com.example.finalyearproject.hollyboothroyd.sync.Activities.Fragments.EditProfileFragment;
 import com.example.finalyearproject.hollyboothroyd.sync.Activities.Fragments.LogoutFragment;
 import com.example.finalyearproject.hollyboothroyd.sync.Activities.Fragments.NewEvent.NewEventBasicInfoFragment;
-import com.example.finalyearproject.hollyboothroyd.sync.Activities.Fragments.NewEvent.NewEventDescriptionFragment;
 import com.example.finalyearproject.hollyboothroyd.sync.Activities.Fragments.NewEvent.NewEventLogisticsFragment;
 import com.example.finalyearproject.hollyboothroyd.sync.Activities.Fragments.NotificationFragment;
 import com.example.finalyearproject.hollyboothroyd.sync.Activities.Fragments.SettingsFragment;
@@ -40,7 +40,6 @@ import android.widget.Toast;
 import com.example.finalyearproject.hollyboothroyd.sync.Activities.Fragments.GMapFragment;
 import com.example.finalyearproject.hollyboothroyd.sync.R;
 import com.example.finalyearproject.hollyboothroyd.sync.Services.DatabaseManager;
-import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.database.DataSnapshot;
@@ -51,8 +50,8 @@ import com.squareup.picasso.Picasso;
 public class CoreActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener, ConnectionFragment.OnListFragmentInteractionListener,
         LogoutFragment.OnFragmentInteractionListener, SettingsFragment.OnFragmentInteractionListener, NewEventBasicInfoFragment.OnFragmentInteractionListener,
-        NewEventLogisticsFragment.OnFragmentInteractionListener, NewEventDescriptionFragment.OnFragmentInteractionListener, ViewEventsFragment.OnListFragmentInteractionListener,
-        EditProfileFragment.OnFragmentInteractionListener, NotificationFragment.OnListFragmentInteractionListener {
+        NewEventLogisticsFragment.OnFragmentInteractionListener, ViewEventsFragment.OnListFragmentInteractionListener,
+        EditProfileFragment.OnFragmentInteractionListener, NotificationFragment.OnListFragmentInteractionListener, EditEventFragment.OnFragmentInteractionListener, GMapFragment.OnFragmentInteractionListener {
 
     private static final String TAG = "CoreActivity";
 
@@ -120,6 +119,9 @@ public class CoreActivity extends AppCompatActivity
                     mSupportFragmentManager.beginTransaction().replace(R.id.content_frame, new LogoutFragment(), getString(R.string.logout_tag)).commit();
                     mCurrentFragment = R.string.logout_tag;
                     break;
+                default:
+                    mSupportFragmentManager.beginTransaction().replace(R.id.content_frame, new GMapFragment(), getString(R.string.gmaps_tag)).commit();
+                    mCurrentFragment = R.string.gmaps_tag;
             }
         }
 
@@ -207,9 +209,6 @@ public class CoreActivity extends AppCompatActivity
         else if (mCurrentFragment == R.string.create_event_logistics_tag) {
             mSupportFragmentManager.beginTransaction().replace(R.id.content_frame, new NewEventBasicInfoFragment(), getString(R.string.create_event_basic_info_tag)).commit();
             mCurrentFragment = R.string.create_event_basic_info_tag;
-        } else if (mCurrentFragment == R.string.create_event_description_tag) {
-            mSupportFragmentManager.beginTransaction().replace(R.id.content_frame, new NewEventLogisticsFragment(), getString(R.string.create_event_logistics_tag)).commit();
-            mCurrentFragment = R.string.create_event_logistics_tag;
         } else if (mCurrentFragment != 0) {
             // Return to the GMaps fragment, if one of the non-nested menu fragments is showing
             mSupportFragmentManager.beginTransaction().replace(R.id.content_frame, new GMapFragment(), getString(R.string.gmaps_tag)).commit();
@@ -304,12 +303,14 @@ public class CoreActivity extends AppCompatActivity
     }
 
     @Override
-    public void onNewEventInfoNextButtonPressed(String eventTitle, String eventIndustry) {
+    public void onNewEventInfoNextButtonPressed(String eventTitle, String eventIndustry, String eventDescription, String eventImageUri) {
         // Pass new event basic info data to next fragment
         NewEventLogisticsFragment eventLogisticsFragment = new NewEventLogisticsFragment();
         Bundle args = new Bundle();
         args.putString(NewEventLogisticsFragment.ARG_TITLE, eventTitle);
         args.putString(NewEventLogisticsFragment.ARG_INDUSTRY, eventIndustry);
+        args.putString(NewEventLogisticsFragment.ARG_DESCRIPTION, eventDescription);
+        args.putString(NewEventLogisticsFragment.ARG_IMAGE, eventImageUri);
         eventLogisticsFragment.setArguments(args);
 
         FragmentTransaction transaction = mSupportFragmentManager.beginTransaction();
@@ -326,46 +327,28 @@ public class CoreActivity extends AppCompatActivity
     }
 
     @Override
-    public void onNewEventLogisticsNextButtonPressed(String eventTitle, String eventIndustry, String date, String time,
-                                                     String street, String city, String state, String zipcode, String country, LatLng position) {
-        // Pass new event logistics and basic info data to next fragment
-        NewEventDescriptionFragment eventDescriptionFragment = new NewEventDescriptionFragment();
-        Bundle args = new Bundle();
-        args.putString(NewEventDescriptionFragment.ARG_TITLE, eventTitle);
-        args.putString(NewEventDescriptionFragment.ARG_INDUSTRY, eventIndustry);
-        args.putString(NewEventDescriptionFragment.ARG_DATE, date);
-        args.putString(NewEventDescriptionFragment.ARG_TIME, time);
-        args.putString(NewEventDescriptionFragment.ARG_STREET, street);
-        args.putString(NewEventDescriptionFragment.ARG_CITY, city);
-        args.putString(NewEventDescriptionFragment.ARG_STATE, state);
-        args.putString(NewEventDescriptionFragment.ARG_ZIPCODE, zipcode);
-        args.putString(NewEventDescriptionFragment.ARG_COUNTRY, country);
-        args.putDouble(NewEventDescriptionFragment.ARG_LONGITUDE, position.longitude);
-        args.putDouble(NewEventDescriptionFragment.ARG_LATITUDE, position.latitude);
-        eventDescriptionFragment.setArguments(args);
-
-        FragmentTransaction transaction = mSupportFragmentManager.beginTransaction();
-
-        // Replace whatever is in the fragment_container view with this fragment,
-        // and add the transaction to the back stack so the user can navigate back
-        transaction.replace(R.id.content_frame, eventDescriptionFragment, getString(R.string.create_event_description_tag));
-        transaction.addToBackStack(null);
-
-        // Commit the transaction
-        transaction.commit();
-
-        mCurrentFragment = R.string.create_event_description_tag;
-    }
-
-    @Override
-    public void onNewEventDescriptionDoneButtonPressed() {
+    public void onNewEventLogisticsDoneButtonPressed() {
         // After the event has been created, load up the GMaps fragment
         mSupportFragmentManager.beginTransaction().replace(R.id.content_frame, new GMapFragment(), getString(R.string.gmaps_tag)).commit();
         mCurrentFragment = R.string.gmaps_tag;
     }
 
     @Override
-    public void onListFragmentInteraction(Event item) {
+    public void onListFragmentInteraction(Event event) {
+        EditEventFragment editEventFragment = new EditEventFragment();
+        editEventFragment.setEvent(event);
+
+        FragmentTransaction transaction = mSupportFragmentManager.beginTransaction();
+
+        // Replace whatever is in the fragment_container view with this fragment,
+        // and add the transaction to the back stack so the user can navigate back
+        transaction.replace(R.id.content_frame, editEventFragment, getString(R.string.edit_event_fragment));
+        transaction.addToBackStack(null);
+
+        // Commit the transaction
+        transaction.commit();
+
+        mCurrentFragment = R.string.edit_event_fragment;
     }
 
     @Override
@@ -401,4 +384,26 @@ public class CoreActivity extends AppCompatActivity
 
     }
 
+    @Override
+    public void onFragmentInteraction(Uri uri) {
+
+    }
+
+    @Override
+    public void onFragmentInteraction(Event event) {
+        EditEventFragment editEventFragment = new EditEventFragment();
+        editEventFragment.setEvent(event);
+
+        FragmentTransaction transaction = mSupportFragmentManager.beginTransaction();
+
+        // Replace whatever is in the fragment_container view with this fragment,
+        // and add the transaction to the back stack so the user can navigate back
+        transaction.replace(R.id.content_frame, editEventFragment, getString(R.string.edit_event_fragment));
+        transaction.addToBackStack(null);
+
+        // Commit the transaction
+        transaction.commit();
+
+        mCurrentFragment = R.string.edit_event_fragment;
+    }
 }

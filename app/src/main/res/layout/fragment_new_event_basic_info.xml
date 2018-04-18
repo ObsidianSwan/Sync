@@ -1,4 +1,4 @@
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
@@ -10,6 +10,16 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical">
+
+        <ImageButton
+            android:id="@+id/new_event_image_button"
+            android:layout_width="@dimen/event_image_dim"
+            android:layout_height="@dimen/event_image_dim"
+            android:layout_gravity="center"
+            android:layout_marginTop="@dimen/new_event_image_top_margin"
+            android:background="@android:color/transparent"
+            android:scaleType="centerCrop"
+            app:srcCompat="@drawable/add_photo" />
 
         <EditText
             android:id="@+id/new_event_title_text"
@@ -36,16 +46,28 @@
             android:inputType="textPersonName"
             style="@style/RoundedOutline" />
 
+        <EditText
+            android:id="@+id/new_event_description_text"
+            style="@style/RoundedOutline"
+            android:layout_width="match_parent"
+            android:layout_height="150dp"
+            android:gravity="top"
+            android:layout_gravity="center"
+            android:layout_marginEnd="@dimen/entry_side_margin"
+            android:layout_marginStart="@dimen/entry_side_margin"
+            android:layout_marginTop="@dimen/entry_top_margin"
+            android:ems="10"
+            android:hint="@string/new_event_description"
+            android:inputType="textMultiLine" />
+
+        <Button
+            android:id="@+id/event_basic_info_next_button"
+            android:layout_width="@dimen/button_width"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_margin="@dimen/button_margin"
+            android:text="@string/Next_Button"
+            style="@style/PrimaryButton" />
     </LinearLayout>
 
-    <Button
-        android:id="@+id/event_basic_info_next_button"
-        android:layout_width="@dimen/button_width"
-        android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:layout_centerHorizontal="true"
-        android:layout_margin="@dimen/button_margin"
-        android:text="@string/Next_Button"
-        style="@style/PrimaryButton" />
-
-</RelativeLayout>
+</ScrollView>

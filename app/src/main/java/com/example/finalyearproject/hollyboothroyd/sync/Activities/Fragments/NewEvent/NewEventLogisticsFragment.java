@@ -1,16 +1,22 @@
 package com.example.finalyearproject.hollyboothroyd.sync.Activities.Fragments.NewEvent;
 
+import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
+import android.annotation.TargetApi;
 import android.app.DatePickerDialog;
 import android.app.TimePickerDialog;
 import android.content.Context;
 import android.location.Address;
 import android.location.Geocoder;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
 import android.text.Editable;
 import android.text.TextUtils;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -20,8 +26,19 @@ import android.widget.EditText;
 import android.widget.TimePicker;
 import android.widget.Toast;
 
+import com.example.finalyearproject.hollyboothroyd.sync.Model.Event;
 import com.example.finalyearproject.hollyboothroyd.sync.R;
+import com.example.finalyearproject.hollyboothroyd.sync.Services.AccountManager;
+import com.example.finalyearproject.hollyboothroyd.sync.Services.DatabaseManager;
+import com.example.finalyearproject.hollyboothroyd.sync.Utils.Constants;
+import com.example.finalyearproject.hollyboothroyd.sync.Utils.Util;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.storage.UploadTask;
 
 import java.io.IOException;
 import java.sql.Time;
@@ -39,17 +56,18 @@ import java.util.regex.Pattern;
  * to handle interaction events.
  */
 public class NewEventLogisticsFragment extends Fragment {
+
+    private static final String TAG = "NewEventLogFragment";
+
     public static final String ARG_TITLE = "title";
     public static final String ARG_INDUSTRY = "industry";
-    public static final String ARG_TOPIC = "topic";
-
-    private static final Pattern sDatePattern =
-            Pattern.compile("^(0[1-9]|[12][0-9]|3[01])[- /.](0[1-9]|1[012])[- /.](19|20)\\d\\d$");
-    private static final Pattern sTimePattern =
-            Pattern.compile("([01]?[0-9]|2[0-3]):[0-5][0-9]");
+    public static final String ARG_DESCRIPTION = "description";
+    public static final String ARG_IMAGE = "image";
 
     private String mTitle;
     private String mIndustry;
+    private String mDescription;
+    private String mImageUri;
 
     private EditText mDate;
     private EditText mTime;
@@ -60,6 +78,14 @@ public class NewEventLogisticsFragment extends Fragment {
     private EditText mState;
     private EditText mZipCode;
     private EditText mCountry;
+
+    private Button mDoneButton;
+
+    private View mProgressView;
+    private View mEventLogisticsView;
+
+    private AccountManager mAccountManager;
+    private DatabaseManager mDatabaseManager;
 
     private OnFragmentInteractionListener mListener;
 
@@ -74,6 +100,8 @@ public class NewEventLogisticsFragment extends Fragment {
             // Retrieve previously inputted event data
             mTitle = getArguments().getString(ARG_TITLE);
             mIndustry = getArguments().getString(ARG_INDUSTRY);
+            mDescription = getArguments().getString(ARG_DESCRIPTION);
+            mImageUri = getArguments().getString(ARG_IMAGE);
         }
     }
 
@@ -85,6 +113,12 @@ public class NewEventLogisticsFragment extends Fragment {
 
         // Set up UI
         getActivity().setTitle(getString(R.string.new_event_action_bar_title));
+
+        mAccountManager = new AccountManager();
+        mDatabaseManager = new DatabaseManager();
+
+        mProgressView = view.findViewById(R.id.event_logistics_progress);
+        mEventLogisticsView = view.findViewById(R.id.event_logistics_form);
 
         Button datePicker = (Button) view.findViewById(R.id.new_event_date_button);
         Button timePicker = (Button) view.findViewById(R.id.new_event_time_button);
@@ -98,7 +132,7 @@ public class NewEventLogisticsFragment extends Fragment {
         mZipCode = (EditText) view.findViewById(R.id.new_event_location_zipcode);
         mCountry = (EditText) view.findViewById(R.id.new_event_location_country);
 
-        Button nextButton = (Button) view.findViewById(R.id.event_logistics_next_button);
+        mDoneButton = (Button) view.findViewById(R.id.event_logistics_done_button);
 
         datePicker.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -119,12 +153,12 @@ public class NewEventLogisticsFragment extends Fragment {
                                 String dayString;
                                 String monthString;
                                 // Format date in desired format
-                                if(dayOfMonth < 10){
+                                if (dayOfMonth < 10) {
                                     dayString = "0" + Integer.toString(dayOfMonth);
                                 } else {
                                     dayString = Integer.toString(dayOfMonth);
                                 }
-                                if(monthOfYear < 10){
+                                if (monthOfYear < 10) {
                                     monthString = "0" + Integer.toString(monthOfYear + 1);
                                 } else {
                                     monthString = Integer.toString(monthOfYear + 1);
@@ -178,12 +212,12 @@ public class NewEventLogisticsFragment extends Fragment {
                                 String hourString;
                                 String minuteString;
                                 // Format time in desired format
-                                if(hourOfDay < 10){
+                                if (hourOfDay < 10) {
                                     hourString = "0" + Integer.toString(hourOfDay);
                                 } else {
                                     hourString = Integer.toString(hourOfDay);
                                 }
-                                if(minute < 10){
+                                if (minute < 10) {
                                     minuteString = "0" + Integer.toString(minute);
                                 } else {
                                     minuteString = Integer.toString(minute);
@@ -217,7 +251,7 @@ public class NewEventLogisticsFragment extends Fragment {
             }
         });
 
-        nextButton.setOnClickListener(new View.OnClickListener() {
+        mDoneButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 String date = mDate.getText().toString().trim();
@@ -230,23 +264,83 @@ public class NewEventLogisticsFragment extends Fragment {
 
                 // Find coordinates of location to be able to place location on map
                 String completeAddress = street + ", " + city + ", " + state + ", " + zipcode + ", " + country;
-                LatLng position = getLocationFromAddress(completeAddress);
+                LatLng position = Util.getLocationFromAddress(getContext(), completeAddress);
 
                 // Perform basic input validation
                 if (areEntriesValid(date, time, street, city, state, zipcode, country, position)) {
-                    if(time.startsWith("0") || time.startsWith("10") || time.startsWith("11")){
-                        time += " a.m.";
-                    } else {
-                        time += " p.m.";
-                    }
-                    if (mListener != null) {
-                        // Pass data to the next fragment via the CoreActivity
-                        mListener.onNewEventLogisticsNextButtonPressed(mTitle, mIndustry, date, time, street, city, state, zipcode, country, position);
-                    }
+                    registerEvent(date, time, street, city, state, zipcode, country, position);
                 }
             }
         });
         return view;
+    }
+
+    private void registerEvent(final String date, final String time, final String street, final String city, final String state,
+                               final String zipcode, final String country, final LatLng position) {
+        showProgress(true);
+
+        // Upload the event image to the database
+        mDatabaseManager.uploadEventImage(Uri.parse(mImageUri)).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+            @Override
+            public void onSuccess(final UploadTask.TaskSnapshot taskSnapshot) {
+                // Get a URL to the uploaded content
+                if (taskSnapshot.getDownloadUrl() != null) {
+                    String downloadUrl = taskSnapshot.getDownloadUrl().toString();
+                    // Register the event
+                    registerEventInternal(date, time, street, city, state, zipcode, country, position, downloadUrl);
+                }
+            }
+        }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+                // Adding the events's image was not successful
+                Toast.makeText(getActivity(), R.string.generic_event_creation_failed, Toast.LENGTH_SHORT).show();
+                showProgress(false);
+                Log.e(TAG, getString(R.string.generic_event_creation_failed));
+            }
+        });
+    }
+
+    private void registerEventInternal(final String date, final String time, final String street, final String city, final String state,
+                                       final String zipcode, final String country, final LatLng position, final String downloadUrl) {
+        final String userId = mAccountManager.getCurrentUser().getUid();
+        // Add the event to the Firebase Database with the image storage reference
+
+        DatabaseReference newEventRef = mDatabaseManager.getNewEventReference();
+        final String refKey = newEventRef.getKey();
+        Event event = new Event(refKey, mTitle, mIndustry, date, time, street,
+                city, state, zipcode, country, position.longitude, position.latitude, mDescription, downloadUrl, userId);
+
+        // Add the event to the event database
+        mDatabaseManager.addEvent(newEventRef, event).addOnCompleteListener(new OnCompleteListener<Void>() {
+            @Override
+            public void onComplete(@NonNull Task<Void> task) {
+                showProgress(false);
+                if (task.isSuccessful()) {
+                    // Add the event to the user's events created database
+                    mDatabaseManager.addEventCreator(refKey, userId).addOnCompleteListener(new OnCompleteListener<Void>() {
+                        @Override
+                        public void onComplete(@NonNull Task<Void> task) {
+                            if (task.isSuccessful()) {
+                                Toast.makeText(getActivity(), R.string.event_creation_successful, Toast.LENGTH_SHORT).show();
+                                if (mListener != null) {
+                                    // Inform the CoreActivity to handle the remainder of the event creation
+                                    mListener.onNewEventLogisticsDoneButtonPressed();
+                                }
+                            } else {
+                                Toast.makeText(getActivity(), R.string.generic_event_creation_failed, Toast.LENGTH_SHORT).show();
+                                showProgress(false);
+                                Log.e(TAG, getString(R.string.add_event_creator_failed));
+                            }
+                        }
+                    });
+                } else {
+                    Toast.makeText(getActivity(), R.string.generic_event_creation_failed, Toast.LENGTH_SHORT).show();
+                    showProgress(false);
+                    Log.e(TAG, getString(R.string.add_event_failed));
+                }
+            }
+        });
     }
 
     private boolean areEntriesValid(String date, String time, String street, String city, String state, String zipcode, String country, LatLng position) {
@@ -265,7 +359,7 @@ public class NewEventLogisticsFragment extends Fragment {
         if (TextUtils.isEmpty(date)) {
             mDate.setError(getString(R.string.error_field_required));
             focusView = mDate;
-        } else if (!isDateValid(date)) {
+        } else if (!Util.isDateValid(date)) {
             mDate.setError(getString(R.string.error_invalid_date));
             focusView = mDate;
         }
@@ -274,7 +368,7 @@ public class NewEventLogisticsFragment extends Fragment {
         if (TextUtils.isEmpty(time)) {
             mTime.setError(getString(R.string.error_field_required));
             focusView = mTime;
-        } else if (!isTimeValid(time)) {
+        } else if (!Util.isTimeValid(time)) {
             mTime.setError(getString(R.string.error_invalid_time));
             focusView = mTime;
         }
@@ -296,7 +390,7 @@ public class NewEventLogisticsFragment extends Fragment {
             focusView = mCountry;
         }
 
-        if(position == null) {
+        if (position == null) {
             mCountry.setError(getString(R.string.enter_valid_address));
             mZipCode.setError(getString(R.string.enter_valid_address));
             mState.setError(getString(R.string.enter_valid_address));
@@ -316,51 +410,6 @@ public class NewEventLogisticsFragment extends Fragment {
 
     }
 
-    private boolean isDateValid(String date) {
-        // Verify date is in the valid format
-        if(!sDatePattern.matcher(date).matches()){
-            return false;
-        }
-        SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy");
-        dateFormat.setLenient(false);
-        try {
-            dateFormat.parse(date);
-            return true;
-        } catch (ParseException ex) {
-            return false;
-        }
-    }
-
-    private boolean isTimeValid(String time) {
-        return sTimePattern.matcher(time).matches();
-    }
-
-    public LatLng getLocationFromAddress(String inputtedAddress) {
-
-        Geocoder coder = new Geocoder(getContext());
-        List<Address> address;
-        LatLng position = null;
-
-        try {
-            // Get location coordinates from the user inputted address
-            // May throw an IOException
-            address = coder.getFromLocationName(inputtedAddress, 5);
-            if (address.isEmpty()) {
-                return null;
-            }
-            Address location = address.get(0);
-            location.getLatitude();
-            location.getLongitude();
-
-            position = new LatLng(location.getLatitude(), location.getLongitude() );
-
-        } catch (IOException ex) {
-
-            ex.printStackTrace();
-        }
-
-        return position;
-    }
 
     @Override
     public void onAttach(Context context) {
@@ -386,7 +435,42 @@ public class NewEventLogisticsFragment extends Fragment {
      * activity.
      */
     public interface OnFragmentInteractionListener {
-        void onNewEventLogisticsNextButtonPressed(String eventTitle, String eventIndustry, String date, String time, String street,
-                                                  String city, String state, String zipcode, String country, LatLng position);
+        void onNewEventLogisticsDoneButtonPressed();
+    }
+
+    @TargetApi(Build.VERSION_CODES.HONEYCOMB_MR2)
+    private void showProgress(final boolean show) {
+        // On Honeycomb MR2 we have the ViewPropertyAnimator APIs, which allow
+        // for very easy animations. If available, use these APIs to fade-in
+        // the progress spinner.
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB_MR2) {
+            int shortAnimTime = getResources().getInteger(android.R.integer.config_shortAnimTime);
+            //Shows the progress UI and hides the event creation form.
+            mDoneButton.setVisibility(show ? View.GONE : View.VISIBLE);
+            mEventLogisticsView.setVisibility(show ? View.GONE : View.VISIBLE);
+            mEventLogisticsView.animate().setDuration(shortAnimTime).alpha(
+                    show ? 0 : 1).setListener(new AnimatorListenerAdapter() {
+                @Override
+                public void onAnimationEnd(Animator animation) {
+                    mDoneButton.setVisibility(show ? View.GONE : View.VISIBLE);
+                    mEventLogisticsView.setVisibility(show ? View.GONE : View.VISIBLE);
+                }
+            });
+
+            mProgressView.setVisibility(show ? View.VISIBLE : View.GONE);
+            mProgressView.animate().setDuration(shortAnimTime).alpha(
+                    show ? 1 : 0).setListener(new AnimatorListenerAdapter() {
+                @Override
+                public void onAnimationEnd(Animator animation) {
+                    mProgressView.setVisibility(show ? View.VISIBLE : View.GONE);
+                }
+            });
+        } else {
+            // The ViewPropertyAnimator APIs are not available, so simply show
+            // and hide the relevant UI components.
+            mProgressView.setVisibility(show ? View.VISIBLE : View.GONE);
+            mDoneButton.setVisibility(show ? View.GONE : View.VISIBLE);
+            mEventLogisticsView.setVisibility(show ? View.GONE : View.VISIBLE);
+        }
     }
 }

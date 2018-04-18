@@ -3,7 +3,6 @@ package com.example.finalyearproject.hollyboothroyd.sync.Activities.Fragments;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.support.annotation.NonNull;
-import android.support.constraint.solver.widgets.Snapshot;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -20,7 +19,6 @@ import com.example.finalyearproject.hollyboothroyd.sync.Model.UserEvents;
 import com.example.finalyearproject.hollyboothroyd.sync.R;
 import com.example.finalyearproject.hollyboothroyd.sync.Services.AccountManager;
 import com.example.finalyearproject.hollyboothroyd.sync.Services.DatabaseManager;
-import com.example.finalyearproject.hollyboothroyd.sync.Utils.Util;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.database.DataSnapshot;
@@ -75,11 +73,6 @@ public class MyEventRecyclerViewAdapter extends RecyclerView.Adapter<MyEventRecy
         holder.mView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (null != mListener) {
-                    // Notify the active callbacks interface (the activity, if the
-                    // fragment is attached to one) that an item has been selected.
-                    mListener.onListFragmentInteraction(holder.mItem);
-                }
                 // Open the event popup
                 eventPopupCreation(holder);
             }
@@ -101,6 +94,7 @@ public class MyEventRecyclerViewAdapter extends RecyclerView.Adapter<MyEventRecy
         TextView eventDescription = (TextView) view.findViewById(R.id.popup_description);
         Button eventButton = (Button) view.findViewById(R.id.popup_event_button);
         Button eventButton2 = (Button) view.findViewById(R.id.popup_event_button2);
+        Button eventButton3 = (Button) view.findViewById(R.id.popup_event_button3);
 
         if (event != null) {
             Picasso.with(mContext).load(event.getImageId()).into(eventImage);
@@ -117,7 +111,9 @@ public class MyEventRecyclerViewAdapter extends RecyclerView.Adapter<MyEventRecy
                 UserEvents.EVENTS_ATTENDING_MAP.containsKey(event.getUid())){
             eventButton.setText(R.string.stop_attending_button_text);
             eventButton2.setText(R.string.delete_event_button_text);
+            eventButton3.setText(R.string.edit_event_button_text);
             eventButton2.setVisibility(View.VISIBLE);
+            eventButton3.setVisibility(View.VISIBLE);
 
             // Stop attending the event if the user is already attending
             eventButton.setOnClickListener(new View.OnClickListener() {
@@ -136,10 +132,24 @@ public class MyEventRecyclerViewAdapter extends RecyclerView.Adapter<MyEventRecy
                 }
             });
 
+            eventButton3.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    mDialog.dismiss();
+                    if (null != mListener) {
+                        // Notify the active callbacks interface (the activity, if the
+                        // fragment is attached to one) that an item wants to be edited.
+                        mListener.onListFragmentInteraction(holder.mItem);
+                    }
+                }
+            });
+
         } // The user is hosting, but not attending the event
         else if (UserEvents.EVENTS_HOSTING_MAP.containsKey(event.getUid()) && !UserEvents.EVENTS_ATTENDING_MAP.containsKey(event.getUid())){
             eventButton2.setText(R.string.delete_event_button_text);
+            eventButton3.setText(R.string.edit_event_button_text);
             eventButton2.setVisibility(View.VISIBLE);
+            eventButton3.setVisibility(View.VISIBLE);
 
             // Attend event
             eventButton.setOnClickListener(new View.OnClickListener() {
@@ -154,6 +164,18 @@ public class MyEventRecyclerViewAdapter extends RecyclerView.Adapter<MyEventRecy
                 @Override
                 public void onClick(View v) {
                     deleteEvent(event, holder);
+                }
+            });
+
+            eventButton3.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    mDialog.dismiss();
+                    if (null != mListener) {
+                        // Notify the active callbacks interface (the activity, if the
+                        // fragment is attached to one) that an item wants to be edited.
+                        mListener.onListFragmentInteraction(holder.mItem);
+                    }
                 }
             });
 

@@ -17,7 +17,6 @@ import android.support.annotation.Nullable;
 import android.support.design.widget.NavigationView;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.LocalBroadcastManager;
-import android.text.Layout;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
@@ -75,7 +74,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
-import static android.content.Context.CONTEXT_IGNORE_SECURITY;
 import static android.content.Context.LOCATION_SERVICE;
 
 /**
@@ -88,6 +86,8 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
     private static final String TAG = "GMapFragment";
 
     private GoogleMap mMap;
+
+    private OnFragmentInteractionListener mListener;
 
     private Person mCurrentUser;
     private String mCurrentUserId;
@@ -202,6 +202,23 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
         });
 
         return view;
+    }
+
+    @Override
+    public void onAttach(Context context) {
+        super.onAttach(context);
+        if (context instanceof OnFragmentInteractionListener) {
+            mListener = (OnFragmentInteractionListener) context;
+        } else {
+            throw new RuntimeException(context.toString()
+                    + " must implement OnFragmentInteractionListener");
+        }
+    }
+
+    @Override
+    public void onDetach() {
+        super.onDetach();
+        mListener = null;
     }
 
     private void setUpCustomization() {
@@ -892,6 +909,7 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
         TextView eventDescription = (TextView) view.findViewById(R.id.popup_description);
         Button eventButton = (Button) view.findViewById(R.id.popup_event_button);
         Button eventButton2 = (Button) view.findViewById(R.id.popup_event_button2);
+        Button eventButton3 = (Button) view.findViewById(R.id.popup_event_button3);
 
         final Event event = mEventMarkerMap.get(marker.getId());
         if (!mEventMarkerMap.isEmpty()) {
@@ -914,7 +932,9 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
                 UserEvents.EVENTS_ATTENDING_MAP.containsKey(event.getUid())) {
             eventButton.setText(R.string.stop_attending_button_text);
             eventButton2.setText(R.string.delete_event_button_text);
+            eventButton3.setText(R.string.edit_event_button_text);
             eventButton2.setVisibility(View.VISIBLE);
+            eventButton3.setVisibility(View.VISIBLE);
 
             // Stop attending the event if the user is already attending
             eventButton.setOnClickListener(new View.OnClickListener() {
@@ -932,10 +952,24 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
                 }
             });
 
+            eventButton3.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    mDialog.dismiss();
+                    if (null != mListener) {
+                        // Notify the active callbacks interface (the activity, if the
+                        // fragment is attached to one) that an item wants to be edited.
+                        mListener.onFragmentInteraction(event);
+                    }
+                }
+            });
+
         } // The user is hosting, but not attending the event
         else if (UserEvents.EVENTS_HOSTING_MAP.containsKey(event.getUid()) && !UserEvents.EVENTS_ATTENDING_MAP.containsKey(event.getUid())) {
             eventButton2.setText(R.string.delete_event_button_text);
+            eventButton3.setText(R.string.edit_event_button_text);
             eventButton2.setVisibility(View.VISIBLE);
+            eventButton3.setVisibility(View.VISIBLE);
 
             // Attend event
             eventButton.setOnClickListener(new View.OnClickListener() {
@@ -950,6 +984,18 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
                 @Override
                 public void onClick(View v) {
                     deleteEvent(event);
+                }
+            });
+
+            eventButton3.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    mDialog.dismiss();
+                    if (null != mListener) {
+                        // Notify the active callbacks interface (the activity, if the
+                        // fragment is attached to one) that an item wants to be edited.
+                        mListener.onFragmentInteraction(event);
+                    }
                 }
             });
 
@@ -1351,6 +1397,16 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
     @Override
     public boolean onNavigationItemSelected(@NonNull MenuItem item) {
         return false;
+    }
+
+    /**
+     * This interface must be implemented by activities that contain this
+     * fragment to allow an interaction in this fragment to be communicated
+     * to the activity and potentially other fragments contained in that
+     * activity.
+     */
+    public interface OnFragmentInteractionListener {
+        void onFragmentInteraction(Event event);
     }
 
 }

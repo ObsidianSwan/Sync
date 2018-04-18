@@ -59,7 +59,7 @@ public class DatabaseManager {
         return filePath.putFile(imageUri);
     }
 
-    public Task<Void> deletePersonImage(String oldImageUri) {
+    public Task<Void> deleteImage(String oldImageUri) {
         StorageReference oldImageRef = mStorage.getStorage().getReferenceFromUrl(oldImageUri);
         return oldImageRef.delete();
     }
