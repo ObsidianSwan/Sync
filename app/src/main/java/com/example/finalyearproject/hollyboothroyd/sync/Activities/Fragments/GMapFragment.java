@@ -1,5 +1,6 @@
 package com.example.finalyearproject.hollyboothroyd.sync.Activities.Fragments;
 
+import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.app.PendingIntent;
@@ -7,14 +8,17 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.NavigationView;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
@@ -365,10 +369,10 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
         super.onDestroyView();
 
         // Remove the listeners
-        if(mPeopleDBRef != null) {
+        if (mPeopleDBRef != null) {
             mPeopleDBRef.removeEventListener(mPeopleDBListener);
         }
-        if(mLocationDBRef != null) {
+        if (mLocationDBRef != null) {
             mLocationDBRef.removeEventListener(mLocationDBListener);
         }
         mLocationListener = null;
@@ -410,10 +414,12 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
                         // Create a geofence around the person, so if the user enters the persons
                         // geofence, the system is notified to put the person on the map
                         if (locationHash != null) {
-                            setUpGeofence(new LatLng(locationHash.get(Constants.geofenceLatitude), locationHash.get(Constants.geofenceLongitude)), snapshot.getKey());
+                            new SetUpGeofences(getContext(),new LatLng(locationHash.get(Constants.geofenceLatitude), locationHash.get(Constants.geofenceLongitude))).execute(snapshot.getKey());
                         }
                     }
                 }
+                int i = 0;
+                i++;
             }
 
             @Override
@@ -541,28 +547,6 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
         }
     }
 
-    private GeofencingRequest getGeofencingRequest() {
-        GeofencingRequest.Builder builder = new GeofencingRequest.Builder();
-        // Set trigger type to INITIAL_TRIGGER_DWELL to reduce 'alert spam' if users briefly enter or
-        // exit the geofence
-        builder.setInitialTrigger(GeofencingRequest.INITIAL_TRIGGER_ENTER);
-        builder.addGeofences(mGeofenceList);
-        return builder.build();
-    }
-
-    private PendingIntent getGeofencePendingIntent() {
-        // Reuse the PendingIntent if we already have it.
-        if (mGeofencePendingIntent != null) {
-            return mGeofencePendingIntent;
-        }
-        Intent intent = new Intent(getActivity(), GeofenceTransitionsIntentService.class);
-        // We use FLAG_UPDATE_CURRENT so that we get the same pending intent back when
-        // calling addGeofences() and removeGeofences().
-        mGeofencePendingIntent = PendingIntent.getService(getActivity(), 0, intent, PendingIntent.
-                FLAG_UPDATE_CURRENT);
-        return mGeofencePendingIntent;
-    }
-
     // Add longitude and latitude to person database
     // Update user location on the map
     @SuppressLint("MissingPermission")
@@ -628,42 +612,6 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
         }
     }
 
-    @SuppressLint("MissingPermission")
-    private void setUpGeofence(LatLng userLocation, String userId) {
-        // Create new geofence for the current users location
-        mGeofenceList.add(new Geofence.Builder()
-                .setRequestId(userId)
-                .setCircularRegion(
-                        userLocation.latitude,
-                        userLocation.longitude,
-                        mSearchRadius
-                )
-                .setExpirationDuration(Geofence.NEVER_EXPIRE)
-                .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_ENTER |
-                        Geofence.GEOFENCE_TRANSITION_EXIT)
-                .build());
-
-        // Add the geofence to the client
-        if (getActivity() != null) {
-            mGeofencingClient.addGeofences(getGeofencingRequest(), getGeofencePendingIntent())
-                    .addOnSuccessListener(getActivity(), new OnSuccessListener<Void>() {
-                        @Override
-                        public void onSuccess(Void aVoid) {
-                            // Geofences added
-                            Log.i(TAG, getString(R.string.add_geofence_successful));
-                        }
-                    })
-                    .addOnFailureListener(getActivity(), new OnFailureListener() {
-                        @Override
-                        public void onFailure(@NonNull Exception e) {
-                            // Failed to add geofences
-                            Log.e(TAG, e.toString());
-                        }
-                    });
-        }
-    }
-
-    //TODO !!!! Clean up when the user logs out
     private void removeGeofences() {
         if (mGeofenceList != null) {
             mGeofenceList.clear();
@@ -1407,6 +1355,80 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
      */
     public interface OnFragmentInteractionListener {
         void onFragmentInteraction(Event event);
+    }
+
+    private class SetUpGeofences extends AsyncTask<String, Void, Void> {
+
+        LatLng location;
+        Context context;
+
+        SetUpGeofences(Context context, LatLng location) {
+            this.context = context;
+            this.location = location;
+        }
+
+        @Override
+        protected Void doInBackground(String... userIds) {
+            String userId = userIds[0];
+            // Create new geofence for the current users location
+            mGeofenceList.add(new Geofence.Builder()
+                    .setRequestId(userId)
+                    .setCircularRegion(
+                            location.latitude,
+                            location.longitude,
+                            mSearchRadius
+                    )
+                    .setExpirationDuration(Geofence.NEVER_EXPIRE)
+                    .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_ENTER |
+                            Geofence.GEOFENCE_TRANSITION_DWELL)
+                    .setLoiteringDelay(0)
+                    .build());
+
+            // Add the geofence to the client
+            if (getActivity() != null) {
+                if (ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                    return null;
+                }
+                mGeofencingClient.addGeofences(getGeofencingRequest(), getGeofencePendingIntent())
+                        .addOnSuccessListener(getActivity(), new OnSuccessListener<Void>() {
+                            @Override
+                            public void onSuccess(Void aVoid) {
+                                // Geofences added
+                                Log.i(TAG, getString(R.string.add_geofence_successful));
+                            }
+                        })
+                        .addOnFailureListener(getActivity(), new OnFailureListener() {
+                            @Override
+                            public void onFailure(@NonNull Exception e) {
+                                // Failed to add geofences
+                                Log.e(TAG, e.toString());
+                            }
+                        });
+            }
+            return null;
+        }
+
+        private GeofencingRequest getGeofencingRequest() {
+            GeofencingRequest.Builder builder = new GeofencingRequest.Builder();
+            // Set trigger type to INITIAL_TRIGGER_DWELL to reduce 'alert spam' if users briefly enter or
+            // exit the geofence
+            builder.setInitialTrigger(GeofencingRequest.INITIAL_TRIGGER_DWELL);
+            builder.addGeofences(mGeofenceList);
+            return builder.build();
+        }
+
+        private PendingIntent getGeofencePendingIntent() {
+            // Reuse the PendingIntent if we already have it.
+            if (mGeofencePendingIntent != null) {
+                return mGeofencePendingIntent;
+            }
+            Intent intent = new Intent(getActivity(), GeofenceTransitionsIntentService.class);
+            // We use FLAG_UPDATE_CURRENT so that we get the same pending intent back when
+            // calling addGeofences() and removeGeofences().
+            mGeofencePendingIntent = PendingIntent.getService(getActivity(), 0, intent, PendingIntent.
+                    FLAG_UPDATE_CURRENT);
+            return mGeofencePendingIntent;
+        }
     }
 
 }
