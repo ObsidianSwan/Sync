@@ -32,12 +32,14 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.finalyearproject.hollyboothroyd.sync.Activities.CoreActivity;
 import com.example.finalyearproject.hollyboothroyd.sync.Model.Event;
 import com.example.finalyearproject.hollyboothroyd.sync.Model.Notification;
 import com.example.finalyearproject.hollyboothroyd.sync.Model.NotificationBase;
 import com.example.finalyearproject.hollyboothroyd.sync.Model.Person;
 import com.example.finalyearproject.hollyboothroyd.sync.Model.UserConnections;
 import com.example.finalyearproject.hollyboothroyd.sync.Model.UserEvents;
+import com.example.finalyearproject.hollyboothroyd.sync.Model.UserEventsListener;
 import com.example.finalyearproject.hollyboothroyd.sync.Model.UserNotifications;
 import com.example.finalyearproject.hollyboothroyd.sync.R;
 import com.example.finalyearproject.hollyboothroyd.sync.Services.AccountManager;
@@ -70,7 +72,15 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.ValueEventListener;
+import com.linkedin.platform.APIHelper;
+import com.linkedin.platform.errors.LIApiError;
+import com.linkedin.platform.listeners.ApiListener;
+import com.linkedin.platform.listeners.ApiResponse;
 import com.squareup.picasso.Picasso;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -83,9 +93,8 @@ import static android.content.Context.LOCATION_SERVICE;
 /**
  * Created by hollyboothroyd on 12/11/2017.
  */
-
-public class GMapFragment extends Fragment implements OnMapReadyCallback,
-        GoogleMap.OnInfoWindowClickListener, GoogleMap.OnMarkerClickListener, NavigationView.OnNavigationItemSelectedListener {
+ public class GMapFragment extends Fragment implements OnMapReadyCallback,
+        GoogleMap.OnInfoWindowClickListener, GoogleMap.OnMarkerClickListener, NavigationView.OnNavigationItemSelectedListener, UserEventsListener {
 
     private static final String TAG = "GMapFragment";
 
@@ -125,13 +134,16 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
     private AlertDialog.Builder mDialogBuilder;
     private AlertDialog mDialog;
 
+    private AlertDialog.Builder mLinkedinDialogBuilder;
+    private AlertDialog mLinkedinDialog;
+    private List<View> mLinkedinDiaglogViews;
+
     private Button mPopupButton;
     private TextView mConnectionPendingMessage;
 
     private String mPersonPositionFilter = "";
     private String mPersonCompanyFilter = "";
     private String mPersonIndustryFilter = "";
-    private String mEventTopicFilter = "";
     private String mEventIndustryFilter = "";
 
     // Set settings to the defaults while the database settings are being retrieved
@@ -142,6 +154,8 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
     private int mMapZoomLevelName = Constants.mapZoomLevelDefault;
     private int mSearchRadius = Constants.geofenceRadiusDefault;
     private int mPrivacyIntensity = Constants.privacyIntensityDefault;
+
+    private final String linkedInProfileDetails = "https://api.linkedin.com/v1/people/~:(first-name,last-name,email-address,picture-urls::(original),positions,industry)?format=json";
 
     @Nullable
     @Override
@@ -169,6 +183,10 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
         // Markers of the local events
         mEventMarkerMap = new ConcurrentHashMap<>();
         mEventMarkerList = new ArrayList<>();
+        UserEvents.mListeners.add(this);
+
+        // Linkedin Popup views
+        mLinkedinDiaglogViews = new ArrayList<>();
 
         // Save reference to DB to remove listener later
         mPeopleDBRef = mDatabaseManager.getPeopleDatabaseReference();
@@ -205,7 +223,112 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
             }
         });
 
+
+        // Check profile details match their LinkedIn if they are connected
+        // TODO write in report a future feature could be addding linkedin connectivity post account creation
+        mDatabaseManager.getUserPeopleDatabaseReference().addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                if (dataSnapshot != null) {
+                    final Person currentUser = dataSnapshot.getValue(Person.class);
+                    if (currentUser != null && currentUser.getIsLinkedInConnected()) {
+                        APIHelper apiHelper = APIHelper.getInstance(getContext());
+                        apiHelper.getRequest(getActivity(), linkedInProfileDetails, new ApiListener() {
+                            @Override
+                            public void onApiSuccess(ApiResponse s) {
+                                JSONObject result = s.getResponseDataAsJson();
+                                Log.i(TAG, getString(R.string.linkedin_profile_retrieval_successful));
+                                try {
+                                    mLinkedinDialogBuilder = new AlertDialog.Builder(getActivity());
+                                    if (!currentUser.getFirstName().toLowerCase().trim().equals(result.get("firstName").toString().toLowerCase().trim())) {
+                                        linkedInUpdatePopup("first name", result.get("firstName").toString(), Constants.userFirstNameChildName);
+                                    }
+                                    if (!currentUser.getLastName().toLowerCase().trim().equals(result.get("lastName").toString().toLowerCase().trim())) {
+                                        linkedInUpdatePopup("last name", result.get("lastName").toString(), Constants.userLastNameChildName);
+                                    }
+                                    JSONObject currentJob = result.getJSONObject("positions").getJSONArray("values").getJSONObject(0);
+                                    if (!currentUser.getPosition().toLowerCase().trim().equals(currentJob.get("title").toString().toLowerCase().trim())) {
+                                        linkedInUpdatePopup("position", currentJob.get("title").toString(), Constants.userPositionChildName);
+                                    }
+                                    if (!currentUser.getCompany().toLowerCase().trim().toLowerCase().trim().equals(currentJob.getJSONObject("company").get("name").toString().toLowerCase().trim())) {
+                                        linkedInUpdatePopup("company", currentJob.getJSONObject("company").get("name").toString(), Constants.userCompanyChildName);
+                                    }
+                                    if (!currentUser.getIndustry().toLowerCase().trim().equals(result.get("industry").toString().toLowerCase().trim())) {
+                                        linkedInUpdatePopup("industry", result.get("industry").toString(), Constants.userIndustryChildName);
+                                    }
+                                    JSONArray array = result.getJSONObject("pictureUrls").getJSONArray("values");
+                                    if (!currentUser.getImageId().toLowerCase().trim().equals(array.getString(0).toLowerCase().trim())) {
+                                        linkedInUpdatePopup("profile picture", array.getString(0), Constants.userImgChildName);
+                                    }
+
+                                    if(mLinkedinDiaglogViews.size() > 0) {
+                                        mLinkedinDialogBuilder.setView(mLinkedinDiaglogViews.get(0));
+                                        mLinkedinDiaglogViews.remove(0);
+                                        mLinkedinDialog = mLinkedinDialogBuilder.create();
+                                        mLinkedinDialog.show();
+                                    }
+                                } catch (JSONException e) {
+                                    Log.e(TAG, e.toString());
+                                }
+                            }
+
+                            @Override
+                            public void onApiError(LIApiError error) {
+                                Log.e(TAG, error.toString());
+                            }
+                        });
+                    }
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                Log.e(TAG, databaseError.toString());
+            }
+        });
+
         return view;
+    }
+
+    private void linkedInUpdatePopup(String textInfoField, final String updateValue, final String databaseChild) {
+        View view = getActivity().getLayoutInflater().inflate(R.layout.linkedin_update_popup, null);
+
+        // Set up the UI
+        TextView updateInfoText = (TextView) view.findViewById(R.id.linkedin_update_info_text);
+        Button acceptButton = (Button) view.findViewById(R.id.linkedin_update_accept_button);
+        Button denyButton = (Button) view.findViewById(R.id.linkedin_update_deny_button);
+
+        updateInfoText.setText("Your " + textInfoField + " is different from your LinkedIn. Would you like to update it to match your LinkedIn profile?");
+
+        acceptButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Toast.makeText(getActivity(), R.string.edit_profile_successfully_changed, Toast.LENGTH_SHORT).show();
+                mLinkedinDialog.dismiss();
+                if(mLinkedinDiaglogViews.size() > 0){
+                    mLinkedinDialogBuilder.setView(mLinkedinDiaglogViews.get(0));
+                    mLinkedinDiaglogViews.remove(0);
+                    mLinkedinDialog = mLinkedinDialogBuilder.create();
+                    mLinkedinDialog.show();
+                }
+                mDatabaseManager.getUserPeopleDatabaseReference().child(databaseChild).setValue(updateValue);
+            }
+        });
+
+        denyButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mLinkedinDialog.dismiss();
+                if(mLinkedinDiaglogViews.size() > 0){
+                    mLinkedinDialogBuilder.setView(mLinkedinDiaglogViews.get(0));
+                    mLinkedinDiaglogViews.remove(0);
+                    mLinkedinDialog = mLinkedinDialogBuilder.create();
+                    mLinkedinDialog.show();
+                }
+            }
+        });
+
+        mLinkedinDiaglogViews.add(view);
     }
 
     @Override
@@ -363,7 +486,6 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
         });
     }
 
-
     @Override
     public void onDestroyView() {
         super.onDestroyView();
@@ -486,7 +608,6 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
 
             // If the person is not currently within the geofence radius (ie. not a local person)
             if (mPeopleMap.containsKey(userId) && !mLocalPeopleMap.containsKey(userId)) {
-
                 mLocalPeopleMap.put(userId, localPerson);
                 updatePersonMarker(localPerson, false);
 
@@ -807,7 +928,7 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
 
     private void clearEventMarkers() {
         // Clear the event marker map and list
-        if (mEventMarkerList != null && mEventMarkerMap != null) {
+        if (mEventMarkerList.size() > 0 && mEventMarkerMap.size() > 0) {
             mEventMarkerMap.clear();
             for (Marker marker : mEventMarkerList) {
                 marker.remove();
@@ -817,18 +938,11 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
     }
 
     private boolean meetsEventFilteringRequirements(Event event) {
-        boolean meetsFilteringRequirements = true;
-        // If there are no filtering requirements, then the event automatically meets the requirements
-        if (mEventTopicFilter.equals("") && mEventIndustryFilter.equals("")) {
-            meetsFilteringRequirements = true;
-        } // If the event industry filter has been specified and the event matches that industry, then the event meets the requirements
-        else if (!mEventIndustryFilter.equals("") && event.getIndustry().toLowerCase().equals(mEventIndustryFilter)) {
-            meetsFilteringRequirements = true;
-        } // If the event topic or industry filter has been specified, but the event does not match, then the event does not meet the requirements
-        else {
-            meetsFilteringRequirements = false;
+         // If the event industry filter has been specified, but the event does not match, then the event does not meet the requirements
+        if (!mEventIndustryFilter.equals("") && !event.getIndustry().toLowerCase().equals(mEventIndustryFilter)){
+            return false;
         }
-        return meetsFilteringRequirements;
+        return true;
     }
 
     @Override
@@ -1345,6 +1459,11 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
     @Override
     public boolean onNavigationItemSelected(@NonNull MenuItem item) {
         return false;
+    }
+
+    @Override
+    public void userEventsUpdated() {
+        getEvents();
     }
 
     /**

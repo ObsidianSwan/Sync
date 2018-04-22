@@ -275,6 +275,8 @@ public class SettingsFragment extends Fragment {
                     for (Person connection : UserConnections.CONNECTION_ITEMS) {
                         deleteConnection(connection.getUserId());
                     }
+                    // Delete location
+                    mDatabaseManager.getLocationDatabaseReference().child(mAccountManager.getCurrentUser().getUid()).setValue(null);
                     // Delete account database
                     mDatabaseManager.deletePerson().addOnCompleteListener(new OnCompleteListener<Void>() {
                         @Override
@@ -296,19 +298,9 @@ public class SettingsFragment extends Fragment {
 
     private void stopAttendingEvent(final String eventId) {
         final String userId = mAccountManager.getCurrentUser().getUid();
-        // Remove event from user's attending DB
-        mDatabaseManager.deleteUserAttendingEvent(eventId).addOnCompleteListener(new OnCompleteListener<Void>() {
-            @Override
-            public void onComplete(@NonNull Task<Void> task) {
-                if (task.isSuccessful()) {
-                    // Remove user from event attendee DB
-                    mDatabaseManager.deleteEventAttending(eventId, userId);
-                    Log.i(TAG, getString(R.string.stop_attending_event_successful));
-                } else {
-                    Log.e(TAG, getString(R.string.stop_attending_event_error));
-                }
-            }
-        });
+        // Remove user from event attendee DB
+        mDatabaseManager.deleteEventAttending(eventId, userId);
+        Log.i(TAG, getString(R.string.stop_attending_event_successful));
     }
 
     private void deleteEvent(final String eventId) {
@@ -322,25 +314,14 @@ public class SettingsFragment extends Fragment {
                     // TODO: check the event is no longer in other users DB
                     mDatabaseManager.deleteEventAttending(eventId, attendeeId);
                 }
-                // Stop hosting the event
-                // TODO: Is this necessary if the person is being deleted
-                mDatabaseManager.deleteEventHosting(eventId).addOnCompleteListener(new OnCompleteListener<Void>() {
+                // Delete event in event database
+                mDatabaseManager.deleteEvent(eventId).addOnCompleteListener(new OnCompleteListener<Void>() {
                     @Override
                     public void onComplete(@NonNull Task<Void> task) {
                         if (task.isSuccessful()) {
-                            // Delete event in event database
-                            mDatabaseManager.deleteEvent(eventId).addOnCompleteListener(new OnCompleteListener<Void>() {
-                                @Override
-                                public void onComplete(@NonNull Task<Void> task) {
-                                    if (task.isSuccessful()) {
-                                        Log.i(TAG, getString(R.string.delete_event_successful));
-                                    } else {
-                                        Log.e(TAG, getString(R.string.delete_event_error));
-                                    }
-                                }
-                            });
+                            Log.i(TAG, getString(R.string.delete_event_successful));
                         } else {
-                            Log.e(TAG, getString(R.string.delete_hosting_event_error));
+                            Log.e(TAG, getString(R.string.delete_event_error));
                         }
                     }
                 });
@@ -355,26 +336,14 @@ public class SettingsFragment extends Fragment {
 
     private void deleteConnection(final String connectionId) {
         final String currentUserId = mAccountManager.getCurrentUser().getUid();
-
-        // Remove the connection reference from the current users database
-        // TODO is this necessary if the whole person is being deleted
-        mDatabaseManager.deleteConnection(currentUserId, connectionId).addOnCompleteListener(new OnCompleteListener<Void>() {
+        // Remove the connection reference from the connection users database
+        mDatabaseManager.deleteConnection(connectionId, currentUserId).addOnCompleteListener(new OnCompleteListener<Void>() {
             @Override
             public void onComplete(@NonNull Task<Void> task) {
                 if (task.isSuccessful()) {
-                    // Remove the connection reference from the connection users database
-                    mDatabaseManager.deleteConnection(connectionId, currentUserId).addOnCompleteListener(new OnCompleteListener<Void>() {
-                        @Override
-                        public void onComplete(@NonNull Task<Void> task) {
-                            if(task.isSuccessful()){
-                                Log.i(TAG, getString(R.string.delete_connection_successful));
-                            } else{
-                                Log.e(TAG, getString(R.string.delete_other_user_connection_error));
-                            }
-                        }
-                    });
+                    Log.i(TAG, getString(R.string.delete_connection_successful));
                 } else {
-                    Log.e(TAG, getString(R.string.delete_current_user_connection_error));
+                    Log.e(TAG, getString(R.string.delete_other_user_connection_error));
                 }
             }
         });
@@ -390,7 +359,7 @@ public class SettingsFragment extends Fragment {
             public void onDataChange(DataSnapshot dataSnapshot) {
                 mZoomValue = 0;
                 if (dataSnapshot.getValue(Integer.class) != null) {
-                        mZoomValue = dataSnapshot.getValue(Integer.class);
+                    mZoomValue = dataSnapshot.getValue(Integer.class);
                 }
                 mZoomPicker.setValue(mZoomValue);
             }

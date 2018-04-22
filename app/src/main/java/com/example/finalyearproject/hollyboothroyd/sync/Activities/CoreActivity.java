@@ -9,6 +9,7 @@ import com.example.finalyearproject.hollyboothroyd.sync.Activities.Fragments.New
 import com.example.finalyearproject.hollyboothroyd.sync.Activities.Fragments.NotificationFragment;
 import com.example.finalyearproject.hollyboothroyd.sync.Activities.Fragments.SettingsFragment;
 import com.example.finalyearproject.hollyboothroyd.sync.Activities.Fragments.ViewEventsFragment;
+import com.example.finalyearproject.hollyboothroyd.sync.Activities.NewAccount.NewAccountBasicInfoActivity;
 import com.example.finalyearproject.hollyboothroyd.sync.Model.Event;
 import com.example.finalyearproject.hollyboothroyd.sync.Model.NotificationBase;
 import com.example.finalyearproject.hollyboothroyd.sync.Model.UserConnections;
@@ -40,12 +41,21 @@ import android.widget.Toast;
 import com.example.finalyearproject.hollyboothroyd.sync.Activities.Fragments.GMapFragment;
 import com.example.finalyearproject.hollyboothroyd.sync.R;
 import com.example.finalyearproject.hollyboothroyd.sync.Services.DatabaseManager;
+import com.example.finalyearproject.hollyboothroyd.sync.Utils.DownloadImageTask;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.ValueEventListener;
+import com.linkedin.platform.APIHelper;
+import com.linkedin.platform.errors.LIApiError;
+import com.linkedin.platform.listeners.ApiListener;
+import com.linkedin.platform.listeners.ApiResponse;
 import com.squareup.picasso.Picasso;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 public class CoreActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener, ConnectionFragment.OnListFragmentInteractionListener,

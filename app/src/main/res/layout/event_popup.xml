@@ -103,7 +103,7 @@
                 android:layout_width="@dimen/button_width"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="@dimen/button_margin"
-                android:visibility="invisible" />
+                android:visibility="gone" />
 
             <Button
                 android:id="@+id/popup_event_button3"
@@ -111,7 +111,7 @@
                 android:layout_width="@dimen/button_width"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="@dimen/button_margin"
-                android:visibility="invisible" />
+                android:visibility="gone" />
 
         </LinearLayout>
     </RelativeLayout>
