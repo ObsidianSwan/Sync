@@ -7,6 +7,7 @@ import android.location.LocationManager;
 import android.util.Log;
 import android.widget.Toast;
 
+import com.example.finalyearproject.hollyboothroyd.sync.Activities.Fragments.SettingsFragment;
 import com.example.finalyearproject.hollyboothroyd.sync.R;
 import com.example.finalyearproject.hollyboothroyd.sync.Services.DatabaseManager;
 import com.example.finalyearproject.hollyboothroyd.sync.Services.LocationFilter;
@@ -32,6 +33,8 @@ import static android.content.Context.LOCATION_SERVICE;
 public class UserEvents {
     private static final String TAG = "UserEvents";
 
+    public static List<UserEventsListener> mListeners = new ArrayList<UserEventsListener>();
+
     private DatabaseManager mDatabaseManager;
     private LocationManager mLocationManager;
 
@@ -47,6 +50,11 @@ public class UserEvents {
     private ValueEventListener mAllEventsListener;
     private ValueEventListener mEventsAttendingListener;
     private ValueEventListener mEventsHostingListener;
+
+
+    private boolean mAllEventsUpdated = false;
+    private boolean mEventsAttendingUpdated = false;
+    private boolean mEventsHostingUpdated = false;
 
     private int mSearchRadius = Constants.geofenceRadiusDefault;
 
@@ -72,6 +80,7 @@ public class UserEvents {
                 mAllEventsListener = mDatabaseManager.getAllEventsDatabaseReference().addValueEventListener(new ValueEventListener() {
                     @Override
                     public void onDataChange(DataSnapshot dataSnapshot) {
+                        mAllEventsUpdated = false;
                         ALL_EVENTS.clear();
                         ALL_EVENTS_MAP.clear();
                         for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
@@ -81,17 +90,23 @@ public class UserEvents {
                                 // Get the users last known location
                                 Location userLastKnowLocation = Util.getLastKnownLocation(mLocationManager);
                                 // If the users last location can be found, populate the map with local events
-                                if(userLastKnowLocation != null) {
+                                if (userLastKnowLocation != null) {
                                     LatLng userPosition = new LatLng(userLastKnowLocation.getLatitude(), userLastKnowLocation.getLongitude());
                                     // Check that the event is within the search radius of the current user
                                     if (LocationFilter.eventWithinRange(userPosition, eventPosition, mSearchRadius)) {
                                         ALL_EVENTS.add(event);
                                         ALL_EVENTS_MAP.put(event.getUid(), event);
+                                        mAllEventsUpdated = true;
                                     }
                                 } else {
                                     Log.e(TAG, context.getString(R.string.location_not_found_error));
                                     Toast.makeText(context, R.string.could_not_find_location, Toast.LENGTH_SHORT).show();
                                 }
+                            }
+                        }
+                        if (mAllEventsUpdated) {
+                            for (UserEventsListener listener : mListeners) {
+                                listener.userEventsUpdated();
                             }
                         }
                     }
@@ -106,6 +121,7 @@ public class UserEvents {
                 mEventsAttendingListener = mDatabaseManager.getEventsAttendingDatabaseReference().addValueEventListener(new ValueEventListener() {
                     @Override
                     public void onDataChange(DataSnapshot dataSnapshot) {
+                        mEventsAttendingUpdated = false;
                         // Clear the event attending map and list
                         EVENTS_ATTENDING.clear();
                         EVENTS_ATTENDING_MAP.clear();
@@ -117,6 +133,7 @@ public class UserEvents {
                                     // Add the event to the event attending map and list
                                     EVENTS_ATTENDING.add(event);
                                     EVENTS_ATTENDING_MAP.put(event.getUid(), event);
+                                    mEventsAttendingUpdated = true;
                                 }
 
                                 @Override
@@ -124,6 +141,11 @@ public class UserEvents {
                                     Log.e(TAG, databaseError.toString());
                                 }
                             });
+                        }
+                        if(mEventsAttendingUpdated){
+                            for (UserEventsListener listener : mListeners) {
+                                listener.userEventsUpdated();
+                            }
                         }
                     }
 
@@ -144,6 +166,7 @@ public class UserEvents {
         mEventsHostingListener = mDatabaseManager.getEventsHostingDatabaseReference().addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
+                mEventsHostingUpdated = false;
                 // Clear the event hosting map and list
                 EVENTS_HOSTING.clear();
                 EVENTS_HOSTING_MAP.clear();
@@ -155,6 +178,7 @@ public class UserEvents {
                             // Add the event to the event hosting map and list
                             EVENTS_HOSTING.add(event);
                             EVENTS_HOSTING_MAP.put(event.getUid(), event);
+                            mEventsHostingUpdated = true;
                         }
 
                         @Override
@@ -162,6 +186,11 @@ public class UserEvents {
                             Log.e(TAG, databaseError.toString());
                         }
                     });
+                }
+                if(mEventsHostingUpdated){
+                    for (UserEventsListener listener : mListeners) {
+                        listener.userEventsUpdated();
+                    }
                 }
             }
 

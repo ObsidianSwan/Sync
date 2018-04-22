@@ -4,18 +4,20 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:layout_marginTop="@dimen/fragment_top_margin"
+    android:fillViewport="true"
     tools:context="com.example.finalyearproject.hollyboothroyd.sync.Activities.Fragments.NewEvent.NewEventBasicInfoFragment">
 
     <LinearLayout
+        android:id="@+id/new_event_input_view"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="wrap_content"
         android:orientation="vertical">
 
         <ImageButton
             android:id="@+id/new_event_image_button"
             android:layout_width="@dimen/event_image_dim"
             android:layout_height="@dimen/event_image_dim"
-            android:layout_gravity="center"
+            android:layout_gravity="center_horizontal"
             android:layout_marginTop="@dimen/new_event_image_top_margin"
             android:background="@android:color/transparent"
             android:scaleType="centerCrop"
@@ -23,51 +25,67 @@
 
         <EditText
             android:id="@+id/new_event_title_text"
+            style="@style/RoundedOutline"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
             android:layout_marginEnd="@dimen/entry_side_margin"
             android:layout_marginStart="@dimen/entry_side_margin"
             android:layout_marginTop="@dimen/entry_top_margin"
             android:ems="10"
             android:hint="@string/New_Event_Title"
             android:inputType="textPersonName"
-            app:layout_constraintEnd_toEndOf="parent"
-            style="@style/RoundedOutline" />
+            app:layout_constraintEnd_toEndOf="parent" />
 
         <EditText
             android:id="@+id/new_event_industry_text"
+            style="@style/RoundedOutline"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
             android:layout_marginEnd="@dimen/entry_side_margin"
             android:layout_marginStart="@dimen/entry_side_margin"
             android:layout_marginTop="@dimen/entry_top_margin"
             android:ems="10"
             android:hint="@string/New_Event_Industry"
-            android:inputType="textPersonName"
-            style="@style/RoundedOutline" />
+            android:inputType="textPersonName" />
 
         <EditText
             android:id="@+id/new_event_description_text"
             style="@style/RoundedOutline"
             android:layout_width="match_parent"
             android:layout_height="150dp"
-            android:gravity="top"
-            android:layout_gravity="center"
+            android:layout_gravity="center_horizontal"
             android:layout_marginEnd="@dimen/entry_side_margin"
             android:layout_marginStart="@dimen/entry_side_margin"
             android:layout_marginTop="@dimen/entry_top_margin"
             android:ems="10"
+            android:gravity="top"
             android:hint="@string/new_event_description"
             android:inputType="textMultiLine" />
 
-        <Button
-            android:id="@+id/event_basic_info_next_button"
-            android:layout_width="@dimen/button_width"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_horizontal"
-            android:layout_margin="@dimen/button_margin"
-            android:text="@string/Next_Button"
-            style="@style/PrimaryButton" />
-    </LinearLayout>
+        <!-- stretching frame layout, using layout_weight -->
 
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"/>
+
+        <!-- content fixated to the bottom of the screen -->
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <Button
+                android:id="@+id/event_basic_info_next_button"
+                style="@style/PrimaryButton"
+                android:layout_width="@dimen/button_width"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_margin="@dimen/button_margin"
+                android:text="@string/Next_Button" />
+        </LinearLayout>
+    </LinearLayout>
 </ScrollView>

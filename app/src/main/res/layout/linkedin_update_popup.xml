@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical">
+
+    <TextView
+        android:id="@+id/linkedin_update_info_text"
+        android:layout_marginTop="@dimen/linkedin_popup_margin"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:layout_marginStart="@dimen/notification_button_margin"
+        android:layout_marginEnd="@dimen/notification_button_margin"
+        android:textAppearance="@style/TextAppearance.AppCompat.Medium"
+        android:textColor="@color/colorPrimary" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/entry_side_margin"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/linkedin_update_accept_button"
+            style="@style/PrimaryButton"
+            android:layout_width="@dimen/notification_button_width"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="@dimen/notification_button_margin"
+            android:layout_marginTop="@dimen/linkedin_popup_margin"
+            android:layout_weight="1"
+            android:text="@string/confirm_button_text" />
+
+        <Button
+            android:id="@+id/linkedin_update_deny_button"
+            style="@style/SecondaryButton"
+            android:layout_width="@dimen/notification_button_width"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="@dimen/linkedin_button_end_margin"
+            android:layout_marginStart="@dimen/notification_button_margin"
+            android:layout_marginTop="@dimen/linkedin_popup_margin"
+            android:layout_marginBottom="@dimen/linkedin_popup_margin"
+            android:layout_weight="1"
+            android:text="@string/ignore_button_text" />
+    </LinearLayout>
+
+</LinearLayout>

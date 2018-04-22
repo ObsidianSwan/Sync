@@ -193,7 +193,7 @@
     <string name="search_radius_setting_change">Search radius successfully changed</string>
     <string name="privacy_intensity_setting_change_successful">Privacy intensity successfully changed</string>
     <string name="sync_icon">sync_icon</string>
-    <string name="sync_title_text">Sync</string>
+    <string name="sync_title_text">SYNC</string>
     <string name="retry_text">Retry</string>
     <string name="sign_in_toast">Signed in</string>
     <string name="sign_in_failed_toast">Sign in failed</string>
@@ -240,4 +240,5 @@
     <string name="edit_event_fragment">edit_event_tag</string>
     <string name="edit_event_successful_toast">Event edited successfully!</string>
     <string name="event_image_required_toast">Event image is required</string>
+    <string name="linkedin_profile_retrieval_successful">LinkedIn profile retrieval successful</string>
 </resources>
