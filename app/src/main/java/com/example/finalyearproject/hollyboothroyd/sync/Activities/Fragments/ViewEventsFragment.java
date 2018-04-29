@@ -125,6 +125,10 @@ public class ViewEventsFragment extends Fragment {
             }
         }));
 
+        tabHost.setCurrentTab(2);
+        tabHost.setCurrentTab(1);
+        tabHost.setCurrentTab(0);
+
         return view;
     }
 

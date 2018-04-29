@@ -58,6 +58,8 @@ public class NFCActivity extends AppCompatActivity {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
+        setTitle(getString(R.string.syncup_activity_title));
+
         mDatabaseManager = new DatabaseManager();
         mAccountManager = new AccountManager();
 

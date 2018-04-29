@@ -298,7 +298,6 @@ public class CoreActivity extends AppCompatActivity
         // The user has decided to delete their account. Clear out all listeners and saved data
         clearListeners();
 
-        // TODO delete account bug
         mAccountManager.getCurrentUser().delete().addOnCompleteListener(new OnCompleteListener<Void>() {
             @Override
             public void onComplete(@NonNull Task<Void> task) {
@@ -367,11 +366,11 @@ public class CoreActivity extends AppCompatActivity
         clearListeners();
 
         mAccountManager.signUserOut();
+        Toast.makeText(this, R.string.logged_out_toast, Toast.LENGTH_SHORT).show();
         startActivity(new Intent(this, LoginActivity.class));
         mCurrentFragment = 0;
     }
 
-    // TODO call this on OnDestroy
     private void clearListeners() {
         // Clear out all listeners and saved data
         mUserEvents.clearEvents();
@@ -382,6 +381,12 @@ public class CoreActivity extends AppCompatActivity
 
         mUserConnections.clearConnections();
         mUserConnections.clearListeners();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        clearListeners();
     }
 
     @Override

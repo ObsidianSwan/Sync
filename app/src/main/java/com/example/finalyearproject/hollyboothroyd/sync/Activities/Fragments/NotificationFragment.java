@@ -71,7 +71,7 @@ public class NotificationFragment extends Fragment {
                 recyclerView.setLayoutManager(new GridLayoutManager(context, mColumnCount));
             }
             // Populate the list with user notifications
-            recyclerView.setAdapter(new MyNotificationRecyclerViewAdapter(getContext(), UserNotifications.ITEMS, mListener));
+            recyclerView.setAdapter(new MyNotificationRecyclerViewAdapter(getActivity(), UserNotifications.ITEMS, mListener));
         }
         return view;
     }

@@ -26,6 +26,8 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.ValueEventListener;
 import com.squareup.picasso.Picasso;
 
+import org.w3c.dom.Text;
+
 import java.util.List;
 
 /**
@@ -91,6 +93,7 @@ public class MyEventRecyclerViewAdapter extends RecyclerView.Adapter<MyEventRecy
         TextView eventIndustry = (TextView) view.findViewById(R.id.popup_industry);
         TextView eventDate = (TextView) view.findViewById(R.id.popup_date);
         TextView eventTime = (TextView) view.findViewById(R.id.popup_time);
+        TextView eventAddress = (TextView) view.findViewById(R.id.popup_address);
         TextView eventDescription = (TextView) view.findViewById(R.id.popup_description);
         Button eventButton = (Button) view.findViewById(R.id.popup_event_button);
         Button eventButton2 = (Button) view.findViewById(R.id.popup_event_button2);
@@ -102,8 +105,12 @@ public class MyEventRecyclerViewAdapter extends RecyclerView.Adapter<MyEventRecy
 
         eventTitle.setText(event.getTitle());
         eventIndustry.setText("Industry: " + event.getIndustry());
-        eventDate.setText("Date: " + event.getDate());
-        eventTime.setText("Time: " + event.getTime());
+        eventDate.setText(event.getDate());
+        eventTime.setText(event.getTime());
+
+        String address = event.getStreet() + ", \n" + event.getCity() + ", " + event.getState() + ", \n" +
+                event.getZipCode() + ", " + event.getCountry();
+        eventAddress.setText(address);
         eventDescription.setText(event.getDescription());
 
         // The user is both hosting and attending the event
@@ -255,7 +262,7 @@ public class MyEventRecyclerViewAdapter extends RecyclerView.Adapter<MyEventRecy
                             if(task.isSuccessful()){
                                 // Remove event from the UI
                                 removeEvent(holder.getAdapterPosition());
-                                Toast.makeText(mContext, "You're no longer attending" + event.getTitle() + "!", Toast.LENGTH_SHORT).show();
+                                Toast.makeText(mContext, "You're no longer attending " + event.getTitle() + "!", Toast.LENGTH_SHORT).show();
                                 mDialog.dismiss();
                                 Log.i(TAG, mContext.getString(R.string.stop_attending_event_successful));
                             } else {
@@ -331,7 +338,6 @@ public class MyEventRecyclerViewAdapter extends RecyclerView.Adapter<MyEventRecy
         private final View mView;
         private final ImageView mEventImage;
         private final TextView mEventTitle;
-        private final TextView mEventTopic;
         private final TextView mEventIndustry;
         private final TextView mEventDate;
         private final TextView mEventTime;
@@ -344,7 +350,6 @@ public class MyEventRecyclerViewAdapter extends RecyclerView.Adapter<MyEventRecy
             // Set up event UI
             mEventImage = (ImageView) view.findViewById(R.id.event_image);
             mEventTitle = (TextView) view.findViewById(R.id.event_title_text);
-            mEventTopic = (TextView) view.findViewById(R.id.event_topic_text);
             mEventIndustry = (TextView) view.findViewById(R.id.event_industry_text);
             mEventDate = (TextView) view.findViewById(R.id.event_date_text);
             mEventTime = (TextView) view.findViewById(R.id.event_time_text);

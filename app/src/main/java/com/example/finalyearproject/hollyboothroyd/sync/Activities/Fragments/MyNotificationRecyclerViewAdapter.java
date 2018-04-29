@@ -2,6 +2,7 @@ package com.example.finalyearproject.hollyboothroyd.sync.Activities.Fragments;
 
 import android.app.AlertDialog;
 import android.content.Context;
+import android.os.Looper;
 import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
@@ -32,6 +33,8 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.ValueEventListener;
 import com.squareup.picasso.Picasso;
 
+import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -107,20 +110,19 @@ public class MyNotificationRecyclerViewAdapter extends RecyclerView.Adapter<MyNo
 
         switch (notification.getType()) {
             case CONNECTION_REQUEST:
-
                 // Set up the view holders timestamp and the button actions
                 final ConnectionRequestViewHolder connectionRequestViewHolder = (ConnectionRequestViewHolder) holder;
                 connectionRequestViewHolder.mTimeStamp.setText(Util.getTimeDifference(notification.getTimeStamp()));
                 connectionRequestViewHolder.mConfirmButton.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        addConnection(notification, holder);
+                        addConnection(notification, connectionRequestViewHolder);
                     }
                 });
                 connectionRequestViewHolder.mDenyButton.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        denyConnectionRequest(notification, holder);
+                        denyConnectionRequest(notification, connectionRequestViewHolder);
                     }
                 });
                 break;
@@ -132,13 +134,14 @@ public class MyNotificationRecyclerViewAdapter extends RecyclerView.Adapter<MyNo
                 profileViewViewHolder.mViewProfileButton.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        profileViewPopupCreation(notification, holder);
+                        profileViewPopupCreation(notification, profileViewViewHolder);
                     }
                 });
                 profileViewViewHolder.mRemoveButton.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        removeProfileView(notification, holder);
+                        // Delete notification from the users database
+                        removeProfileView(notification, profileViewViewHolder);
                     }
                 });
                 break;
@@ -148,8 +151,7 @@ public class MyNotificationRecyclerViewAdapter extends RecyclerView.Adapter<MyNo
         }
     }
 
-    private void removeProfileView(final NotificationBase notification, final ViewHolder holder){
-        // Delete notification from the users database
+    private void removeProfileView(final NotificationBase notification, final ViewHolder holder) {
         mDatabaseManager.deleteUserNotification(notification.getDbRefKey()).addOnCompleteListener(new OnCompleteListener<Void>() {
             @Override
             public void onComplete(@NonNull Task<Void> task) {
@@ -162,6 +164,7 @@ public class MyNotificationRecyclerViewAdapter extends RecyclerView.Adapter<MyNo
                 }
             }
         });
+
     }
 
     private void profileViewPopupCreation(final NotificationBase notification, final ViewHolder holder) {
@@ -405,7 +408,7 @@ public class MyNotificationRecyclerViewAdapter extends RecyclerView.Adapter<MyNo
     private void removeNotification(int position) {
         // Remove item from the UI list
         notifyItemRemoved(position);
-        notifyItemRangeChanged(position, mValues.size());
+        notifyDataSetChanged();
     }
 
     @Override
