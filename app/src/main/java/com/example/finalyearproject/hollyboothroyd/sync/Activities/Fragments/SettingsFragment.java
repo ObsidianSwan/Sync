@@ -311,7 +311,6 @@ public class SettingsFragment extends Fragment {
                 for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
                     String attendeeId = snapshot.getKey();
                     // Remove users from event attendee DB
-                    // TODO: check the event is no longer in other users DB
                     mDatabaseManager.deleteEventAttending(eventId, attendeeId);
                 }
                 // Delete event in event database

@@ -241,4 +241,9 @@
     <string name="edit_event_successful_toast">Event edited successfully!</string>
     <string name="event_image_required_toast">Event image is required</string>
     <string name="linkedin_profile_retrieval_successful">LinkedIn profile retrieval successful</string>
+    <string name="search_distance_meters">Search distance (meters)</string>
+    <string name="logged_out_toast">Logged out</string>
+    <string name="syncup_activity_title">SyncUp</string>
+    <string name="record_notification_unsuccessful">Record notification unsuccessful</string>
+    <string name="record_notification_successful">Record notification successful</string>
 </resources>

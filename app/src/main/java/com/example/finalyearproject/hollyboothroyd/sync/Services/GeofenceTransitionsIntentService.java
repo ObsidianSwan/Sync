@@ -80,7 +80,7 @@ public class GeofenceTransitionsIntentService extends IntentService {
     private void geofenceTriggeredMessageToMaps(List<String> geofenceEnterTransitionDetails){
         // Send the geofence trigger message to the GMaps fragment
         for(String id : geofenceEnterTransitionDetails){
-            Intent intent = new Intent(Constants.geofenceEnterTrigger);
+            Intent intent = new Intent(getString(R.string.geofence_enter_trigger));
             intent.putExtra(Constants.geofenceUserId, id);
             LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
         }
@@ -91,7 +91,7 @@ public class GeofenceTransitionsIntentService extends IntentService {
     private List<String> getGeofenceEnterTransitionDetails(int geofenceTransition, List<Geofence> triggeringGeofences){
         List<String> geofenceRequestIds = new ArrayList<>();
         // Return the request ids of the geofences that triggered with enter
-        if(geofenceTransition == Geofence.GEOFENCE_TRANSITION_DWELL) {
+        if(geofenceTransition == Geofence.GEOFENCE_TRANSITION_DWELL || geofenceTransition == Geofence.GEOFENCE_TRANSITION_ENTER) {
             for (Geofence geofence : triggeringGeofences) {
                 geofenceRequestIds.add(geofence.getRequestId());
             }

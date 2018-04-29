@@ -61,6 +61,7 @@ public class Constants {
     // Database/storage references
     public static final String peopleDatabaseRefName = "people";
     public static final String userNotificationDatabaseRefName = "notifications";
+    public static final String sentNotificationDatabaseRefName = "sent_notifications";
     public static final String connectionDatabaseRefName = "connections";
     public static final String locationDatabaseRefName = "people_locations";
     public static final String connectionRequestsDatabaseRefName = "connection_requests";

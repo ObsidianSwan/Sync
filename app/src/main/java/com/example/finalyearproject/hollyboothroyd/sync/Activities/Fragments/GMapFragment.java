@@ -93,7 +93,7 @@ import static android.content.Context.LOCATION_SERVICE;
 /**
  * Created by hollyboothroyd on 12/11/2017.
  */
- public class GMapFragment extends Fragment implements OnMapReadyCallback,
+public class GMapFragment extends Fragment implements OnMapReadyCallback,
         GoogleMap.OnInfoWindowClickListener, GoogleMap.OnMarkerClickListener, NavigationView.OnNavigationItemSelectedListener, UserEventsListener {
 
     private static final String TAG = "GMapFragment";
@@ -261,7 +261,7 @@ import static android.content.Context.LOCATION_SERVICE;
                                         linkedInUpdatePopup("profile picture", array.getString(0), Constants.userImgChildName);
                                     }
 
-                                    if(mLinkedinDiaglogViews.size() > 0) {
+                                    if (mLinkedinDiaglogViews.size() > 0) {
                                         mLinkedinDialogBuilder.setView(mLinkedinDiaglogViews.get(0));
                                         mLinkedinDiaglogViews.remove(0);
                                         mLinkedinDialog = mLinkedinDialogBuilder.create();
@@ -305,7 +305,7 @@ import static android.content.Context.LOCATION_SERVICE;
             public void onClick(View v) {
                 Toast.makeText(getActivity(), R.string.edit_profile_successfully_changed, Toast.LENGTH_SHORT).show();
                 mLinkedinDialog.dismiss();
-                if(mLinkedinDiaglogViews.size() > 0){
+                if (mLinkedinDiaglogViews.size() > 0) {
                     mLinkedinDialogBuilder.setView(mLinkedinDiaglogViews.get(0));
                     mLinkedinDiaglogViews.remove(0);
                     mLinkedinDialog = mLinkedinDialogBuilder.create();
@@ -319,7 +319,7 @@ import static android.content.Context.LOCATION_SERVICE;
             @Override
             public void onClick(View v) {
                 mLinkedinDialog.dismiss();
-                if(mLinkedinDiaglogViews.size() > 0){
+                if (mLinkedinDiaglogViews.size() > 0) {
                     mLinkedinDialogBuilder.setView(mLinkedinDiaglogViews.get(0));
                     mLinkedinDiaglogViews.remove(0);
                     mLinkedinDialog = mLinkedinDialogBuilder.create();
@@ -536,12 +536,10 @@ import static android.content.Context.LOCATION_SERVICE;
                         // Create a geofence around the person, so if the user enters the persons
                         // geofence, the system is notified to put the person on the map
                         if (locationHash != null) {
-                            new SetUpGeofences(getContext(),new LatLng(locationHash.get(Constants.geofenceLatitude), locationHash.get(Constants.geofenceLongitude))).execute(snapshot.getKey());
+                            new SetUpGeofences(getContext(), new LatLng(locationHash.get(Constants.geofenceLatitude), locationHash.get(Constants.geofenceLongitude))).execute(snapshot.getKey());
                         }
                     }
                 }
-                int i = 0;
-                i++;
             }
 
             @Override
@@ -938,8 +936,8 @@ import static android.content.Context.LOCATION_SERVICE;
     }
 
     private boolean meetsEventFilteringRequirements(Event event) {
-         // If the event industry filter has been specified, but the event does not match, then the event does not meet the requirements
-        if (!mEventIndustryFilter.equals("") && !event.getIndustry().toLowerCase().equals(mEventIndustryFilter)){
+        // If the event industry filter has been specified, but the event does not match, then the event does not meet the requirements
+        if (!mEventIndustryFilter.equals("") && !event.getIndustry().toLowerCase().equals(mEventIndustryFilter)) {
             return false;
         }
         return true;
@@ -1136,7 +1134,7 @@ import static android.content.Context.LOCATION_SERVICE;
                         @Override
                         public void onComplete(@NonNull Task<Void> task) {
                             if (task.isSuccessful()) {
-                                Toast.makeText(getActivity(), "You're no longer attending" + event.getTitle() + "!", Toast.LENGTH_SHORT).show();
+                                Toast.makeText(getActivity(), "You're no longer attending " + event.getTitle() + "!", Toast.LENGTH_SHORT).show();
                                 mDialog.dismiss();
                                 Log.i(TAG, getString(R.string.stop_attending_event_successful));
                             } else {
@@ -1270,7 +1268,7 @@ import static android.content.Context.LOCATION_SERVICE;
         // Send a profile view notification unless it is the current users profile
         if (!person.getUserId().equals(mCurrentUserId)) {
             DatabaseReference newNotificationRef = mDatabaseManager.getNewNotifcationReference(person.getUserId());
-            String refKey = newNotificationRef.getKey();
+            final String refKey = newNotificationRef.getKey();
             Notification notification = new Notification(refKey, mCurrentUserId, NotificationType.PROFILE_VIEW);
             mDatabaseManager.sendNotification(newNotificationRef, notification).addOnCompleteListener(new OnCompleteListener<Void>() {
                 @Override
@@ -1426,12 +1424,8 @@ import static android.content.Context.LOCATION_SERVICE;
                 mPersonIndustryFilter = personIndustry.getText().toString().toLowerCase().trim();
                 mEventIndustryFilter = eventIndustry.getText().toString().toLowerCase().trim();
 
-                if (!mPersonPositionFilter.equals("") || !mPersonCompanyFilter.equals("") || !mPersonIndustryFilter.equals("")) {
-                    getPeople();
-                }
-                if (!mEventIndustryFilter.equals("")) {
-                    getEvents();
-                }
+                getPeople();
+                getEvents();
 
                 mDialog.dismiss();
             }
@@ -1508,21 +1502,24 @@ import static android.content.Context.LOCATION_SERVICE;
                 if (ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
                     return null;
                 }
-                mGeofencingClient.addGeofences(getGeofencingRequest(), getGeofencePendingIntent())
-                        .addOnSuccessListener(getActivity(), new OnSuccessListener<Void>() {
-                            @Override
-                            public void onSuccess(Void aVoid) {
-                                // Geofences added
-                                Log.i(TAG, getString(R.string.add_geofence_successful));
-                            }
-                        })
-                        .addOnFailureListener(getActivity(), new OnFailureListener() {
-                            @Override
-                            public void onFailure(@NonNull Exception e) {
-                                // Failed to add geofences
-                                Log.e(TAG, e.toString());
-                            }
-                        });
+
+                if(!mGeofenceList.isEmpty()) {
+                    mGeofencingClient.addGeofences(getGeofencingRequest(), getGeofencePendingIntent())
+                            .addOnSuccessListener(getActivity(), new OnSuccessListener<Void>() {
+                                @Override
+                                public void onSuccess(Void aVoid) {
+                                    // Geofences added
+                                    Log.i(TAG, getString(R.string.add_geofence_successful));
+                                }
+                            })
+                            .addOnFailureListener(getActivity(), new OnFailureListener() {
+                                @Override
+                                public void onFailure(@NonNull Exception e) {
+                                    // Failed to add geofences
+                                    Log.e(TAG, e.toString());
+                                }
+                            });
+                }
             }
             return null;
         }
@@ -1531,7 +1528,7 @@ import static android.content.Context.LOCATION_SERVICE;
             GeofencingRequest.Builder builder = new GeofencingRequest.Builder();
             // Set trigger type to INITIAL_TRIGGER_DWELL to reduce 'alert spam' if users briefly enter or
             // exit the geofence
-            builder.setInitialTrigger(GeofencingRequest.INITIAL_TRIGGER_DWELL);
+            builder.setInitialTrigger(GeofencingRequest.INITIAL_TRIGGER_DWELL | GeofencingRequest.INITIAL_TRIGGER_ENTER);
             builder.addGeofences(mGeofenceList);
             return builder.build();
         }

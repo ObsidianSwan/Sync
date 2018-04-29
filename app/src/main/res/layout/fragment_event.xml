@@ -34,12 +34,6 @@
                 android:textColor="@color/colorPrimary"/>
 
             <TextView
-                android:id="@+id/event_topic_text"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Topic" />
-
-            <TextView
                 android:id="@+id/event_industry_text"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
