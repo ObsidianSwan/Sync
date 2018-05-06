@@ -69,4 +69,5 @@
     <dimen name="small_popup_margin">3dp</dimen>
     <dimen name="linkedin_popup_margin">20dp</dimen>
     <dimen name="linkedin_button_end_margin">15dp</dimen>
+    <dimen name="app_bar_height">180dp</dimen>
 </resources>

@@ -1,10 +1,10 @@
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:layout_marginTop="@dimen/fragment_top_margin"
     android:orientation="vertical"
+    android:fillViewport="true"
     tools:context="com.example.finalyearproject.hollyboothroyd.sync.Activities.Fragments.SettingsFragment">
 
     <LinearLayout
@@ -39,6 +39,7 @@
                     android:layout_height="wrap_content"
                     android:layout_alignParentStart="true"
                     android:layout_centerVertical="true"
+                    android:layout_toStartOf="@+id/settings_map_zoom_number_picker"
                     android:text="@string/settings_zoom_text"
                     android:textAppearance="@style/TextAppearance.AppCompat.Medium"
                     android:textColor="@color/colorPrimary" />
@@ -65,6 +66,8 @@
                     android:layout_height="wrap_content"
                     android:layout_alignParentStart="true"
                     android:layout_centerVertical="true"
+                    android:layout_marginEnd="@dimen/entry_side_margin"
+                    android:layout_toStartOf="@+id/settings_user_color_spinner"
                     android:text="@string/settings_user_pin_color_text"
                     android:textAppearance="@style/TextAppearance.AppCompat.Medium"
                     android:textColor="@color/colorPrimary" />
@@ -92,6 +95,8 @@
                     android:layout_height="wrap_content"
                     android:layout_alignParentStart="true"
                     android:layout_centerVertical="true"
+                    android:layout_marginEnd="@dimen/entry_side_margin"
+                    android:layout_toStartOf="@+id/settings_event_color_spinner"
                     android:text="@string/settings_event_pin_color_text"
                     android:textAppearance="@style/TextAppearance.AppCompat.Medium"
                     android:textColor="@color/colorPrimary" />
@@ -118,7 +123,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
-                android:text="Location details"
+                android:text="@string/location_details_title"
                 android:textAppearance="@style/TextAppearance.AppCompat.Large" />
 
             <RelativeLayout
@@ -135,7 +140,9 @@
                     android:layout_height="wrap_content"
                     android:layout_alignParentStart="true"
                     android:layout_centerVertical="true"
-                    android:text="Privacy intensity"
+                    android:layout_marginEnd="@dimen/entry_side_margin"
+                    android:layout_toStartOf="@+id/settings_privacy_intensity_spinner"
+                    android:text="@string/privacy_intensity"
                     android:textAppearance="@style/TextAppearance.AppCompat.Medium"
                     android:textColor="@color/colorPrimary" />
 
@@ -162,6 +169,8 @@
                     android:layout_height="wrap_content"
                     android:layout_alignParentStart="true"
                     android:layout_centerVertical="true"
+                    android:layout_marginEnd="@dimen/entry_side_margin"
+                    android:layout_toStartOf="@+id/settings_search_distance_picker"
                     android:text="@string/search_distance_meters"
                     android:textAppearance="@style/TextAppearance.AppCompat.Medium"
                     android:textColor="@color/colorPrimary" />
@@ -188,7 +197,9 @@
                     android:layout_height="wrap_content"
                     android:layout_alignParentStart="true"
                     android:layout_centerVertical="true"
-                    android:text="Refresh rate: Time (min)"
+                    android:layout_marginEnd="@dimen/entry_side_margin"
+                    android:layout_toStartOf="@+id/settings_time_refresh_number_picker"
+                    android:text="@string/refresh_rate_time_min"
                     android:textAppearance="@style/TextAppearance.AppCompat.Medium"
                     android:textColor="@color/colorPrimary" />
 
@@ -214,7 +225,8 @@
                     android:layout_height="wrap_content"
                     android:layout_alignParentStart="true"
                     android:layout_centerVertical="true"
-                    android:text="Refresh rate: Distance (meters)"
+                    android:text="@string/refresh_rate_distance_meters"
+                    android:layout_toStartOf="@+id/settings_dis_refresh_number_picker"
                     android:textAppearance="@style/TextAppearance.AppCompat.Medium"
                     android:textColor="@color/colorPrimary" />
 
@@ -227,22 +239,39 @@
             </RelativeLayout>
         </LinearLayout>
 
-        <Button
-            android:id="@+id/delete_account_button"
-            style="@style/SecondaryButton"
-            android:layout_width="@dimen/button_width"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:layout_margin="@dimen/button_margin"
-            android:text="@string/delete_account_button" />
+        <!-- stretching frame layout, using layout_weight -->
 
-        <Button
-            android:id="@+id/commit_settings_button"
-            style="@style/PrimaryButton"
-            android:layout_width="@dimen/button_width"
+        <FrameLayout
+            android:id="@+id/new_event_logistics_frame_layout"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1" />
+
+        <!-- content fixated to the bottom of the screen -->
+
+        <LinearLayout
+            android:id="@+id/settings_button_layout"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:layout_margin="@dimen/button_margin"
-            android:text="@string/commit_button" />
+            android:orientation="vertical">
+
+            <Button
+                android:id="@+id/delete_account_button"
+                style="@style/SecondaryButton"
+                android:layout_width="@dimen/button_width"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_margin="@dimen/button_margin"
+                android:text="@string/delete_account_button" />
+
+            <Button
+                android:id="@+id/commit_settings_button"
+                style="@style/PrimaryButton"
+                android:layout_width="@dimen/button_width"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_margin="@dimen/button_margin"
+                android:text="@string/commit_button" />
+        </LinearLayout>
     </LinearLayout>
 </ScrollView>

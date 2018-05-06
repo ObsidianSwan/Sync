@@ -14,6 +14,6 @@
         android:layout_height="wrap_content"
         android:gravity="center_horizontal"
         android:layout_gravity="center"
-        android:text="Tap to add a new connection with NFC"/>
+        android:text="@string/nfc_activity_text"/>
 
 </LinearLayout>

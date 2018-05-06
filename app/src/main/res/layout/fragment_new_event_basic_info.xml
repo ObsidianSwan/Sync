@@ -21,7 +21,8 @@
             android:layout_marginTop="@dimen/new_event_image_top_margin"
             android:background="@android:color/transparent"
             android:scaleType="centerCrop"
-            app:srcCompat="@drawable/add_photo" />
+            app:srcCompat="@drawable/add_photo"
+            android:contentDescription="@string/event_image_content_description"/>
 
         <EditText
             android:id="@+id/new_event_title_text"

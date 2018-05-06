@@ -23,7 +23,8 @@
             android:layout_marginTop="@dimen/entry_top_margin"
             android:background="@android:color/transparent"
             android:scaleType="centerCrop"
-            app:srcCompat="@drawable/add_photo" />
+            app:srcCompat="@drawable/add_photo"
+            android:contentDescription="@string/profile_image"/>
 
         <EditText
             android:id="@+id/edit_first_name_text"

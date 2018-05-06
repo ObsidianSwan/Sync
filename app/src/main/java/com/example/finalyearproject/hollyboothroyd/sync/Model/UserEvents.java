@@ -7,7 +7,6 @@ import android.location.LocationManager;
 import android.util.Log;
 import android.widget.Toast;
 
-import com.example.finalyearproject.hollyboothroyd.sync.Activities.Fragments.SettingsFragment;
 import com.example.finalyearproject.hollyboothroyd.sync.R;
 import com.example.finalyearproject.hollyboothroyd.sync.Services.DatabaseManager;
 import com.example.finalyearproject.hollyboothroyd.sync.Services.LocationFilter;
@@ -16,7 +15,6 @@ import com.example.finalyearproject.hollyboothroyd.sync.Utils.Util;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
-import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;

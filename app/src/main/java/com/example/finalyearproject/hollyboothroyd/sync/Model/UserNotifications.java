@@ -7,7 +7,6 @@ package com.example.finalyearproject.hollyboothroyd.sync.Model;
 import android.content.Context;
 import android.support.annotation.NonNull;
 import android.util.Log;
-import android.widget.Switch;
 
 import com.example.finalyearproject.hollyboothroyd.sync.R;
 import com.example.finalyearproject.hollyboothroyd.sync.Services.DatabaseManager;
@@ -38,7 +37,6 @@ public class UserNotifications {
 
     public UserNotifications(final Context context) {
         mDatabaseManager = new DatabaseManager();
-
         // Listen for changes in the users notification database
         mUserNotificationsListener = mDatabaseManager.getNotifications().addValueEventListener(new ValueEventListener() {
             @Override

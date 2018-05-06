@@ -24,8 +24,6 @@ import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 
-import static com.google.android.gms.tasks.Tasks.await;
-
 /**
  * A login screen that offers login via email/password.
  */

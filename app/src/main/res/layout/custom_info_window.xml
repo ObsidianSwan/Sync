@@ -15,7 +15,8 @@
             android:layout_gravity="center"
             android:layout_margin="10dp"
             android:scaleType="centerCrop"
-            android:src="@mipmap/ic_launcher_foreground" />
+            android:src="@mipmap/ic_launcher_foreground"
+            android:contentDescription="@string/profile_image"/>
 
         <RelativeLayout
             android:layout_width="match_parent"
