@@ -1,7 +1,6 @@
 package com.example.finalyearproject.hollyboothroyd.sync.Activities.Fragments;
 
 import android.Manifest;
-import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
@@ -15,12 +14,12 @@ import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.SystemClock;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.NavigationView;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -33,7 +32,6 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.example.finalyearproject.hollyboothroyd.sync.Activities.CoreActivity;
 import com.example.finalyearproject.hollyboothroyd.sync.Model.Event;
 import com.example.finalyearproject.hollyboothroyd.sync.Model.Notification;
 import com.example.finalyearproject.hollyboothroyd.sync.Model.NotificationBase;
@@ -92,7 +90,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import static android.content.Context.LOCATION_SERVICE;
 
 /**
- * Created by hollyboothroyd on 12/11/2017.
+ * Created by hollyboothroyd
+ * 12/11/2017.
  */
 public class GMapFragment extends Fragment implements OnMapReadyCallback,
         GoogleMap.OnInfoWindowClickListener, GoogleMap.OnMarkerClickListener, NavigationView.OnNavigationItemSelectedListener, UserEventsListener {
@@ -157,6 +156,9 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
     private int mPrivacyIntensity = Constants.privacyIntensityDefault;
 
     private final String linkedInProfileDetails = "https://api.linkedin.com/v1/people/~:(first-name,last-name,email-address,picture-urls::(original),positions,industry)?format=json";
+
+    private int mPermissionsRequestLocation;
+    private Object mPermissionsRequestObject;
 
     @Nullable
     @Override
@@ -226,7 +228,6 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
 
 
         // Check profile details match their LinkedIn if they are connected
-        // TODO write in report a future feature could be addding linkedin connectivity post account creation
         mDatabaseManager.getUserPeopleDatabaseReference().addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
@@ -532,7 +533,6 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
                 for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
                     // The current user does not need a geofence placed around it
                     if (!snapshot.getKey().equals(mCurrentUserId) && mPeopleMap.containsKey(snapshot.getKey())) {
-                        // TODO check the location of the person changed
                         HashMap<String, Double> locationHash = (HashMap<String, Double>) snapshot.getValue();
                         // Create a geofence around the person, so if the user enters the persons
                         // geofence, the system is notified to put the person on the map
@@ -669,13 +669,19 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
 
     // Add longitude and latitude to person database
     // Update user location on the map
-    @SuppressLint("MissingPermission")
     private void setUserLocation() {
-        Location lastKnownLocation = Util.getLastKnownLocation(mLocationManager);
-        if (lastKnownLocation == null) {
-            Toast.makeText(getActivity(), R.string.could_not_find_location, Toast.LENGTH_SHORT).show();
+        // Check if location permissions have been granted
+        if (ActivityCompat.checkSelfPermission(getContext(), android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(getContext(), android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            // Request Location permissions
+            ActivityCompat.requestPermissions(getActivity(), new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION, android.Manifest.permission.ACCESS_COARSE_LOCATION}, 2);
+            mPermissionsRequestLocation = 0;
         } else {
-            updateUserLocation(new LatLng(lastKnownLocation.getLatitude(), lastKnownLocation.getLongitude()), true);
+            Location lastKnownLocation = Util.getLastKnownLocation(mLocationManager);
+            if (lastKnownLocation == null) {
+                Toast.makeText(getActivity(), R.string.could_not_find_location, Toast.LENGTH_SHORT).show();
+            } else {
+                updateUserLocation(new LatLng(lastKnownLocation.getLatitude(), lastKnownLocation.getLongitude()), true);
+            }
         }
     }
 
@@ -767,7 +773,6 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
         }
     }
 
-    @SuppressLint("MissingPermission")
     private void createPersonMarker(final Person person) {
         // Check if the person marker is the current users
         if (person.getUserId().equals(mCurrentUserId)) {
@@ -777,21 +782,28 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
             markerOptions.title(person.getFirstName() + " " + person.getLastName());
 
             // Set current users pin to actual location and not the obfuscated location
-            Location lastKnownLocation = Util.getLastKnownLocation(mLocationManager);
-            markerOptions.position(new LatLng(lastKnownLocation.getLatitude(), lastKnownLocation.getLongitude()));
+            // Check if location permissions have been granted
+            if (ActivityCompat.checkSelfPermission(getContext(), android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(getContext(), android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                // Request Location permissions
+                ActivityCompat.requestPermissions(getActivity(), new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION, android.Manifest.permission.ACCESS_COARSE_LOCATION}, 2);
+                mPermissionsRequestLocation = 1;
+                mPermissionsRequestObject = person;
+            } else {
+                Location lastKnownLocation = Util.getLastKnownLocation(mLocationManager);
+                markerOptions.position(new LatLng(lastKnownLocation.getLatitude(), lastKnownLocation.getLongitude()));
 
-            markerOptions.snippet("Position: " + person.getPosition() +
-                    "\nCompany: " + person.getCompany());
+                markerOptions.snippet("Position: " + person.getPosition() +
+                        "\nCompany: " + person.getCompany());
 
-            Marker newMarker = mMap.addMarker(markerOptions);
-            newMarker.setTag(Constants.personMarkerTag);
+                Marker newMarker = mMap.addMarker(markerOptions);
+                newMarker.setTag(Constants.personMarkerTag);
 
-            // Store person data to a map to use in the mDialog and the CustomInfoWindow
-            // Save person markers in a map to be able to clear person markers individually or as a group separate from the events markers
-            mPersonMarkerMap.put(newMarker.getId(), person);
-            mPersonMarkerList.add(newMarker);
-            mCustomInfoWindow.addMarkerImage(newMarker.getId(), person.getImageId());
-
+                // Store person data to a map to use in the mDialog and the CustomInfoWindow
+                // Save person markers in a map to be able to clear person markers individually or as a group separate from the events markers
+                mPersonMarkerMap.put(newMarker.getId(), person);
+                mPersonMarkerList.add(newMarker);
+                mCustomInfoWindow.addMarkerImage(newMarker.getId(), person.getImageId());
+            }
         } else {
             mDatabaseManager.getUserLocationDatabaseReference(person.getUserId()).addListenerForSingleValueEvent(new ValueEventListener() {
                 @Override
@@ -839,6 +851,24 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
                 marker.remove();
             }
             mPersonMarkerList.clear();
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
+                                           @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+
+        // Check if the location permissions have been granted
+        if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            if (ContextCompat.checkSelfPermission(getContext(), android.Manifest.permission.ACCESS_FINE_LOCATION)
+                    == PackageManager.PERMISSION_GRANTED) {
+                if(mPermissionsRequestLocation == 0){
+                    setUserLocation();
+                } else if (mPermissionsRequestLocation == 1){
+                    createPersonMarker((Person)mPermissionsRequestObject);
+                }
+            }
         }
     }
 
@@ -1111,7 +1141,8 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
                             } else {
                                 Toast.makeText(getActivity(), R.string.event_attendence_unsuccessful, Toast.LENGTH_SHORT).show();
                                 Log.e(TAG, getString(R.string.event_attendence_unsuccessful));
-                                // TODO: Remove the added previous db entry
+                                // Remove the previously added database entry
+                                mDatabaseManager.deleteUserAttendingEvent(event.getUid());
                             }
                         }
                     });

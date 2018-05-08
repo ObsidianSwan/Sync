@@ -28,6 +28,7 @@ import android.widget.Toast;
 
 import com.example.finalyearproject.hollyboothroyd.sync.Activities.Fragments.GMapFragment;
 import com.example.finalyearproject.hollyboothroyd.sync.Model.NotificationBase;
+import com.example.finalyearproject.hollyboothroyd.sync.Model.Person;
 import com.example.finalyearproject.hollyboothroyd.sync.R;
 import com.example.finalyearproject.hollyboothroyd.sync.Services.AccountManager;
 import com.example.finalyearproject.hollyboothroyd.sync.Services.DatabaseManager;
@@ -117,22 +118,16 @@ public class NFCActivity extends AppCompatActivity {
     }
 
     private void enableNdefExchangeMode() {
-        // TODO: What if permissions are rejected. If they are later granted this is not called
-        if (ContextCompat.checkSelfPermission(NFCActivity.this, android.Manifest.permission.NFC)
-                == PackageManager.PERMISSION_GRANTED) {
+        String userId = mAccountManager.getCurrentUser().getUid();
 
-            String userId = mAccountManager.getCurrentUser().getUid();
+        // Create an NDEF message containing the user's ID
+        NdefMessage message = new NdefMessage(new NdefRecord[]{createMime("text/plain", userId.getBytes())});
+        mNfcAdapter.setNdefPushMessage(message, NFCActivity.this);
 
-            // Create an NDEF message containing the user's ID
-            NdefMessage message = new NdefMessage(new NdefRecord[]{createMime("text/plain", userId.getBytes())});
-            mNfcAdapter.setNdefPushMessage(message, NFCActivity.this);
-
-            // Set up listener for the intent that is filtered for
-            mNfcAdapter.enableForegroundDispatch(this, mNfcPendingIntent,
-                    mNdefExchangeFilters, null);
-        }
+        // Set up listener for the intent that is filtered for
+        mNfcAdapter.enableForegroundDispatch(this, mNfcPendingIntent,
+                mNdefExchangeFilters, null);
     }
-
 
     @Override
     public void onNewIntent(Intent intent) {

@@ -9,6 +9,7 @@ import com.example.finalyearproject.hollyboothroyd.sync.Activities.Fragments.New
 import com.example.finalyearproject.hollyboothroyd.sync.Activities.Fragments.NotificationFragment;
 import com.example.finalyearproject.hollyboothroyd.sync.Activities.Fragments.SettingsFragment;
 import com.example.finalyearproject.hollyboothroyd.sync.Activities.Fragments.ViewEventsFragment;
+import com.example.finalyearproject.hollyboothroyd.sync.Activities.NewAccount.NewAccountPhotoActivity;
 import com.example.finalyearproject.hollyboothroyd.sync.Model.Event;
 import com.example.finalyearproject.hollyboothroyd.sync.Model.NotificationBase;
 import com.example.finalyearproject.hollyboothroyd.sync.Model.UserConnections;
@@ -18,11 +19,14 @@ import com.example.finalyearproject.hollyboothroyd.sync.Model.UserNotifications;
 import com.example.finalyearproject.hollyboothroyd.sync.Services.AccountManager;
 
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.support.annotation.NonNull;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.FragmentTransaction;
+import android.support.v4.content.ContextCompat;
 import android.util.Log;
 import android.view.View;
 import android.support.design.widget.NavigationView;
@@ -73,7 +77,12 @@ public class CoreActivity extends AppCompatActivity
 
         // Instantiate these so the database listener is set up and the user connections, events, and notifications lists stay up to date
         mUserConnections = new UserConnections();
-        mUserEvents = new UserEvents(this);
+        if (ActivityCompat.checkSelfPermission(CoreActivity.this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(CoreActivity.this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            // Request Location permissions
+            ActivityCompat.requestPermissions(CoreActivity.this, new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION, android.Manifest.permission.ACCESS_COARSE_LOCATION}, 2);
+        } else {
+            mUserEvents = new UserEvents(this);
+        }
         mUserNotifications = new UserNotifications(this);
 
         mSupportFragmentManager = getSupportFragmentManager();
@@ -213,6 +222,20 @@ public class CoreActivity extends AppCompatActivity
             // Return to the GMaps fragment, if one of the non-nested menu fragments is showing
             mSupportFragmentManager.beginTransaction().replace(R.id.content_frame, new GMapFragment(), getString(R.string.gmaps_tag)).commit();
             mCurrentFragment = R.string.gmaps_tag;
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
+                                           @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+
+        // Check if the location permissions have been granted
+        if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            if (ContextCompat.checkSelfPermission(getApplicationContext(), android.Manifest.permission.ACCESS_FINE_LOCATION)
+                    == PackageManager.PERMISSION_GRANTED) {
+                mUserEvents = new UserEvents(this);
+            }
         }
     }
 

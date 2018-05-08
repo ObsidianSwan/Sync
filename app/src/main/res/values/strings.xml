@@ -299,4 +299,11 @@
     <string name="refresh_rate_time_min">Refresh rate: Time (min)</string>
     <string name="refresh_rate_distance_meters">Refresh rate: Distance (meters)</string>
     <string name="sidebar_system_title">System</string>
+    <string name="re_enter_new_password">Re-enter New Password</string>
+    <string name="new_password">New Password</string>
+    <string name="new_email">New Email</string>
+    <string name="verify">Verify</string>
+    <string name="please_verify_your_current_account_details">Please verify your current account details</string>
+    <string name="account_details">Account Details</string>
+    <string name="incorrect_login_details">Login details are incorrect</string>
 </resources>

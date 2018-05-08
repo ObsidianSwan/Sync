@@ -67,6 +67,7 @@
                 android:layout_height="150dp"
                 android:gravity="top"
                 android:layout_gravity="center"
+                android:maxLength="15"
                 android:layout_marginEnd="@dimen/entry_side_margin"
                 android:layout_marginStart="@dimen/entry_side_margin"
                 android:layout_marginTop="@dimen/entry_top_margin"
@@ -101,7 +102,6 @@
                     android:layout_centerHorizontal="true"
                     android:hint="@string/new_event_date_hint"
                     android:inputType="date"
-                    android:maxLength="10"
                     android:textAppearance="@style/TextAppearance.AppCompat.Medium" />
 
                 <Button

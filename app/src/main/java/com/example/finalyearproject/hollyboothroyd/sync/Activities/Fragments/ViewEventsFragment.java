@@ -41,15 +41,6 @@ public class ViewEventsFragment extends Fragment {
     public ViewEventsFragment() {
     }
 
-    @SuppressWarnings("unused")
-    public static ViewEventsFragment newInstance(int columnCount) {
-        ViewEventsFragment fragment = new ViewEventsFragment();
-        Bundle args = new Bundle();
-        args.putInt(ARG_COLUMN_COUNT, columnCount);
-        fragment.setArguments(args);
-        return fragment;
-    }
-
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);

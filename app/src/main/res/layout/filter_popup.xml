@@ -51,6 +51,7 @@
                     android:layout_height="wrap_content"
                     android:layout_alignParentEnd="true"
                     android:inputType="text"
+                    android:maxLength="15"
                     style="@style/RoundedOutline"/>
 
             </RelativeLayout>
@@ -81,6 +82,7 @@
                     android:layout_height="wrap_content"
                     android:layout_alignParentEnd="true"
                     android:inputType="text"
+                    android:maxLength="15"
                     style="@style/RoundedOutline"/>
 
             </RelativeLayout>
@@ -111,6 +113,7 @@
                     android:layout_height="wrap_content"
                     android:layout_alignParentEnd="true"
                     android:inputType="text"
+                    android:maxLength="15"
                     style="@style/RoundedOutline"/>
 
             </RelativeLayout>
@@ -150,6 +153,7 @@
                     android:layout_height="wrap_content"
                     android:layout_alignParentEnd="true"
                     android:inputType="text"
+                    android:maxLength="15"
                     style="@style/RoundedOutline"/>
             </RelativeLayout>
 

@@ -86,6 +86,50 @@
             android:hint="@string/Industry_Text_Hint"
             android:inputType="textPersonName" />
 
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/account_details"
+            android:layout_marginTop="@dimen/entry_top_margin"
+            android:gravity="center_horizontal"
+            android:textAppearance="@style/TextAppearance.AppCompat.Large"/>
+
+        <EditText
+            android:id="@+id/edit_email_text"
+            style="@style/RoundedOutline"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="@dimen/entry_side_margin"
+            android:layout_marginStart="@dimen/entry_side_margin"
+            android:layout_marginTop="@dimen/entry_top_margin"
+            android:ems="10"
+            android:hint="@string/new_email"
+            android:inputType="textEmailAddress"/>
+
+        <EditText
+            android:id="@+id/edit_password_text"
+            style="@style/RoundedOutline"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="@dimen/entry_side_margin"
+            android:layout_marginStart="@dimen/entry_side_margin"
+            android:layout_marginTop="@dimen/entry_top_margin"
+            android:ems="10"
+            android:hint="@string/new_password"
+            android:inputType="textPassword"/>
+
+        <EditText
+            android:id="@+id/edit_reenter_password_text"
+            style="@style/RoundedOutline"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="@dimen/entry_side_margin"
+            android:layout_marginStart="@dimen/entry_side_margin"
+            android:layout_marginTop="@dimen/entry_top_margin"
+            android:ems="10"
+            android:hint="@string/re_enter_new_password"
+            android:inputType="textPassword"/>
+
         <!-- stretching frame layout, using layout_weight -->
 
         <FrameLayout

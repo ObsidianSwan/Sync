@@ -1,5 +1,6 @@
 package com.example.finalyearproject.hollyboothroyd.sync.Activities.Fragments;
 
+import android.app.AlertDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
@@ -7,24 +8,37 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
 import android.util.Log;
+import android.util.Patterns;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.finalyearproject.hollyboothroyd.sync.Activities.CoreActivity;
+import com.example.finalyearproject.hollyboothroyd.sync.Model.Notification;
+import com.example.finalyearproject.hollyboothroyd.sync.Model.NotificationBase;
 import com.example.finalyearproject.hollyboothroyd.sync.Model.Person;
+import com.example.finalyearproject.hollyboothroyd.sync.Model.UserConnections;
+import com.example.finalyearproject.hollyboothroyd.sync.Model.UserNotifications;
 import com.example.finalyearproject.hollyboothroyd.sync.R;
 import com.example.finalyearproject.hollyboothroyd.sync.Services.DatabaseManager;
 import com.example.finalyearproject.hollyboothroyd.sync.Utils.Constants;
+import com.example.finalyearproject.hollyboothroyd.sync.Utils.NotificationType;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
+import com.google.firebase.auth.AuthCredential;
+import com.google.firebase.auth.EmailAuthProvider;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.UploadTask;
 import com.squareup.picasso.Picasso;
@@ -32,6 +46,7 @@ import com.theartofdev.edmodo.cropper.CropImage;
 import com.theartofdev.edmodo.cropper.CropImageView;
 
 import java.net.URI;
+import java.util.regex.Pattern;
 
 import static android.app.Activity.RESULT_OK;
 
@@ -54,6 +69,9 @@ public class EditProfileFragment extends Fragment {
     private EditText mPosition;
     private EditText mCompany;
     private EditText mIndustry;
+    private EditText mNewEmail;
+    private EditText mNewPassword;
+    private EditText mReenteredNewPassword;
 
     private String mOriginalProfileImageUri;
     private String mOriginalFirstName;
@@ -64,7 +82,13 @@ public class EditProfileFragment extends Fragment {
 
     private Button mCommitButton;
 
+    private AlertDialog.Builder mDialogBuilder;
+    private AlertDialog mDialog;
+
     private boolean mProfileChanged = false;
+    private boolean mAccountDetailsChanged = false;
+
+    private FirebaseUser mCurrentUser;
 
     private OnFragmentInteractionListener mListener;
 
@@ -93,6 +117,10 @@ public class EditProfileFragment extends Fragment {
         mPosition = (EditText) view.findViewById(R.id.edit_position_text);
         mCompany = (EditText) view.findViewById(R.id.edit_company_text);
         mIndustry = (EditText) view.findViewById(R.id.edit_industry_text);
+        mNewEmail = (EditText) view.findViewById(R.id.edit_email_text);
+        mNewPassword = (EditText) view.findViewById(R.id.edit_password_text);
+        mReenteredNewPassword = (EditText) view.findViewById(R.id.edit_reenter_password_text);
+
         mCommitButton = (Button) view.findViewById(R.id.edit_profile_commit_button);
 
         // Open the gallery to select the profile image
@@ -128,6 +156,8 @@ public class EditProfileFragment extends Fragment {
                     mPosition.setText(mOriginalPosition);
                     mCompany.setText(mOriginalCompany);
                     mIndustry.setText(mOriginalIndustry);
+
+                    mCurrentUser = FirebaseAuth.getInstance().getCurrentUser();
                 }
             }
 
@@ -147,6 +177,9 @@ public class EditProfileFragment extends Fragment {
                 String inputtedPosition = mPosition.getText().toString().trim();
                 String inputtedCompany = mCompany.getText().toString().trim();
                 String inputtedIndustry = mIndustry.getText().toString().trim();
+                String inputtedEmail = mNewEmail.getText().toString().trim();
+                String inputtedPassword = mNewPassword.getText().toString().trim();
+                String inputtedReenteredPassword = mReenteredNewPassword.getText().toString().trim();
 
                 // Check if the user's profile image has been changed
                 if (mProfileImageUri != null && !mOriginalProfileImageUri.equals(mProfileImageUri.toString())) {
@@ -207,14 +240,156 @@ public class EditProfileFragment extends Fragment {
                     mOriginalIndustry = inputtedIndustry;
                     mProfileChanged = true;
                 }
+
+                // Update the account authentication if the users email and password has changed
+                if (!inputtedPassword.equals("") && !inputtedReenteredPassword.equals("")) {
+                    // Check that the password and verify password match
+                    if(inputtedPassword.equals(inputtedReenteredPassword)) {
+                        if (!inputtedEmail.equals("") && isEmailValid(inputtedEmail)) {
+                            editAccountDetailsPopupCreation(0, inputtedEmail, inputtedPassword);
+                            mAccountDetailsChanged = true;
+                        }
+                    } else{
+                        mReenteredNewPassword.setError(getString(R.string.error_invalid_verify_password));
+                    }
+                } // Update the account authentication if the users email has changed
+                else if (!inputtedEmail.equals("") && isEmailValid(inputtedEmail)) {
+                    editAccountDetailsPopupCreation(1, inputtedEmail, null);
+                    mAccountDetailsChanged = true;
+                } // Update the account authentication if the users password has changed
+                else if (!inputtedPassword.equals("") && !inputtedReenteredPassword.equals("") && isPasswordValid(inputtedPassword)) {
+                    // Check that the password and verify password match
+                    if(inputtedPassword.equals(inputtedReenteredPassword)) {
+                        editAccountDetailsPopupCreation(2, inputtedPassword, null);
+                        mAccountDetailsChanged = true;
+                    } else{
+                        mReenteredNewPassword.setError(getString(R.string.error_invalid_verify_password));
+                    }
+                }
+
                 if (mProfileChanged) {
                     Toast.makeText(getActivity(), R.string.edit_profile_successfully_changed, Toast.LENGTH_SHORT).show();
+                } else if (mAccountDetailsChanged) {
+                    // Do nothing. Toast will be shown after account has been verified
                 } else {
                     Toast.makeText(getActivity(), R.string.edit_profile_no_changes_toast, Toast.LENGTH_SHORT).show();
                 }
             }
         });
         return view;
+    }
+
+    private void editAccountDetailsPopupCreation(final int editedField, final String editedContent, final String editedContent2) {
+        mDialogBuilder = new AlertDialog.Builder(getContext());
+        final View view = LayoutInflater.from(getContext()).inflate(R.layout.account_details_popup, null);
+        // Get person data who viewed the current users profile
+
+
+        // Set up the UI
+        Button dismissPopupButton = (Button) view.findViewById(R.id.dismiss_popup_button);
+        TextView popupTitle = (TextView) view.findViewById(R.id.account_details_popup_title);
+        final EditText email = (EditText) view.findViewById(R.id.edit_original_email_text);
+        final EditText password = (EditText) view.findViewById(R.id.edit_original_password_text);
+        Button verifyButton = (Button) view.findViewById(R.id.verify_button);
+
+
+        verifyButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                // Get auth credentials from the user for re-authentication.
+                AuthCredential credential = EmailAuthProvider
+                        .getCredential(email.getText().toString().trim(), password.getText().toString().trim());
+
+                // Prompt the user to re-provide their sign-in credentials
+                // This is necessary if the user has not logged in in awhile
+                mCurrentUser.reauthenticate(credential)
+                        .addOnCompleteListener(new OnCompleteListener<Void>() {
+                            @Override
+                            public void onComplete(@NonNull Task<Void> task) {
+                                if (task.isSuccessful()) {
+                                    if(editedField == 0){
+                                        mCurrentUser.updateEmail(editedContent).addOnCompleteListener(new OnCompleteListener<Void>() {
+                                            @Override
+                                            public void onComplete(@NonNull Task<Void> task) {
+                                                if (task.isSuccessful()) {
+                                                    Log.d(TAG, "Email updated");
+                                                    mCurrentUser.updatePassword(editedContent2).addOnCompleteListener(new OnCompleteListener<Void>() {
+                                                        @Override
+                                                        public void onComplete(@NonNull Task<Void> task) {
+                                                            if (task.isSuccessful()) {
+                                                                Log.d(TAG, "Password updated");
+                                                                mDialog.dismiss();
+                                                                Toast.makeText(getActivity(), R.string.edit_profile_successfully_changed, Toast.LENGTH_SHORT).show();
+                                                            } else {
+                                                                Log.d(TAG, "Error password not updated");
+                                                            }
+                                                        }
+                                                    });
+                                                } else {
+                                                    Log.d(TAG, "Error email not updated");
+                                                }
+                                            }
+                                        });
+                                    }
+                                    if(editedField == 1){
+                                        mCurrentUser.updateEmail(editedContent).addOnCompleteListener(new OnCompleteListener<Void>() {
+                                            @Override
+                                            public void onComplete(@NonNull Task<Void> task) {
+                                                if (task.isSuccessful()) {
+                                                    Log.d(TAG, "Email updated");
+                                                    mDialog.dismiss();
+                                                    Toast.makeText(getActivity(), R.string.edit_profile_successfully_changed, Toast.LENGTH_SHORT).show();
+                                                } else {
+                                                    Log.d(TAG, "Error email not updated");
+                                                }
+                                            }
+                                        });
+                                    }
+                                    if(editedField == 2) {
+                                        mCurrentUser.updatePassword(editedContent).addOnCompleteListener(new OnCompleteListener<Void>() {
+                                            @Override
+                                            public void onComplete(@NonNull Task<Void> task) {
+                                                if (task.isSuccessful()) {
+                                                    Log.d(TAG, "Password updated");
+                                                    mDialog.dismiss();
+                                                    Toast.makeText(getActivity(), R.string.edit_profile_successfully_changed, Toast.LENGTH_SHORT).show();
+                                                } else {
+                                                    Log.d(TAG, "Error password not updated");
+                                                }
+                                            }
+                                        });
+                                    }
+                                } else {
+                                    Toast.makeText(getActivity(), R.string.incorrect_login_details, Toast.LENGTH_SHORT).show();
+                                    Log.d(TAG, "Error auth failed");
+                                }
+                            }
+                        });
+            }
+        });
+
+        dismissPopupButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mDialog.dismiss();
+            }
+        });
+
+
+        mDialogBuilder.setView(view);
+        mDialog = mDialogBuilder.create();
+        mDialog.show();
+
+    }
+
+    private boolean isEmailValid(String email) {
+        Pattern pattern = Patterns.EMAIL_ADDRESS;
+        return pattern.matcher(email).matches();
+    }
+
+    private boolean isPasswordValid(String password) {
+        return password.length() > 4;
     }
 
     @Override
