@@ -5,10 +5,7 @@ import android.animation.AnimatorListenerAdapter;
 import android.annotation.TargetApi;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.net.Uri;
-import android.os.AsyncTask;
 import android.os.Build;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
@@ -18,11 +15,12 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.ImageButton;
 import android.widget.Toast;
 
 import com.example.finalyearproject.hollyboothroyd.sync.Activities.CoreActivity;
-import com.example.finalyearproject.hollyboothroyd.sync.Activities.LoginFormActivity;
+import com.example.finalyearproject.hollyboothroyd.sync.Activities.PrivacyPolicyActivity;
 import com.example.finalyearproject.hollyboothroyd.sync.Model.Person;
 import com.example.finalyearproject.hollyboothroyd.sync.R;
 import com.example.finalyearproject.hollyboothroyd.sync.Services.AccountManager;
@@ -46,7 +44,6 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.InputStream;
 import java.util.HashMap;
 
 
@@ -60,6 +57,8 @@ public class NewAccountPhotoActivity extends AppCompatActivity {
     private ImageButton mProfileImage;
     private Button mDoneButton;
     private Button mRetryButton;
+    private Button mPrivacyPolicyButton;
+    private CheckBox mPrivacyPolicyCheckBox;
     private Uri mImageUri;
 
     private final String profileImageUrl = "https://api.linkedin.com/v1/people/~:(picture-urls::(original))?format=json";
@@ -67,6 +66,7 @@ public class NewAccountPhotoActivity extends AppCompatActivity {
     private View mProgressView;
     private View mSignUpFormView;
     private View mRetryView;
+    private View mPrivacyPolicyView;
 
     Float personPinColor = Constants.personPinColorDefault;
     Float eventPinColor = Constants.eventPinColorDefault;
@@ -94,6 +94,8 @@ public class NewAccountPhotoActivity extends AppCompatActivity {
         mProfileImage = (ImageButton) findViewById(R.id.profile_photo_button);
         mDoneButton = (Button) findViewById(R.id.done_button);
         mRetryButton = (Button) findViewById(R.id.retry_button);
+        mPrivacyPolicyButton = (Button) findViewById(R.id.privacy_policy);
+        mPrivacyPolicyCheckBox = (CheckBox) findViewById(R.id.privacy_policy_checkbox);
 
         if(getIntent().getBooleanExtra("isLinkedInConnected", false)){
             APIHelper apiHelper = APIHelper.getInstance(getApplicationContext());
@@ -128,6 +130,13 @@ public class NewAccountPhotoActivity extends AppCompatActivity {
             }
         });
 
+        mPrivacyPolicyButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivity(new Intent(NewAccountPhotoActivity.this, PrivacyPolicyActivity.class));
+            }
+        });
+
 
         mDoneButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -143,13 +152,18 @@ public class NewAccountPhotoActivity extends AppCompatActivity {
                 boolean isLinkedInConnected = getIntent().getBooleanExtra("isLinkedInConnected", false);
 
                 // Register user
-                registerUser(firstName, lastName, position, company, industry, mImageUri, email, password, isLinkedInConnected);
+                if(mPrivacyPolicyCheckBox.isChecked()) {
+                    registerUser(firstName, lastName, position, company, industry, mImageUri, email, password, isLinkedInConnected);
+                } else {
+                    mPrivacyPolicyCheckBox.setError(getString(R.string.privacy_policy_error_text));
+                }
             }
         });
 
         mSignUpFormView = findViewById(R.id.sign_up_layout);
         mProgressView = findViewById(R.id.sign_up_progress);
         mRetryView = findViewById(R.id.retry_layout);
+        mPrivacyPolicyView = findViewById(R.id.privacy_policy_view);
     }
 
     @Override
@@ -289,6 +303,7 @@ public class NewAccountPhotoActivity extends AppCompatActivity {
             public void onComplete(@NonNull Task<Void> task) {
                 showProgress(false);
                 if (task.isSuccessful()) {
+
                     if (ActivityCompat.checkSelfPermission(NewAccountPhotoActivity.this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(NewAccountPhotoActivity.this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
                         // Request Location permissions
                         ActivityCompat.requestPermissions(NewAccountPhotoActivity.this, new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION, android.Manifest.permission.ACCESS_COARSE_LOCATION}, 2);
@@ -349,6 +364,7 @@ public class NewAccountPhotoActivity extends AppCompatActivity {
             int shortAnimTime = getResources().getInteger(android.R.integer.config_shortAnimTime);
 
             // Shows the progress UI and hides the login form.
+            mPrivacyPolicyView.setVisibility(show ? View.GONE : View.VISIBLE);
             mDoneButton.setVisibility(show ? View.GONE : View.VISIBLE);
             mSignUpFormView.setVisibility(show ? View.GONE : View.VISIBLE);
             mSignUpFormView.animate().setDuration(shortAnimTime).alpha(
@@ -357,6 +373,7 @@ public class NewAccountPhotoActivity extends AppCompatActivity {
                 public void onAnimationEnd(Animator animation) {
                     mDoneButton.setVisibility(show ? View.GONE : View.VISIBLE);
                     mSignUpFormView.setVisibility(show ? View.GONE : View.VISIBLE);
+                    mPrivacyPolicyView.setVisibility(show ? View.GONE : View.VISIBLE);
                 }
             });
 
@@ -374,6 +391,7 @@ public class NewAccountPhotoActivity extends AppCompatActivity {
             mProgressView.setVisibility(show ? View.VISIBLE : View.GONE);
             mDoneButton.setVisibility(show ? View.GONE : View.VISIBLE);
             mSignUpFormView.setVisibility(show ? View.GONE : View.VISIBLE);
+            mPrivacyPolicyView.setVisibility(show ? View.GONE : View.VISIBLE);
         }
     }
 }

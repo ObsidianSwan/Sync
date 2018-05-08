@@ -35,7 +35,7 @@
     </group>
 
 
-        <item android:title="Communicate">
+        <item android:title="@string/sidebar_system_title">
             <menu>
                 <item
                     android:id="@+id/nav_settings"

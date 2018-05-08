@@ -21,11 +21,14 @@
             android:theme="@style/AppTheme.NoActionBar">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
             <intent-filter>
                 <action android:name="android.nfc.action.NDEF_DISCOVERED" />
+
                 <category android:name="android.intent.category.DEFAULT" />
+
                 <data android:mimeType="text/plain" />
             </intent-filter>
         </activity>
@@ -70,6 +73,10 @@
         <activity
             android:name=".Activities.NFCActivity"
             android:label="@string/title_activity_nfc"
+            android:theme="@style/AppTheme.NoActionBar" />
+        <activity
+            android:name=".Activities.PrivacyPolicyActivity"
+            android:label="@string/title_activity_privacy_policy"
             android:theme="@style/AppTheme.NoActionBar"></activity>
     </application>
 

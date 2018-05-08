@@ -27,41 +27,42 @@
             android:layout_height="@dimen/popup_img_dimen"
             android:layout_margin="@dimen/popup_margin"
             android:background="@drawable/add_photo"
-            android:scaleType="centerCrop" />
+            android:scaleType="centerCrop"
+            android:contentDescription="@string/profile_image"/>
 
         <TextView
             android:id="@+id/popup_name"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:gravity="center_horizontal"
             android:layout_marginEnd="@dimen/popup_margin"
             android:layout_marginStart="@dimen/popup_margin"
             android:layout_marginTop="@dimen/popup_title_top_margin"
-            android:text="TextView"
             android:textAppearance="@style/TextAppearance.AppCompat.Large"
-            android:textColor="@color/colorPrimary" />
+            android:textColor="@color/colorPrimary"/>
 
         <TextView
             android:id="@+id/popup_position"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:gravity="center_horizontal"
             android:layout_margin="@dimen/popup_margin"
-            android:text="TextView"
             android:textAppearance="@style/TextAppearance.AppCompat.Medium" />
 
         <TextView
             android:id="@+id/popup_company"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:gravity="center_horizontal"
             android:layout_margin="@dimen/popup_margin"
-            android:text="TextView"
             android:textAppearance="@style/TextAppearance.AppCompat.Medium" />
 
         <TextView
             android:id="@+id/popup_industry"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:gravity="center_horizontal"
             android:layout_margin="@dimen/popup_margin"
-            android:text="TextView"
             android:textAppearance="@style/TextAppearance.AppCompat.Medium" />
 
 
@@ -87,10 +88,10 @@
 
         <TextView
             android:id="@+id/popup_connected"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:gravity="center_horizontal"
             android:text="@string/popup_connected_text"
-            android:layout_centerHorizontal="true"
             android:textAppearance="@style/TextAppearance.AppCompat.Large"
             android:textColor="@color/colorPrimary"
             android:visibility="invisible" />

@@ -35,15 +35,6 @@ public class NotificationFragment extends Fragment {
     public NotificationFragment() {
     }
 
-    @SuppressWarnings("unused")
-    public static NotificationFragment newInstance(int columnCount) {
-        NotificationFragment fragment = new NotificationFragment();
-        Bundle args = new Bundle();
-        args.putInt(ARG_COLUMN_COUNT, columnCount);
-        fragment.setArguments(args);
-        return fragment;
-    }
-
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);

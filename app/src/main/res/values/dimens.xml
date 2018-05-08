@@ -41,7 +41,7 @@
     // Sidebar
     <dimen name="nav_header_vertical_spacing">25dp</dimen>
     <dimen name="nav_header_horizontal_spacing">5dp</dimen>
-    <dimen name="nav_header_top">50dp</dimen>
+    <dimen name="nav_header_top">30dp</dimen>
     <dimen name="nav_header_photo">15dp</dimen>
     <dimen name="nav_header_height">176dp</dimen>
     <dimen name="nav_header_image_top_margin">45dp</dimen>
@@ -55,7 +55,7 @@
     <dimen name="text_margin">16dp</dimen>
     <dimen name="custom_info_window_image_dimen">100dp</dimen>
     <dimen name="popup_img_dimen">250dp</dimen>
-    <dimen name="popup_margin">6dp</dimen>
+    <dimen name="popup_margin">8dp</dimen>
     <dimen name="popup_content_bottom_margin">16dp</dimen>
     <dimen name="popup_title_top_margin">16dp</dimen>
 
@@ -69,4 +69,8 @@
     <dimen name="small_popup_margin">3dp</dimen>
     <dimen name="linkedin_popup_margin">20dp</dimen>
     <dimen name="linkedin_button_end_margin">15dp</dimen>
+    <dimen name="app_bar_height">180dp</dimen>
+    <dimen name="connection_margin">8dp</dimen>
+    <dimen name="connection_dimen">125dp</dimen>
+    <dimen name="navigation_img_dimen">125dp</dimen>
 </resources>

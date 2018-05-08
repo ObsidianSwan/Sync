@@ -12,11 +12,8 @@
         android:id="@+id/notification_image"
         android:layout_width="@dimen/event_image_dimen"
         android:layout_height="@dimen/event_image_dimen"
-        android:scaleType="centerCrop" />
-
-    <RelativeLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:scaleType="centerCrop"
+        android:contentDescription="@string/notification_image_content_description"/>
 
         <LinearLayout
             android:layout_width="wrap_content"
@@ -34,9 +31,7 @@
             <TextView
                 android:id="@+id/notification_description_text"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Description" />
+                android:layout_height="wrap_content" />
 
         </LinearLayout>
-    </RelativeLayout>
 </LinearLayout>

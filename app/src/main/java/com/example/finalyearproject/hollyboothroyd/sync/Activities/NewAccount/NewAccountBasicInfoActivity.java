@@ -5,6 +5,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.util.Log;
+import android.util.Patterns;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -19,6 +20,8 @@ import com.linkedin.platform.listeners.ApiResponse;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import java.util.regex.Pattern;
 
 public class NewAccountBasicInfoActivity extends AppCompatActivity {
 
@@ -115,7 +118,6 @@ public class NewAccountBasicInfoActivity extends AppCompatActivity {
             focusView = mLastNameText;
         }
         // Check for a valid email address.
-        // TODO better email check
         if (TextUtils.isEmpty(email)) {
             mEmailText.setError(getString(R.string.error_field_required));
             focusView = mEmailText;
@@ -154,7 +156,8 @@ public class NewAccountBasicInfoActivity extends AppCompatActivity {
     }
 
     private boolean isEmailValid(String email) {
-        return email.contains("@");
+        Pattern pattern = Patterns.EMAIL_ADDRESS;
+        return pattern.matcher(email).matches();
     }
 
     private boolean isPasswordValid(String password) {

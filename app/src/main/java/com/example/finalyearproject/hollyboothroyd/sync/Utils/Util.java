@@ -1,44 +1,15 @@
 package com.example.finalyearproject.hollyboothroyd.sync.Utils;
 
 import android.annotation.SuppressLint;
-import android.app.Activity;
 import android.app.AlertDialog;
-import android.app.Dialog;
 import android.content.Context;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
 import android.location.LocationManager;
-import android.os.AsyncTask;
-import android.support.annotation.NonNull;
-import android.util.Log;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.widget.Button;
-import android.widget.ImageButton;
-import android.widget.ImageView;
-import android.widget.TextView;
-import android.widget.Toast;
-
-import com.example.finalyearproject.hollyboothroyd.sync.Model.Event;
-import com.example.finalyearproject.hollyboothroyd.sync.Model.UserEvents;
-import com.example.finalyearproject.hollyboothroyd.sync.R;
-import com.example.finalyearproject.hollyboothroyd.sync.Services.AccountManager;
-import com.example.finalyearproject.hollyboothroyd.sync.Services.DatabaseManager;
 import com.google.android.gms.maps.model.LatLng;
-import com.google.android.gms.maps.model.Marker;
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.Task;
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.ValueEventListener;
-import com.squareup.picasso.Picasso;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -48,7 +19,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
 /**
- * Created by hollyboothroyd on 12/10/2017.
+ * Created by hollyboothroyd
+ * 12/10/2017.
  */
 
 public class Util {
@@ -97,6 +69,7 @@ public class Util {
         return String.format ("%dm", diffInMinutes);
     }
 
+    // Permissions check is done in the calling activity or fragment
     @SuppressLint("MissingPermission")
     public static Location getLastKnownLocation(LocationManager locationManager) {
         List<String> providers = locationManager.getProviders(true);
