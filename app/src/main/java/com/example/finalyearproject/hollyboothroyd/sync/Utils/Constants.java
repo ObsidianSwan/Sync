@@ -3,7 +3,8 @@ package com.example.finalyearproject.hollyboothroyd.sync.Utils;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 
 /**
- * Created by hollyboothroyd on 12/10/2017.
+ * Created by hollyboothroyd
+ * 12/10/2017.
  */
 
 public class Constants {
@@ -33,7 +34,6 @@ public class Constants {
     public static final String geofenceLatitude = "latitude";
     public static final String geofenceLongitude = "longitude";
     public static final String geofenceUserId = "userId";
-    public static final String geofenceEnterTrigger = "geofenceEnterTriggered";
 
     // Location Privacy Names
 
@@ -51,17 +51,23 @@ public class Constants {
 
     public static final int timeRefreshRatePickerMinValue = 1;
     public static final int timeRefreshRatePickerMaxValue = 60;
+    public static final int timeRefreshRatePickerStepValue = 5;
+    public static final int timeRefreshRatePickerSize = 13;
 
-    public static final int disRefreshRatePickerMinValue = 5;
+    public static final int disRefreshRatePickerMinValue = 1;
     public static final int disRefreshRatePickerMaxValue = 500;
+    public static final int disRefreshRatePickerStepValue = 20;
+    public static final int disRefreshRatePickerSize = 26;
 
-    public static final int searchRadiusPickerMinValue = 50;
+    public static final int searchRadiusPickerMinValue = 1;
     public static final int searchRadiusPickerMaxValue = 800;
+    public static final int searchRadiusPickerStepValue = 20;
+    public static final int searchRadiusPickerSize = 36;
+
 
     // Database/storage references
     public static final String peopleDatabaseRefName = "people";
     public static final String userNotificationDatabaseRefName = "notifications";
-    public static final String sentNotificationDatabaseRefName = "sent_notifications";
     public static final String connectionDatabaseRefName = "connections";
     public static final String locationDatabaseRefName = "people_locations";
     public static final String connectionRequestsDatabaseRefName = "connection_requests";
@@ -98,7 +104,6 @@ public class Constants {
 
     public static final String personImgStorageName = "person_images";
     public static final String eventImgStorageName = "event_images";
-    public static final String eventDefaultImgStorageUrl = "https://firebasestorage.googleapis.com/v0/b/sync-1a37a.appspot.com/o/Event_Images%2FLogoSqTransparent.png?alt=media&token=b45dc652-3b09-48a1-8371-31748e4967ac";
 
     // Event tabs
     public static final String allEventsTab = "allEvents";

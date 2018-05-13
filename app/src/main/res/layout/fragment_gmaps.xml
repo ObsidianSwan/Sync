@@ -7,6 +7,14 @@
     tools:context="com.example.finalyearproject.hollyboothroyd.sync.Activities.Fragments.GMapFragment">
 
     <Button
+        android:id="@+id/menu_button"
+        android:layout_width="@dimen/filter_dimen"
+        android:layout_height="@dimen/filter_dimen"
+        android:layout_marginTop="5dp"
+        android:layout_alignParentStart="true"
+        android:background="@drawable/menu" />
+
+    <Button
         android:id="@+id/filter_button"
         android:layout_width="@dimen/filter_dimen"
         android:layout_height="@dimen/filter_dimen"
