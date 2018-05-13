@@ -30,9 +30,8 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.ValueEventListener;
 
+import java.util.ArrayList;
 import java.util.HashMap;
-
-// implements AdapterView.OnItemSelectedListener
 
 public class SettingsFragment extends Fragment {
 
@@ -40,8 +39,8 @@ public class SettingsFragment extends Fragment {
 
     private OnFragmentInteractionListener mListener;
 
-    private final HashMap<String, Float> pinColorMap = new HashMap<String, Float>();
-    private final HashMap<String, Integer> privacyIntensityMap = new HashMap<String, Integer>();
+    private final HashMap<String, Float> pinColorMap = new HashMap<>();
+    private final HashMap<String, Integer> privacyIntensityMap = new HashMap<>();
 
     private DatabaseManager mDatabaseManager;
     private AccountManager mAccountManager;
@@ -55,30 +54,21 @@ public class SettingsFragment extends Fragment {
     private Spinner mPrivacyIntensitySpinner;
     private Button mDeleteAccountButton;
 
+    private ArrayList<String> mDisRefreshRateList;
+    private ArrayList<String> mTimeRefreshRateList;
+    private ArrayList<String> mSearchRadiusList;
+
 
     private int mZoomValue = Constants.mapZoomLevelDefault;
-    private int mTimeRefreshRateValue = Constants.locationTimeUpdateIntervalDefault;
-    private int mDisRefreshRateValue = Constants.locationDistanceUpdateIntervalDefault;
-    private int mSearchRadiusValue = Constants.obfuscationRadiusDefault;
+    private String mTimeRefreshRateValue = String.valueOf(Constants.locationTimeUpdateIntervalDefault);
+    private String mDisRefreshRateValue = String.valueOf(Constants.locationDistanceUpdateIntervalDefault);
+    private String mSearchRadiusValue = String.valueOf(Constants.obfuscationRadiusDefault);
     private String mPrivacyIntensityValue = String.valueOf(Constants.privacyIntensityDefault);
     private String mPersonPinColorValue = String.valueOf(Constants.personPinColorDefault);
     private String mEventPinColorValue = String.valueOf(Constants.eventPinColorDefault);
 
     public SettingsFragment() {
         // Required empty public constructor
-    }
-
-    /**
-     * Use this factory method to create a new instance of
-     * this fragment using the provided parameters.
-     *
-     * @return A new instance of fragment SettingsFragment.
-     */
-    public static SettingsFragment newInstance() {
-        SettingsFragment fragment = new SettingsFragment();
-        Bundle args = new Bundle();
-        fragment.setArguments(args);
-        return fragment;
     }
 
     @Override
@@ -155,12 +145,12 @@ public class SettingsFragment extends Fragment {
                         }
                     });
                 }
-                if (mTimeRefreshRateValue != mTimeRefreshRatePicker.getValue()) {
-                    mDatabaseManager.setUserSettings(Constants.locationTimeUpdateIntervalName, mTimeRefreshRatePicker.getValue()).addOnCompleteListener(new OnCompleteListener<Void>() {
+                if (!mTimeRefreshRateValue.equals(mTimeRefreshRateList.get(mTimeRefreshRatePicker.getValue() - 1))) {
+                    mDatabaseManager.setUserSettings(Constants.locationTimeUpdateIntervalName, Integer.parseInt(mTimeRefreshRateList.get(mTimeRefreshRatePicker.getValue() - 1))).addOnCompleteListener(new OnCompleteListener<Void>() {
                         @Override
                         public void onComplete(@NonNull Task<Void> task) {
                             if (task.isSuccessful()) {
-                                mTimeRefreshRateValue = mTimeRefreshRatePicker.getValue();
+                                mTimeRefreshRateValue = mTimeRefreshRateList.get(mTimeRefreshRatePicker.getValue() - 1);
                                 Toast.makeText(getActivity(), R.string.time_refresh_setting_change_succesful, Toast.LENGTH_SHORT).show();
                                 Log.i(TAG, getString(R.string.time_refresh_setting_change_succesful));
                             } else {
@@ -170,11 +160,12 @@ public class SettingsFragment extends Fragment {
                         }
                     });
                 }
-                if (mDisRefreshRateValue != mDisRefreshRatePicker.getValue()) {
-                    mDatabaseManager.setUserSettings(Constants.locationDistanceUpdateIntervalName, mDisRefreshRatePicker.getValue()).addOnCompleteListener(new OnCompleteListener<Void>() {
+                if (!mDisRefreshRateValue.equals(mDisRefreshRateList.get(mDisRefreshRatePicker.getValue() - 1))) {
+                    mDatabaseManager.setUserSettings(Constants.locationDistanceUpdateIntervalName, Integer.parseInt(mDisRefreshRateList.get(mDisRefreshRatePicker.getValue() - 1))).addOnCompleteListener(new OnCompleteListener<Void>() {
                         @Override
                         public void onComplete(@NonNull Task<Void> task) {
                             if (task.isSuccessful()) {
+                                mDisRefreshRateValue = mDisRefreshRateList.get(mDisRefreshRatePicker.getValue() - 1);
                                 Toast.makeText(getActivity(), R.string.distance_refresh_setting_change, Toast.LENGTH_SHORT).show();
                                 Log.i(TAG, getString(R.string.distance_refresh_setting_change));
                             } else {
@@ -184,12 +175,12 @@ public class SettingsFragment extends Fragment {
                         }
                     });
                 }
-                if (mSearchRadiusValue != mSearchRadiusPicker.getValue()) {
-                    mDatabaseManager.setUserSettings(Constants.searchRadiusName, mSearchRadiusPicker.getValue()).addOnCompleteListener(new OnCompleteListener<Void>() {
+                if (!mSearchRadiusValue.equals(mSearchRadiusList.get(mSearchRadiusPicker.getValue() - 1))) {
+                    mDatabaseManager.setUserSettings(Constants.searchRadiusName, Integer.parseInt(mSearchRadiusList.get(mSearchRadiusPicker.getValue() - 1))).addOnCompleteListener(new OnCompleteListener<Void>() {
                         @Override
                         public void onComplete(@NonNull Task<Void> task) {
                             if (task.isSuccessful()) {
-                                mSearchRadiusValue = mSearchRadiusPicker.getValue();
+                                mSearchRadiusValue = mSearchRadiusList.get(mSearchRadiusPicker.getValue() - 1);
                                 Toast.makeText(getActivity(), R.string.search_radius_setting_change, Toast.LENGTH_SHORT).show();
                                 Log.i(TAG, getString(R.string.search_radius_setting_change));
                             } else {
@@ -371,17 +362,25 @@ public class SettingsFragment extends Fragment {
     }
 
     private void setUpTimeRefreshRatePicker() {
+        // Set up picker with incremental step
+        mTimeRefreshRateList = new ArrayList<>();
+        mTimeRefreshRateList.add(String.valueOf(Constants.timeRefreshRatePickerMinValue));
+        for(int i = Constants.timeRefreshRatePickerStepValue; i <= Constants.timeRefreshRatePickerMaxValue; i += Constants.timeRefreshRatePickerStepValue){
+            mTimeRefreshRateList.add(String.valueOf(i));
+        }
+        String[] pickerArray = mTimeRefreshRateList.toArray(new String[mTimeRefreshRateList.size()]);
         mTimeRefreshRatePicker.setMinValue(Constants.timeRefreshRatePickerMinValue);
-        mTimeRefreshRatePicker.setMaxValue(Constants.timeRefreshRatePickerMaxValue);
+        mTimeRefreshRatePicker.setMaxValue(Constants.timeRefreshRatePickerSize);
+        mTimeRefreshRatePicker.setDisplayedValues(pickerArray);
         // During initialization, set the spinner to select the users saved settings
         mDatabaseManager.getUserSettings(Constants.locationTimeUpdateIntervalName).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                mTimeRefreshRateValue = 0;
+                mTimeRefreshRatePicker.setValue(0);
                 if (dataSnapshot.getValue(Integer.class) != null) {
-                    mTimeRefreshRateValue = dataSnapshot.getValue(Integer.class);
+                    mTimeRefreshRateValue = String.valueOf(dataSnapshot.getValue(Integer.class));
+                    mTimeRefreshRatePicker.setValue(mTimeRefreshRateList.indexOf(String.valueOf(dataSnapshot.getValue(Integer.class))) + 1);
                 }
-                mTimeRefreshRatePicker.setValue(mTimeRefreshRateValue);
             }
 
             @Override
@@ -392,17 +391,25 @@ public class SettingsFragment extends Fragment {
     }
 
     private void setUpDisRefreshRatePicker() {
+        // Set up picker with incremental step
+        mDisRefreshRateList = new ArrayList<>();
+        mDisRefreshRateList.add(String.valueOf(Constants.disRefreshRatePickerMinValue));
+        for(int i = Constants.disRefreshRatePickerStepValue; i <= Constants.disRefreshRatePickerMaxValue; i += Constants.disRefreshRatePickerStepValue){
+            mDisRefreshRateList.add(String.valueOf(i));
+        }
+        String[] pickerArray = mDisRefreshRateList.toArray(new String[mDisRefreshRateList.size()]);
         mDisRefreshRatePicker.setMinValue(Constants.disRefreshRatePickerMinValue);
-        mDisRefreshRatePicker.setMaxValue(Constants.disRefreshRatePickerMaxValue);
+        mDisRefreshRatePicker.setMaxValue(Constants.disRefreshRatePickerSize);
+        mDisRefreshRatePicker.setDisplayedValues(pickerArray);
         // During initialization, set the spinner to select the users saved settings
         mDatabaseManager.getUserSettings(Constants.locationDistanceUpdateIntervalName).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                mDisRefreshRateValue = 0;
+                mDisRefreshRatePicker.setValue(0);
                 if (dataSnapshot.getValue(Integer.class) != null) {
-                    mDisRefreshRateValue = dataSnapshot.getValue(Integer.class);
+                    mDisRefreshRateValue = String.valueOf(dataSnapshot.getValue(Integer.class));
+                    mDisRefreshRatePicker.setValue(mDisRefreshRateList.indexOf(String.valueOf(dataSnapshot.getValue(Integer.class))) + 1);
                 }
-                mDisRefreshRatePicker.setValue(mDisRefreshRateValue);
             }
 
             @Override
@@ -413,17 +420,24 @@ public class SettingsFragment extends Fragment {
     }
 
     private void setUpSearchRadiusPicker() {
+        // Set up picker with incremental step
+        mSearchRadiusList = new ArrayList<>();
+        for(int i = Constants.searchRadiusPickerStepValue * 5; i <= Constants.searchRadiusPickerMaxValue; i += Constants.searchRadiusPickerStepValue){
+            mSearchRadiusList.add(String.valueOf(i));
+        }
+        String[] pickerArray = mSearchRadiusList.toArray(new String[mSearchRadiusList.size()]);
         mSearchRadiusPicker.setMinValue(Constants.searchRadiusPickerMinValue);
-        mSearchRadiusPicker.setMaxValue(Constants.searchRadiusPickerMaxValue);
+        mSearchRadiusPicker.setMaxValue(Constants.searchRadiusPickerSize);
+        mSearchRadiusPicker.setDisplayedValues(pickerArray);
         // During initialization, set the spinner to select the users saved settings
         mDatabaseManager.getUserSettings(Constants.searchRadiusName).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                mSearchRadiusValue = Constants.obfuscationRadiusDefault;
+                mSearchRadiusPicker.setValue(Constants.obfuscationRadiusDefault);
                 if (dataSnapshot.getValue(Integer.class) != null) {
-                    mSearchRadiusValue = dataSnapshot.getValue(Integer.class);
+                    mSearchRadiusValue = String.valueOf(dataSnapshot.getValue(Integer.class));
+                    mSearchRadiusPicker.setValue(mSearchRadiusList.indexOf(String.valueOf(dataSnapshot.getValue(Integer.class))) + 1);
                 }
-                mSearchRadiusPicker.setValue(mSearchRadiusValue);
             }
 
             @Override

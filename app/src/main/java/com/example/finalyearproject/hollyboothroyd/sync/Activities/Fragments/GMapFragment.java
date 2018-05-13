@@ -21,6 +21,8 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.content.LocalBroadcastManager;
+import android.support.v4.view.GravityCompat;
+import android.support.v4.widget.DrawerLayout;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
@@ -213,6 +215,18 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
                 Log.e(TAG, databaseError.toString());
             }
         });
+
+        Button menuButton = (Button) view.findViewById(R.id.menu_button);
+        final DrawerLayout drawer = (DrawerLayout) getActivity().findViewById(R.id.drawer_layout);
+        menuButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (!drawer.isDrawerOpen(GravityCompat.START)) {
+                    drawer.openDrawer(GravityCompat.START);
+                }
+            }
+        });
+
 
         // Pull down user settings that customize the map look and functionality
         setUpCustomization();
@@ -747,14 +761,18 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
                             @Override
                             public void onSuccess(Void aVoid) {
                                 // Geofences removed
-                                Log.i(TAG, getString(R.string.remove_geofence_successful));
+                                if(isAdded()) {
+                                    Log.i(TAG, getString(R.string.remove_geofence_successful));
+                                }
                             }
                         })
                         .addOnFailureListener(getActivity(), new OnFailureListener() {
                             @Override
                             public void onFailure(@NonNull Exception e) {
                                 // Failed to remove geofences
-                                Log.e(TAG, e.toString());
+                                if(isAdded()) {
+                                    Log.e(TAG, e.toString());
+                                }
                             }
                         });
             }
@@ -1536,21 +1554,29 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
                 }
 
                 if(!mGeofenceList.isEmpty()) {
-                    mGeofencingClient.addGeofences(getGeofencingRequest(), getGeofencePendingIntent())
-                            .addOnSuccessListener(getActivity(), new OnSuccessListener<Void>() {
-                                @Override
-                                public void onSuccess(Void aVoid) {
-                                    // Geofences added
-                                    Log.i(TAG, getString(R.string.add_geofence_successful));
-                                }
-                            })
-                            .addOnFailureListener(getActivity(), new OnFailureListener() {
-                                @Override
-                                public void onFailure(@NonNull Exception e) {
-                                    // Failed to add geofences
-                                    Log.e(TAG, e.toString());
-                                }
-                            });
+                    try {
+                        mGeofencingClient.addGeofences(getGeofencingRequest(), getGeofencePendingIntent())
+                                .addOnSuccessListener(getActivity(), new OnSuccessListener<Void>() {
+                                    @Override
+                                    public void onSuccess(Void aVoid) {
+                                        // Geofences added
+                                        if(isAdded()) {
+                                            Log.i(TAG, getString(R.string.add_geofence_successful));
+                                        }
+                                    }
+                                })
+                                .addOnFailureListener(getActivity(), new OnFailureListener() {
+                                    @Override
+                                    public void onFailure(@NonNull Exception e) {
+                                        // Failed to add geofences
+                                        if(isAdded()) {
+                                            Log.e(TAG, e.toString());
+                                        }
+                                    }
+                                });
+                    } catch (IllegalArgumentException ex){
+                        Log.e(TAG, ex.toString());
+                    }
                 }
             }
             return null;
@@ -1570,11 +1596,13 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
             if (mGeofencePendingIntent != null) {
                 return mGeofencePendingIntent;
             }
-            Intent intent = new Intent(getActivity(), GeofenceTransitionsIntentService.class);
-            // We use FLAG_UPDATE_CURRENT so that we get the same pending intent back when
-            // calling addGeofences() and removeGeofences().
-            mGeofencePendingIntent = PendingIntent.getService(getActivity(), 0, intent, PendingIntent.
-                    FLAG_UPDATE_CURRENT);
+            if(isAdded()) {
+                Intent intent = new Intent(getActivity(), GeofenceTransitionsIntentService.class);
+                // We use FLAG_UPDATE_CURRENT so that we get the same pending intent back when
+                // calling addGeofences() and removeGeofences().
+                mGeofencePendingIntent = PendingIntent.getService(getActivity(), 0, intent, PendingIntent.
+                        FLAG_UPDATE_CURRENT);
+            }
             return mGeofencePendingIntent;
         }
     }

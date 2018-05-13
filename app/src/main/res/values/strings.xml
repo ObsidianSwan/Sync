@@ -306,4 +306,10 @@
     <string name="please_verify_your_current_account_details">Please verify your current account details</string>
     <string name="account_details">Account Details</string>
     <string name="incorrect_login_details">Login details are incorrect</string>
+    <string name="email_update_error">Update failed. That email may already be taken</string>
+    <string name="email_update_log">Error email not updated</string>
+    <string name="authentication_failed_log">Error auth failed</string>
+    <string name="password_update_failed_log">Error password not updated</string>
+    <string name="password_updated_log">Password updated</string>
+    <string name="email_updated_log">Email updated</string>
 </resources>

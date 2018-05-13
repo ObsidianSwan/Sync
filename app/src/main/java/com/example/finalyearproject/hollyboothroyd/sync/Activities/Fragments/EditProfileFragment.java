@@ -287,7 +287,6 @@ public class EditProfileFragment extends Fragment {
 
         // Set up the UI
         Button dismissPopupButton = (Button) view.findViewById(R.id.dismiss_popup_button);
-        TextView popupTitle = (TextView) view.findViewById(R.id.account_details_popup_title);
         final EditText email = (EditText) view.findViewById(R.id.edit_original_email_text);
         final EditText password = (EditText) view.findViewById(R.id.edit_original_password_text);
         Button verifyButton = (Button) view.findViewById(R.id.verify_button);
@@ -297,75 +296,84 @@ public class EditProfileFragment extends Fragment {
             @Override
             public void onClick(View v) {
 
-                // Get auth credentials from the user for re-authentication.
-                AuthCredential credential = EmailAuthProvider
-                        .getCredential(email.getText().toString().trim(), password.getText().toString().trim());
+                if (email.getText() == null || email.getText().toString().equals("")){
+                    email.setError(getString(R.string.error_field_required));
+                }
+                else if (password.getText() == null || password.getText().toString().equals("")){
+                    password.setError(getString(R.string.error_field_required));
+                }
+                else {
+                    // Get auth credentials from the user for re-authentication.
+                    AuthCredential credential = EmailAuthProvider
+                            .getCredential(email.getText().toString().trim(), password.getText().toString().trim());
 
-                // Prompt the user to re-provide their sign-in credentials
-                // This is necessary if the user has not logged in in awhile
-                mCurrentUser.reauthenticate(credential)
-                        .addOnCompleteListener(new OnCompleteListener<Void>() {
-                            @Override
-                            public void onComplete(@NonNull Task<Void> task) {
-                                if (task.isSuccessful()) {
-                                    if(editedField == 0){
-                                        mCurrentUser.updateEmail(editedContent).addOnCompleteListener(new OnCompleteListener<Void>() {
-                                            @Override
-                                            public void onComplete(@NonNull Task<Void> task) {
-                                                if (task.isSuccessful()) {
-                                                    Log.d(TAG, "Email updated");
-                                                    mCurrentUser.updatePassword(editedContent2).addOnCompleteListener(new OnCompleteListener<Void>() {
-                                                        @Override
-                                                        public void onComplete(@NonNull Task<Void> task) {
-                                                            if (task.isSuccessful()) {
-                                                                Log.d(TAG, "Password updated");
-                                                                mDialog.dismiss();
-                                                                Toast.makeText(getActivity(), R.string.edit_profile_successfully_changed, Toast.LENGTH_SHORT).show();
-                                                            } else {
-                                                                Log.d(TAG, "Error password not updated");
+                    // Prompt the user to re-provide their sign-in credentials
+                    // This is necessary if the user has not logged in in awhile
+                    mCurrentUser.reauthenticate(credential)
+                            .addOnCompleteListener(new OnCompleteListener<Void>() {
+                                @Override
+                                public void onComplete(@NonNull Task<Void> task) {
+                                    if (task.isSuccessful()) {
+                                        if (editedField == 0) {
+                                            mCurrentUser.updateEmail(editedContent).addOnCompleteListener(new OnCompleteListener<Void>() {
+                                                @Override
+                                                public void onComplete(@NonNull Task<Void> task) {
+                                                    if (task.isSuccessful()) {
+                                                        Log.d(TAG, getString(R.string.email_updated_log));
+                                                        mCurrentUser.updatePassword(editedContent2).addOnCompleteListener(new OnCompleteListener<Void>() {
+                                                            @Override
+                                                            public void onComplete(@NonNull Task<Void> task) {
+                                                                if (task.isSuccessful()) {
+                                                                    Log.d(TAG, getString(R.string.password_updated_log));
+                                                                    mDialog.dismiss();
+                                                                    Toast.makeText(getActivity(), R.string.edit_profile_successfully_changed, Toast.LENGTH_SHORT).show();
+                                                                } else {
+                                                                    Log.d(TAG, getString(R.string.password_update_failed_log));
+                                                                }
                                                             }
-                                                        }
-                                                    });
-                                                } else {
-                                                    Log.d(TAG, "Error email not updated");
+                                                        });
+                                                    } else {
+                                                        Log.d(TAG, getString(R.string.email_update_log));
+                                                    }
                                                 }
-                                            }
-                                        });
-                                    }
-                                    if(editedField == 1){
-                                        mCurrentUser.updateEmail(editedContent).addOnCompleteListener(new OnCompleteListener<Void>() {
-                                            @Override
-                                            public void onComplete(@NonNull Task<Void> task) {
-                                                if (task.isSuccessful()) {
-                                                    Log.d(TAG, "Email updated");
-                                                    mDialog.dismiss();
-                                                    Toast.makeText(getActivity(), R.string.edit_profile_successfully_changed, Toast.LENGTH_SHORT).show();
-                                                } else {
-                                                    Log.d(TAG, "Error email not updated");
+                                            });
+                                        }
+                                        if (editedField == 1) {
+                                            mCurrentUser.updateEmail(editedContent).addOnCompleteListener(new OnCompleteListener<Void>() {
+                                                @Override
+                                                public void onComplete(@NonNull Task<Void> task) {
+                                                    if (task.isSuccessful()) {
+                                                        Log.d(TAG, getString(R.string.email_updated_log));
+                                                        mDialog.dismiss();
+                                                        Toast.makeText(getActivity(), R.string.edit_profile_successfully_changed, Toast.LENGTH_SHORT).show();
+                                                    } else {
+                                                        Log.d(TAG, getString(R.string.email_update_log));
+                                                        Toast.makeText(getActivity(), R.string.email_update_error, Toast.LENGTH_SHORT).show();
+                                                    }
                                                 }
-                                            }
-                                        });
-                                    }
-                                    if(editedField == 2) {
-                                        mCurrentUser.updatePassword(editedContent).addOnCompleteListener(new OnCompleteListener<Void>() {
-                                            @Override
-                                            public void onComplete(@NonNull Task<Void> task) {
-                                                if (task.isSuccessful()) {
-                                                    Log.d(TAG, "Password updated");
-                                                    mDialog.dismiss();
-                                                    Toast.makeText(getActivity(), R.string.edit_profile_successfully_changed, Toast.LENGTH_SHORT).show();
-                                                } else {
-                                                    Log.d(TAG, "Error password not updated");
+                                            });
+                                        }
+                                        if (editedField == 2) {
+                                            mCurrentUser.updatePassword(editedContent).addOnCompleteListener(new OnCompleteListener<Void>() {
+                                                @Override
+                                                public void onComplete(@NonNull Task<Void> task) {
+                                                    if (task.isSuccessful()) {
+                                                        Log.d(TAG, getString(R.string.password_updated_log));
+                                                        mDialog.dismiss();
+                                                        Toast.makeText(getActivity(), R.string.edit_profile_successfully_changed, Toast.LENGTH_SHORT).show();
+                                                    } else {
+                                                        Log.d(TAG, getString(R.string.password_update_failed_log));
+                                                    }
                                                 }
-                                            }
-                                        });
+                                            });
+                                        }
+                                    } else {
+                                        Toast.makeText(getActivity(), R.string.incorrect_login_details, Toast.LENGTH_SHORT).show();
+                                        Log.d(TAG, getString(R.string.authentication_failed_log));
                                     }
-                                } else {
-                                    Toast.makeText(getActivity(), R.string.incorrect_login_details, Toast.LENGTH_SHORT).show();
-                                    Log.d(TAG, "Error auth failed");
                                 }
-                            }
-                        });
+                            });
+                }
             }
         });
 
