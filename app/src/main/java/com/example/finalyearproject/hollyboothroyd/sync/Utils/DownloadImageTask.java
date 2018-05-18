@@ -9,14 +9,15 @@ import android.widget.ImageButton;
 import java.io.InputStream;
 
 /**
- * Created by hollyboothroyd on 4/16/2018.
+ * Created by hollyboothroyd
+ * 4/16/2018.
  */
 
 public class DownloadImageTask extends AsyncTask<String, Void, Bitmap> {
-    ImageButton bmImage;
+    private ImageButton mImageButton;
 
     public DownloadImageTask(ImageButton bmImage) {
-        this.bmImage = bmImage;
+        this.mImageButton = bmImage;
     }
 
     protected Bitmap doInBackground(String... urls) {
@@ -33,7 +34,7 @@ public class DownloadImageTask extends AsyncTask<String, Void, Bitmap> {
     }
 
     protected void onPostExecute(Bitmap result) {
-        bmImage.setImageBitmap(result);
+        mImageButton.setImageBitmap(result);
     }
 }
 

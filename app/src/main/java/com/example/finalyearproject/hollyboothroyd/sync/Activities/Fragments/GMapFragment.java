@@ -12,6 +12,7 @@ import android.graphics.Color;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -49,6 +50,7 @@ import com.example.finalyearproject.hollyboothroyd.sync.Services.GeofenceTransit
 import com.example.finalyearproject.hollyboothroyd.sync.Services.LocationFilter;
 import com.example.finalyearproject.hollyboothroyd.sync.UI.CustomInfoWindow;
 import com.example.finalyearproject.hollyboothroyd.sync.Utils.Constants;
+import com.example.finalyearproject.hollyboothroyd.sync.Utils.DownloadImageTask;
 import com.example.finalyearproject.hollyboothroyd.sync.Utils.NotificationType;
 import com.example.finalyearproject.hollyboothroyd.sync.Utils.Util;
 import com.google.android.gms.location.Geofence;
@@ -73,6 +75,7 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.storage.UploadTask;
 import com.linkedin.platform.APIHelper;
 import com.linkedin.platform.errors.LIApiError;
 import com.linkedin.platform.listeners.ApiListener;
@@ -157,7 +160,7 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
     private int mSearchRadius = Constants.geofenceRadiusDefault;
     private int mPrivacyIntensity = Constants.privacyIntensityDefault;
 
-    private final String linkedInProfileDetails = "https://api.linkedin.com/v1/people/~:(first-name,last-name,email-address,picture-urls::(original),positions,industry)?format=json";
+    private static final String PROFILE_DETAILS_URL = "https://api.linkedin.com/v1/people/~:(first-name,last-name,email-address,picture-urls::(original),positions,industry)?format=json";
 
     private int mPermissionsRequestLocation;
     private Object mPermissionsRequestObject;
@@ -240,7 +243,6 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
             }
         });
 
-
         // Check profile details match their LinkedIn if they are connected
         mDatabaseManager.getUserPeopleDatabaseReference().addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
@@ -249,7 +251,7 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
                     final Person currentUser = dataSnapshot.getValue(Person.class);
                     if (currentUser != null && currentUser.getIsLinkedInConnected()) {
                         APIHelper apiHelper = APIHelper.getInstance(getContext());
-                        apiHelper.getRequest(getActivity(), linkedInProfileDetails, new ApiListener() {
+                        apiHelper.getRequest(getActivity(), PROFILE_DETAILS_URL, new ApiListener() {
                             @Override
                             public void onApiSuccess(ApiResponse s) {
                                 JSONObject result = s.getResponseDataAsJson();
@@ -327,10 +329,10 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
                     mLinkedinDialog = mLinkedinDialogBuilder.create();
                     mLinkedinDialog.show();
                 }
-                mDatabaseManager.getUserPeopleDatabaseReference().child(databaseChild).setValue(updateValue);
+
+                    mDatabaseManager.updateUserProfileInformation(databaseChild, updateValue);
             }
         });
-
         denyButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -514,7 +516,8 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
             mLocationDBRef.removeEventListener(mLocationDBListener);
         }
         mLocationListener = null;
-        LocalBroadcastManager.getInstance(getActivity()).unregisterReceiver(mMessageReceiver);
+        LocalBroadcastManager.getInstance(getActivity()).unregisterReceiver(mAddMessageReceiver);
+        LocalBroadcastManager.getInstance(getActivity()).unregisterReceiver(mRemoveMessageReceiver);
     }
 
     @Override
@@ -609,11 +612,12 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
         // Location permission previously granted
         requestLocationUpdates();
 
-        // Register listener for NFC broadcasts
-        LocalBroadcastManager.getInstance(getActivity()).registerReceiver(mMessageReceiver, new IntentFilter(getString(R.string.geofence_enter_trigger)));
+        // Register listener for geofence broadcasts
+        LocalBroadcastManager.getInstance(getActivity()).registerReceiver(mAddMessageReceiver, new IntentFilter(getString(R.string.geofence_enter_trigger)));
+        LocalBroadcastManager.getInstance(getActivity()).registerReceiver(mRemoveMessageReceiver, new IntentFilter(getString(R.string.geofence_exit_trigger)));
     }
 
-    private BroadcastReceiver mMessageReceiver = new BroadcastReceiver() {
+    private BroadcastReceiver mAddMessageReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
             String userId = intent.getStringExtra(Constants.geofenceUserId);
@@ -631,6 +635,21 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
             }
         }
 
+    };
+
+    private BroadcastReceiver mRemoveMessageReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            String userId = intent.getStringExtra(Constants.geofenceUserId);
+            Person localPerson = mPeopleMap.get(userId);
+
+            // If the person was previously within the geofence radius (ie. was a local person)
+            // but is no longer in the geofence radius, then remove
+            if (mPeopleMap.containsKey(userId) && mLocalPeopleMap.containsKey(userId)) {
+                mLocalPeopleMap.remove(userId);
+                removeMarker(localPerson);
+            }
+        }
     };
 
     private void updatePersonMarker(Person localPerson, boolean isLocal) {
@@ -690,6 +709,7 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
             ActivityCompat.requestPermissions(getActivity(), new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION, android.Manifest.permission.ACCESS_COARSE_LOCATION}, 2);
             mPermissionsRequestLocation = 0;
         } else {
+            // Update the map to show the users location if the location is found
             Location lastKnownLocation = Util.getLastKnownLocation(mLocationManager);
             if (lastKnownLocation == null) {
                 Toast.makeText(getActivity(), R.string.could_not_find_location, Toast.LENGTH_SHORT).show();
@@ -761,7 +781,7 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
                             @Override
                             public void onSuccess(Void aVoid) {
                                 // Geofences removed
-                                if(isAdded()) {
+                                if (isAdded()) {
                                     Log.i(TAG, getString(R.string.remove_geofence_successful));
                                 }
                             }
@@ -770,7 +790,7 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
                             @Override
                             public void onFailure(@NonNull Exception e) {
                                 // Failed to remove geofences
-                                if(isAdded()) {
+                                if (isAdded()) {
                                     Log.e(TAG, e.toString());
                                 }
                             }
@@ -881,10 +901,10 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
         if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
             if (ContextCompat.checkSelfPermission(getContext(), android.Manifest.permission.ACCESS_FINE_LOCATION)
                     == PackageManager.PERMISSION_GRANTED) {
-                if(mPermissionsRequestLocation == 0){
+                if (mPermissionsRequestLocation == 0) {
                     setUserLocation();
-                } else if (mPermissionsRequestLocation == 1){
-                    createPersonMarker((Person)mPermissionsRequestObject);
+                } else if (mPermissionsRequestLocation == 1) {
+                    createPersonMarker((Person) mPermissionsRequestObject);
                 }
             }
         }
@@ -1021,6 +1041,8 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
         Button eventButton3 = (Button) view.findViewById(R.id.popup_event_button3);
 
         final Event event = mEventMarkerMap.get(marker.getId());
+
+        // Load the event image into the event popup
         if (!mEventMarkerMap.isEmpty()) {
             Picasso.with(getActivity()).load(event.getImageId()).into(eventImage);
         }
@@ -1258,8 +1280,9 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
         mPopupButton = (Button) view.findViewById(R.id.popup_button);
         mConnectionPendingMessage = (TextView) view.findViewById(R.id.popup_connection_pending);
 
-
         final Person person = mPersonMarkerMap.get(marker.getId());
+
+        // Load the person image into the person popup
         if (!mPersonMarkerMap.isEmpty()) {
             Picasso.with(getActivity()).load(person.getImageId()).into(personImage);
         }
@@ -1338,57 +1361,47 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
     }
 
     private void addConnection(final NotificationBase notification) {
-        mDatabaseManager.getUserPeopleDatabaseReference().addListenerForSingleValueEvent(new ValueEventListener() {
+        // Add connection to current users database
+        mDatabaseManager.addConnection(notification.getId(), mCurrentUserId).addOnCompleteListener(new OnCompleteListener<Void>() {
             @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                // Add connection to current users database
-                mDatabaseManager.addConnection(notification.getId(), mCurrentUserId).addOnCompleteListener(new OnCompleteListener<Void>() {
-                    @Override
-                    public void onComplete(@NonNull Task<Void> task) {
-                        if (task.isSuccessful()) {
-                            // Add connection to other users database
-                            mDatabaseManager.addConnection(mCurrentUserId, notification.getId()).addOnCompleteListener(new OnCompleteListener<Void>() {
-                                @Override
-                                public void onComplete(@NonNull Task<Void> task) {
-                                    if (task.isSuccessful()) {
-                                        // Delete connection request in the other users database
-                                        mDatabaseManager.deleteUserConnectionRequest(notification.getId()).addOnCompleteListener(new OnCompleteListener<Void>() {
-                                            @Override
-                                            public void onComplete(@NonNull Task<Void> task) {
-                                                if (task.isSuccessful()) {
-                                                    // Delete connection notification in the current users database
-                                                    mDatabaseManager.deleteUserNotification(notification.getDbRefKey()).addOnCompleteListener(new OnCompleteListener<Void>() {
-                                                        @Override
-                                                        public void onComplete(@NonNull Task<Void> task) {
-                                                            if (task.isSuccessful()) {
-                                                                Toast.makeText(getContext(), R.string.connection_accepted_toast_text, Toast.LENGTH_SHORT).show();
-                                                                mDialog.dismiss();
-                                                                Log.i(TAG, getString(R.string.connection_accepted_toast_text));
-                                                            } else {
-                                                                Log.e(TAG, getString(R.string.delete_notification_error));
-                                                            }
-                                                        }
-                                                    });
-                                                } else {
-                                                    Log.e(TAG, getString(R.string.delete_connection_request_error));
+            public void onComplete(@NonNull Task<Void> task) {
+                if (task.isSuccessful()) {
+                    // Add connection to other users database
+                    mDatabaseManager.addConnection(mCurrentUserId, notification.getId()).addOnCompleteListener(new OnCompleteListener<Void>() {
+                        @Override
+                        public void onComplete(@NonNull Task<Void> task) {
+                            if (task.isSuccessful()) {
+                                // Delete connection request in the other users database
+                                mDatabaseManager.deleteUserConnectionRequest(notification.getId()).addOnCompleteListener(new OnCompleteListener<Void>() {
+                                    @Override
+                                    public void onComplete(@NonNull Task<Void> task) {
+                                        if (task.isSuccessful()) {
+                                            // Delete connection notification in the current users database
+                                            mDatabaseManager.deleteUserNotification(notification.getDbRefKey()).addOnCompleteListener(new OnCompleteListener<Void>() {
+                                                @Override
+                                                public void onComplete(@NonNull Task<Void> task) {
+                                                    if (task.isSuccessful()) {
+                                                        Toast.makeText(getContext(), R.string.connection_accepted_toast_text, Toast.LENGTH_SHORT).show();
+                                                        mDialog.dismiss();
+                                                        Log.i(TAG, getString(R.string.connection_accepted_toast_text));
+                                                    } else {
+                                                        Log.e(TAG, getString(R.string.delete_notification_error));
+                                                    }
                                                 }
-                                            }
-                                        });
-                                    } else {
-                                        Log.e(TAG, getString(R.string.add_connection_other_user_error));
+                                            });
+                                        } else {
+                                            Log.e(TAG, getString(R.string.delete_connection_request_error));
+                                        }
                                     }
-                                }
-                            });
-                        } else {
-                            Log.e(TAG, getString(R.string.add_connection_current_user_error));
+                                });
+                            } else {
+                                Log.e(TAG, getString(R.string.add_connection_other_user_error));
+                            }
                         }
-                    }
-                });
-            }
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-                Log.e(TAG, databaseError.toString());
+                    });
+                } else {
+                    Log.e(TAG, getString(R.string.add_connection_current_user_error));
+                }
             }
         });
     }
@@ -1467,13 +1480,13 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
         filterButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
                 // Retrieve user inputted filter
                 mPersonPositionFilter = personPosition.getText().toString().toLowerCase().trim();
                 mPersonCompanyFilter = personCompany.getText().toString().toLowerCase().trim();
                 mPersonIndustryFilter = personIndustry.getText().toString().toLowerCase().trim();
                 mEventIndustryFilter = eventIndustry.getText().toString().toLowerCase().trim();
 
+                // Refresh the pins based on the filtering requirements
                 getPeople();
                 getEvents();
 
@@ -1507,6 +1520,7 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
 
     @Override
     public void userEventsUpdated() {
+        // Refresh the events based on the users new location
         getEvents();
     }
 
@@ -1530,6 +1544,7 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
             this.location = location;
         }
 
+        // Set up geofences on a background thread to ensure a performant application and prevent UI blocks
         @Override
         protected Void doInBackground(String... userIds) {
             String userId = userIds[0];
@@ -1543,7 +1558,7 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
                     )
                     .setExpirationDuration(Geofence.NEVER_EXPIRE)
                     .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_ENTER |
-                            Geofence.GEOFENCE_TRANSITION_DWELL)
+                            Geofence.GEOFENCE_TRANSITION_DWELL | Geofence.GEOFENCE_TRANSITION_EXIT)
                     .setLoiteringDelay(0)
                     .build());
 
@@ -1553,14 +1568,14 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
                     return null;
                 }
 
-                if(!mGeofenceList.isEmpty()) {
+                if (!mGeofenceList.isEmpty()) {
                     try {
                         mGeofencingClient.addGeofences(getGeofencingRequest(), getGeofencePendingIntent())
                                 .addOnSuccessListener(getActivity(), new OnSuccessListener<Void>() {
                                     @Override
                                     public void onSuccess(Void aVoid) {
                                         // Geofences added
-                                        if(isAdded()) {
+                                        if (isAdded()) {
                                             Log.i(TAG, getString(R.string.add_geofence_successful));
                                         }
                                     }
@@ -1569,12 +1584,12 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
                                     @Override
                                     public void onFailure(@NonNull Exception e) {
                                         // Failed to add geofences
-                                        if(isAdded()) {
+                                        if (isAdded()) {
                                             Log.e(TAG, e.toString());
                                         }
                                     }
                                 });
-                    } catch (IllegalArgumentException ex){
+                    } catch (IllegalArgumentException ex) {
                         Log.e(TAG, ex.toString());
                     }
                 }
@@ -1584,9 +1599,7 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
 
         private GeofencingRequest getGeofencingRequest() {
             GeofencingRequest.Builder builder = new GeofencingRequest.Builder();
-            // Set trigger type to INITIAL_TRIGGER_DWELL to reduce 'alert spam' if users briefly enter or
-            // exit the geofence
-            builder.setInitialTrigger(GeofencingRequest.INITIAL_TRIGGER_DWELL | GeofencingRequest.INITIAL_TRIGGER_ENTER);
+            builder.setInitialTrigger(GeofencingRequest.INITIAL_TRIGGER_DWELL | GeofencingRequest.INITIAL_TRIGGER_ENTER | GeofencingRequest.INITIAL_TRIGGER_EXIT);
             builder.addGeofences(mGeofenceList);
             return builder.build();
         }
@@ -1596,7 +1609,7 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
             if (mGeofencePendingIntent != null) {
                 return mGeofencePendingIntent;
             }
-            if(isAdded()) {
+            if (isAdded()) {
                 Intent intent = new Intent(getActivity(), GeofenceTransitionsIntentService.class);
                 // We use FLAG_UPDATE_CURRENT so that we get the same pending intent back when
                 // calling addGeofences() and removeGeofences().

@@ -57,11 +57,10 @@ public class NewAccountPhotoActivity extends AppCompatActivity {
     private ImageButton mProfileImage;
     private Button mDoneButton;
     private Button mRetryButton;
-    private Button mPrivacyPolicyButton;
     private CheckBox mPrivacyPolicyCheckBox;
     private Uri mImageUri;
 
-    private final String profileImageUrl = "https://api.linkedin.com/v1/people/~:(picture-urls::(original))?format=json";
+    private static final String PROFILE_IMAGE_URL = "https://api.linkedin.com/v1/people/~:(picture-urls::(original))?format=json";
 
     private View mProgressView;
     private View mSignUpFormView;
@@ -94,12 +93,13 @@ public class NewAccountPhotoActivity extends AppCompatActivity {
         mProfileImage = (ImageButton) findViewById(R.id.profile_photo_button);
         mDoneButton = (Button) findViewById(R.id.done_button);
         mRetryButton = (Button) findViewById(R.id.retry_button);
-        mPrivacyPolicyButton = (Button) findViewById(R.id.privacy_policy);
+        Button privacyPolicyButton = (Button) findViewById(R.id.privacy_policy);
         mPrivacyPolicyCheckBox = (CheckBox) findViewById(R.id.privacy_policy_checkbox);
 
-        if(getIntent().getBooleanExtra("isLinkedInConnected", false)){
+        // Retrieve the users LinkedIn profile picture if their LinkedIn account is integrated
+        if (getIntent().getBooleanExtra(Constants.userLinkedInChildName, false)) {
             APIHelper apiHelper = APIHelper.getInstance(getApplicationContext());
-            apiHelper.getRequest(NewAccountPhotoActivity.this, profileImageUrl, new ApiListener() {
+            apiHelper.getRequest(NewAccountPhotoActivity.this, PROFILE_IMAGE_URL, new ApiListener() {
                 @Override
                 public void onApiSuccess(ApiResponse s) {
                     JSONObject result = s.getResponseDataAsJson();
@@ -130,7 +130,8 @@ public class NewAccountPhotoActivity extends AppCompatActivity {
             }
         });
 
-        mPrivacyPolicyButton.setOnClickListener(new View.OnClickListener() {
+        // Open the privacy policy activity
+        privacyPolicyButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 startActivity(new Intent(NewAccountPhotoActivity.this, PrivacyPolicyActivity.class));
@@ -152,7 +153,7 @@ public class NewAccountPhotoActivity extends AppCompatActivity {
                 boolean isLinkedInConnected = getIntent().getBooleanExtra("isLinkedInConnected", false);
 
                 // Register user
-                if(mPrivacyPolicyCheckBox.isChecked()) {
+                if (mPrivacyPolicyCheckBox.isChecked()) {
                     registerUser(firstName, lastName, position, company, industry, mImageUri, email, password, isLinkedInConnected);
                 } else {
                     mPrivacyPolicyCheckBox.setError(getString(R.string.privacy_policy_error_text));
@@ -234,7 +235,7 @@ public class NewAccountPhotoActivity extends AppCompatActivity {
                     Log.i(TAG, getString(R.string.new_user_signed_in_successfully));
                     // Add the user to the people database that is accessible by all users.
                     // Add the user's image to the Firebase Storage
-                    if(!isLinkedInConnected) {
+                    if (!isLinkedInConnected) {
                         addUserPhoto(imageUri, firstName, lastName, position, company, industry, isLinkedInConnected);
                     } else {
                         String userId = accountManager.getCurrentUser().getUid();

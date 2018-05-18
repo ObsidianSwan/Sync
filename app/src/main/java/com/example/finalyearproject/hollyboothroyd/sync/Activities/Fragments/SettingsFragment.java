@@ -117,6 +117,7 @@ public class SettingsFragment extends Fragment {
         mDeleteAccountButton = (Button) view.findViewById(R.id.delete_account_button);
         Button commitChangesButton = (Button) view.findViewById(R.id.commit_settings_button);
 
+        // Set up settings interactors
         setUpZoomPicker();
         setUpTimeRefreshRatePicker();
         setUpDisRefreshRatePicker();
@@ -341,6 +342,7 @@ public class SettingsFragment extends Fragment {
 
 
     private void setUpZoomPicker() {
+        // Set up the zoom pickers min and max values
         mZoomPicker.setMinValue(Constants.zoomPickerMinValue);
         mZoomPicker.setMaxValue(Constants.zoomPickerMaxValue);
         // During initialization, set the spinner to select the users saved settings
@@ -365,7 +367,7 @@ public class SettingsFragment extends Fragment {
         // Set up picker with incremental step
         mTimeRefreshRateList = new ArrayList<>();
         mTimeRefreshRateList.add(String.valueOf(Constants.timeRefreshRatePickerMinValue));
-        for(int i = Constants.timeRefreshRatePickerStepValue; i <= Constants.timeRefreshRatePickerMaxValue; i += Constants.timeRefreshRatePickerStepValue){
+        for (int i = Constants.timeRefreshRatePickerStepValue; i <= Constants.timeRefreshRatePickerMaxValue; i += Constants.timeRefreshRatePickerStepValue) {
             mTimeRefreshRateList.add(String.valueOf(i));
         }
         String[] pickerArray = mTimeRefreshRateList.toArray(new String[mTimeRefreshRateList.size()]);
@@ -378,6 +380,8 @@ public class SettingsFragment extends Fragment {
             public void onDataChange(DataSnapshot dataSnapshot) {
                 mTimeRefreshRatePicker.setValue(0);
                 if (dataSnapshot.getValue(Integer.class) != null) {
+                    // Set the time refresh rate value to the users saved settings
+                    // Set the picker's selected value to the users saved settings
                     mTimeRefreshRateValue = String.valueOf(dataSnapshot.getValue(Integer.class));
                     mTimeRefreshRatePicker.setValue(mTimeRefreshRateList.indexOf(String.valueOf(dataSnapshot.getValue(Integer.class))) + 1);
                 }
@@ -394,7 +398,7 @@ public class SettingsFragment extends Fragment {
         // Set up picker with incremental step
         mDisRefreshRateList = new ArrayList<>();
         mDisRefreshRateList.add(String.valueOf(Constants.disRefreshRatePickerMinValue));
-        for(int i = Constants.disRefreshRatePickerStepValue; i <= Constants.disRefreshRatePickerMaxValue; i += Constants.disRefreshRatePickerStepValue){
+        for (int i = Constants.disRefreshRatePickerStepValue; i <= Constants.disRefreshRatePickerMaxValue; i += Constants.disRefreshRatePickerStepValue) {
             mDisRefreshRateList.add(String.valueOf(i));
         }
         String[] pickerArray = mDisRefreshRateList.toArray(new String[mDisRefreshRateList.size()]);
@@ -407,6 +411,8 @@ public class SettingsFragment extends Fragment {
             public void onDataChange(DataSnapshot dataSnapshot) {
                 mDisRefreshRatePicker.setValue(0);
                 if (dataSnapshot.getValue(Integer.class) != null) {
+                    // Set the distance refresh rate value to the users saved settings
+                    // Set the picker's selected value to the users saved settings
                     mDisRefreshRateValue = String.valueOf(dataSnapshot.getValue(Integer.class));
                     mDisRefreshRatePicker.setValue(mDisRefreshRateList.indexOf(String.valueOf(dataSnapshot.getValue(Integer.class))) + 1);
                 }
@@ -422,7 +428,7 @@ public class SettingsFragment extends Fragment {
     private void setUpSearchRadiusPicker() {
         // Set up picker with incremental step
         mSearchRadiusList = new ArrayList<>();
-        for(int i = Constants.searchRadiusPickerStepValue * 5; i <= Constants.searchRadiusPickerMaxValue; i += Constants.searchRadiusPickerStepValue){
+        for (int i = Constants.searchRadiusPickerStepValue * 5; i <= Constants.searchRadiusPickerMaxValue; i += Constants.searchRadiusPickerStepValue) {
             mSearchRadiusList.add(String.valueOf(i));
         }
         String[] pickerArray = mSearchRadiusList.toArray(new String[mSearchRadiusList.size()]);
@@ -435,6 +441,8 @@ public class SettingsFragment extends Fragment {
             public void onDataChange(DataSnapshot dataSnapshot) {
                 mSearchRadiusPicker.setValue(Constants.obfuscationRadiusDefault);
                 if (dataSnapshot.getValue(Integer.class) != null) {
+                    // Set the search radius value to the users saved settings
+                    // Set the picker's selected value to the users saved settings
                     mSearchRadiusValue = String.valueOf(dataSnapshot.getValue(Integer.class));
                     mSearchRadiusPicker.setValue(mSearchRadiusList.indexOf(String.valueOf(dataSnapshot.getValue(Integer.class))) + 1);
                 }
@@ -457,6 +465,7 @@ public class SettingsFragment extends Fragment {
                     int pinColor = dataSnapshot.getValue(Integer.class);
                     mPersonPinColorValue = Util.getMapKeyFloat(pinColorMap, pinColor);
                     if (mPersonPinColorValue != null) {
+                        // Set the spinners position to the users saved setting value
                         int position = arrayAdapter.getPosition(mPersonPinColorValue);
                         mPersonPinColorSpinner.setSelection(position, false);
                     }
@@ -480,6 +489,7 @@ public class SettingsFragment extends Fragment {
                     int pinColor = dataSnapshot.getValue(Integer.class);
                     mEventPinColorValue = Util.getMapKeyFloat(pinColorMap, pinColor);
                     if (mEventPinColorValue != null) {
+                        // Set the spinners position to the users saved setting value
                         int position = arrayAdapter.getPosition(mEventPinColorValue);
                         mEventPinColorSpinner.setSelection(position, false);
                     }
@@ -512,6 +522,7 @@ public class SettingsFragment extends Fragment {
                     int privacyIntensity = dataSnapshot.getValue(Integer.class);
                     mPrivacyIntensityValue = Util.getMapKeyInt(privacyIntensityMap, privacyIntensity);
                     if (mPrivacyIntensityValue != null) {
+                        // Set the spinners position to the users saved setting value
                         int position = privacyArrayAdapter.getPosition(mPrivacyIntensityValue);
                         mPrivacyIntensitySpinner.setSelection(position, false);
                     }

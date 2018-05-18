@@ -5,7 +5,8 @@ import com.example.finalyearproject.hollyboothroyd.sync.Utils.NotificationType;
 import java.util.Date;
 
 /**
- * Created by hollyboothroyd on 2/25/2018.
+ * Created by hollyboothroyd
+ * 2/25/2018.
  */
 
 public class NotificationBase {

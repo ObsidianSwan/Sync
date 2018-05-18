@@ -10,6 +10,7 @@ import android.widget.Toast;
 
 import com.example.finalyearproject.hollyboothroyd.sync.Activities.NewAccount.NewAccountBasicInfoActivity;
 import com.example.finalyearproject.hollyboothroyd.sync.R;
+import com.example.finalyearproject.hollyboothroyd.sync.Utils.Constants;
 import com.linkedin.platform.LISessionManager;
 import com.linkedin.platform.errors.LIAuthError;
 import com.linkedin.platform.listeners.AuthListener;
@@ -39,7 +40,7 @@ public class LoginActivity extends AppCompatActivity {
                         Log.i(TAG, getString(R.string.linkedin_authentication_successful));
                         // Save the inputted data to be sent to the next account creation activity
                         Intent intent = new Intent(LoginActivity.this, NewAccountBasicInfoActivity.class);
-                        intent.putExtra("isLinkedInConnected", true);
+                        intent.putExtra(Constants.userLinkedInChildName, true);
                         startActivity(intent);
                     }
 
@@ -57,7 +58,7 @@ public class LoginActivity extends AppCompatActivity {
             public void onClick(View view) {
                 // Show New Account creation
                 Intent intent = new Intent(LoginActivity.this, NewAccountBasicInfoActivity.class);
-                intent.putExtra("isLinkedInConnected", false);
+                intent.putExtra(Constants.userLinkedInChildName, false);
                 startActivity(intent);
             }
         });

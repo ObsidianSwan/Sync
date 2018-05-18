@@ -3,23 +3,14 @@ package com.example.finalyearproject.hollyboothroyd.sync.Services;
 import android.app.IntentService;
 import android.content.Context;
 import android.content.Intent;
-import android.content.pm.PackageManager;
-import android.content.res.Resources;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.v4.content.ContextCompat;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
-import com.example.finalyearproject.hollyboothroyd.sync.Model.Person;
 import com.example.finalyearproject.hollyboothroyd.sync.R;
 import com.example.finalyearproject.hollyboothroyd.sync.Utils.Constants;
 import com.google.android.gms.location.Geofence;
 import com.google.android.gms.location.GeofenceStatusCodes;
 import com.google.android.gms.location.GeofencingEvent;
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
-import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -27,23 +18,19 @@ import java.util.List;
 import static android.content.ContentValues.TAG;
 
 /**
- * Created by hollyboothroyd on 3/8/2018.
+ * Created by hollyboothroyd
+ * 3/8/2018.
  */
 
 public class GeofenceTransitionsIntentService extends IntentService {
 
-    private DatabaseManager mDatabaseManager;
-
     public GeofenceTransitionsIntentService() {
         // Use the TAG to name the worker thread.
         super(TAG);
-
-        mDatabaseManager = new DatabaseManager();
     }
 
     @Override
-    public void onCreate()
-    {
+    public void onCreate() {
         super.onCreate();
     }
 
@@ -59,46 +46,53 @@ public class GeofenceTransitionsIntentService extends IntentService {
         // Get the transition type.
         int geofenceTransition = geofencingEvent.getGeofenceTransition();
 
-        // Test that the reported transition was of interest.
+        // Get the geofences that were triggered. A single event can trigger
+        // multiple geofences.
+        List<Geofence> triggeringGeofences = geofencingEvent.getTriggeringGeofences();
+
+        // Get the transition details as a String.
+        List<String> geofenceEnterTransitionDetails = getGeofenceTransitionDetails(triggeringGeofences);
+
+        // Check if the other user is now local (enter or dwell triggers) or no longer local (exit trigger)
         if (geofenceTransition == Geofence.GEOFENCE_TRANSITION_ENTER ||
                 geofenceTransition == Geofence.GEOFENCE_TRANSITION_DWELL) {
-
-            // Get the geofences that were triggered. A single event can trigger
-            // multiple geofences.
-            List<Geofence> triggeringGeofences = geofencingEvent.getTriggeringGeofences();
-
-            // Get the transition details as a String.
-            List<String> geofenceEnterTransitionDetails = getGeofenceEnterTransitionDetails(geofenceTransition, triggeringGeofences);
-            // TODO get left users too
-
-            // Send details to GMapFragment to display/remove local user
-            geofenceTriggeredMessageToMaps(geofenceEnterTransitionDetails);
-
-            Log.i(TAG, String.valueOf(geofenceTransition));
-        } else {
-            // Log the error.
-            Log.e(TAG, getString(R.string.geofence_transition_invalid_type) + ": " + geofenceTransition);
+            // Send details to GMapFragment to display local user
+            geofenceAddTriggeredMessageToMaps(geofenceEnterTransitionDetails);
+        } else if (geofenceTransition == Geofence.GEOFENCE_TRANSITION_EXIT) {
+            // Send details to GMapFragment to remove user
+            geofenceRemoveTriggeredMessageToMaps(geofenceEnterTransitionDetails);
         }
+
+        Log.i(TAG, String.valueOf(geofenceTransition));
+
     }
 
-    private void geofenceTriggeredMessageToMaps(List<String> geofenceEnterTransitionDetails){
+    // Create an intent that informs the map to add the user's pin to the map
+    private void geofenceAddTriggeredMessageToMaps(List<String> geofenceEnterTransitionDetails) {
         // Send the geofence trigger message to the GMaps fragment
-        for(String id : geofenceEnterTransitionDetails){
+        for (String id : geofenceEnterTransitionDetails) {
             Intent intent = new Intent(getString(R.string.geofence_enter_trigger));
             intent.putExtra(Constants.geofenceUserId, id);
             LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
         }
-
     }
 
+    // Create an intent that informs the map to remove the user's pin from the map
+    private void geofenceRemoveTriggeredMessageToMaps(List<String> geofenceEnterTransitionDetails) {
+        // Send the geofence trigger message to the GMaps fragment
+        for (String id : geofenceEnterTransitionDetails) {
+            Intent intent = new Intent(getString(R.string.geofence_exit_trigger));
+            intent.putExtra(Constants.geofenceUserId, id);
+            LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
+        }
+    }
 
-    private List<String> getGeofenceEnterTransitionDetails(int geofenceTransition, List<Geofence> triggeringGeofences){
+    // Retrieve the triggering users' ID
+    private List<String> getGeofenceTransitionDetails(List<Geofence> triggeringGeofences) {
         List<String> geofenceRequestIds = new ArrayList<>();
-        // Return the request ids of the geofences that triggered with enter
-        if(geofenceTransition == Geofence.GEOFENCE_TRANSITION_DWELL || geofenceTransition == Geofence.GEOFENCE_TRANSITION_ENTER) {
-            for (Geofence geofence : triggeringGeofences) {
-                geofenceRequestIds.add(geofence.getRequestId());
-            }
+        // Return the request ids of the triggered geofences
+        for (Geofence geofence : triggeringGeofences) {
+            geofenceRequestIds.add(geofence.getRequestId());
         }
         return geofenceRequestIds;
     }

@@ -23,7 +23,6 @@ import com.example.finalyearproject.hollyboothroyd.sync.Services.AccountManager;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
-import com.google.firebase.auth.FirebaseAuth;
 
 import java.util.regex.Pattern;
 
@@ -41,8 +40,6 @@ public class LoginFormActivity extends AppCompatActivity {
     private View mLoginFormView;
     private Button mLoginButton;
 
-    private FirebaseAuth mAuth;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -50,7 +47,6 @@ public class LoginFormActivity extends AppCompatActivity {
 
         // Set up Firebase account and auth systems
         accountManager = new AccountManager();
-        mAuth = FirebaseAuth.getInstance();
 
         // Set up the login form.
         mEmailText = findViewById(R.id.email);

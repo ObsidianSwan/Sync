@@ -3,7 +3,8 @@ package com.example.finalyearproject.hollyboothroyd.sync.Model;
 import java.util.HashMap;
 
 /**
- * Created by hollyboothroyd on 11/15/2017.
+ * Created by hollyboothroyd
+ * 11/15/2017.
  */
 
 public class Person {
@@ -84,15 +85,27 @@ public class Person {
         this.mImageId = imageId;
     }
 
-    public String getUserId() { return mUserId; }
+    public String getUserId() {
+        return mUserId;
+    }
 
-    public void setUserId(String userId) { this.mUserId = userId; }
+    public void setUserId(String userId) {
+        this.mUserId = userId;
+    }
 
-    public HashMap<String, Integer> getUserSettings() { return mUserSettings; }
+    public HashMap<String, Integer> getUserSettings() {
+        return mUserSettings;
+    }
 
-    public void setUserSettings(HashMap<String, Integer> userSettings) { this.mUserSettings = userSettings; }
+    public void setUserSettings(HashMap<String, Integer> userSettings) {
+        this.mUserSettings = userSettings;
+    }
 
-    public boolean getIsLinkedInConnected() { return mIsLinkedInConnected; }
+    public boolean getIsLinkedInConnected() {
+        return mIsLinkedInConnected;
+    }
 
-    public void setIsLinkedInConnected(boolean isLinkedInConnected) { this.mIsLinkedInConnected = isLinkedInConnected; }
+    public void setIsLinkedInConnected(boolean isLinkedInConnected) {
+        this.mIsLinkedInConnected = isLinkedInConnected;
+    }
 }

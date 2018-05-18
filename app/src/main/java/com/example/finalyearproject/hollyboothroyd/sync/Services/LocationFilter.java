@@ -6,7 +6,8 @@ import com.google.android.gms.maps.model.LatLng;
 import java.util.Random;
 
 /**
- * Created by hollyboothroyd on 3/7/2018.
+ * Created by hollyboothroyd
+ * 3/7/2018.
  */
 
 public class LocationFilter {
@@ -126,10 +127,7 @@ public class LocationFilter {
     }
 
     public static boolean eventWithinRange(LatLng originalLocation, LatLng eventLocation, int searchRadius){
-        if(distanceBetweenPoints(originalLocation, eventLocation) < searchRadius){
-            return true;
-        }
-        return false;
+        return distanceBetweenPoints(originalLocation, eventLocation) < searchRadius;
     }
 
     // Returns the distance between two LatLng positions in meters using the Haversine formula

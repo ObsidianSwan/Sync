@@ -7,18 +7,19 @@ import com.google.firebase.database.ServerValue;
 import java.util.Date;
 
 /**
- * Created by hollyboothroyd on 2/25/2018.
+ * Created by hollyboothroyd
+ * 2/25/2018.
  */
 
 public class Notification {
 
     private String mDbRefKey;
     private String mItemId;
-    NotificationType mType;
-    Object mTimeStamp;
+    private NotificationType mType;
+    private Object mTimeStamp;
 
     // Used during notification list population
-    public Notification(){
+    public Notification() {
 
     }
 
@@ -33,14 +34,18 @@ public class Notification {
         return mDbRefKey;
     }
 
-    public void setDbRefKey(String dbRefKey) { this.mDbRefKey = dbRefKey; }
+    public void setDbRefKey(String dbRefKey) {
+        this.mDbRefKey = dbRefKey;
+    }
 
 
     public String getItemId() {
         return mItemId;
     }
 
-    public void setItemId(String itemId) { this.mItemId = itemId; }
+    public void setItemId(String itemId) {
+        this.mItemId = itemId;
+    }
 
     public NotificationType getType() {
         return mType;
@@ -59,7 +64,7 @@ public class Notification {
     }
 
     @Exclude
-    public Date getTimeStampDate(){
+    public Date getTimeStampDate() {
         return new Date((long) mTimeStamp);
     }
 }

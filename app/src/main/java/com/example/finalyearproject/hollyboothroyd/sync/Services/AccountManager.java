@@ -1,23 +1,18 @@
 package com.example.finalyearproject.hollyboothroyd.sync.Services;
 
-import android.support.annotation.NonNull;
-
-import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
 /**
- * Created by hollyboothroyd on 11/11/2017.
+ * Created by hollyboothroyd
+ * 11/11/2017.
  */
 
 public class AccountManager {
 
     private FirebaseAuth mAuth;
-
-    /*Variables used to return status information to the calling activity*/
-    private boolean isSignUpSuccessful = false;
 
     public AccountManager() {
         mAuth = FirebaseAuth.getInstance();
@@ -28,17 +23,10 @@ public class AccountManager {
     }
 
     public boolean isUserSignedIn() {
-        if (getCurrentUser() != null) {
-            //user is signed in
-            return true;
-        } else {
-            //user is signed out
-            return false;
-        }
+        return getCurrentUser() != null;
     }
 
-    public void signUserOut()
-    {
+    public void signUserOut() {
         mAuth.signOut();
     }
 

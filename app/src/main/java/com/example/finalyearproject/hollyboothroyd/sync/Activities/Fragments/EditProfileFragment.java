@@ -15,22 +15,13 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
-import android.widget.ImageView;
-import android.widget.TextView;
 import android.widget.Toast;
 
-import com.example.finalyearproject.hollyboothroyd.sync.Activities.CoreActivity;
-import com.example.finalyearproject.hollyboothroyd.sync.Model.Notification;
-import com.example.finalyearproject.hollyboothroyd.sync.Model.NotificationBase;
 import com.example.finalyearproject.hollyboothroyd.sync.Model.Person;
-import com.example.finalyearproject.hollyboothroyd.sync.Model.UserConnections;
-import com.example.finalyearproject.hollyboothroyd.sync.Model.UserNotifications;
 import com.example.finalyearproject.hollyboothroyd.sync.R;
 import com.example.finalyearproject.hollyboothroyd.sync.Services.DatabaseManager;
 import com.example.finalyearproject.hollyboothroyd.sync.Utils.Constants;
-import com.example.finalyearproject.hollyboothroyd.sync.Utils.NotificationType;
 import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthCredential;
 import com.google.firebase.auth.EmailAuthProvider;
@@ -38,14 +29,12 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
-import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.UploadTask;
 import com.squareup.picasso.Picasso;
 import com.theartofdev.edmodo.cropper.CropImage;
 import com.theartofdev.edmodo.cropper.CropImageView;
 
-import java.net.URI;
 import java.util.regex.Pattern;
 
 import static android.app.Activity.RESULT_OK;
@@ -59,6 +48,10 @@ import static android.app.Activity.RESULT_OK;
 public class EditProfileFragment extends Fragment {
 
     private static final String TAG = "EditProfileFragment";
+
+    private static final int EMAIL_AND_PASSWORD_UPDATED = 0;
+    private static final int EMAIL_UPDATED = 1;
+    private static final int PASSWORD_UPDATED = 2;
 
     private DatabaseManager mDatabaseManager;
 
@@ -79,10 +72,8 @@ public class EditProfileFragment extends Fragment {
     private String mOriginalPosition;
     private String mOriginalCompany;
     private String mOriginalIndustry;
+    private boolean mIsLinkedInConnected;
 
-    private Button mCommitButton;
-
-    private AlertDialog.Builder mDialogBuilder;
     private AlertDialog mDialog;
 
     private boolean mProfileChanged = false;
@@ -121,7 +112,7 @@ public class EditProfileFragment extends Fragment {
         mNewPassword = (EditText) view.findViewById(R.id.edit_password_text);
         mReenteredNewPassword = (EditText) view.findViewById(R.id.edit_reenter_password_text);
 
-        mCommitButton = (Button) view.findViewById(R.id.edit_profile_commit_button);
+        Button commitButton = (Button) view.findViewById(R.id.edit_profile_commit_button);
 
         // Open the gallery to select the profile image
         mProfileImage.setOnClickListener(new View.OnClickListener() {
@@ -140,24 +131,31 @@ public class EditProfileFragment extends Fragment {
                 if (dataSnapshot != null) {
                     // Populate page with users information
                     Person currentUser = dataSnapshot.getValue(Person.class);
-                    if (currentUser.getImageId() != null) {
-                        mOriginalProfileImageUri = currentUser.getImageId();
-                        Picasso.with(getActivity()).load(currentUser.getImageId()).into(mProfileImage);
+                    if (currentUser != null) {
+                        if (currentUser.getImageId() != null) {
+                            mOriginalProfileImageUri = currentUser.getImageId();
+                            Picasso.with(getActivity()).load(currentUser.getImageId()).into(mProfileImage);
+                        }
+
+                        // Save the original user data to be used to compare to the inputted data
+                        // Used to check if the database needs to be updated
+                        mOriginalFirstName = currentUser.getFirstName();
+                        mOriginalLastName = currentUser.getLastName();
+                        mOriginalPosition = currentUser.getPosition();
+                        mOriginalCompany = currentUser.getCompany();
+                        mOriginalIndustry = currentUser.getIndustry();
+                        mIsLinkedInConnected = currentUser.getIsLinkedInConnected();
+
+                        // Set up the UI to contain the user's existing profile details
+                        mProfileImageUri = Uri.parse(mOriginalProfileImageUri);
+                        mFirstName.setText(mOriginalFirstName);
+                        mLastName.setText(mOriginalLastName);
+                        mPosition.setText(mOriginalPosition);
+                        mCompany.setText(mOriginalCompany);
+                        mIndustry.setText(mOriginalIndustry);
+
+                        mCurrentUser = FirebaseAuth.getInstance().getCurrentUser();
                     }
-                    mOriginalFirstName = currentUser.getFirstName();
-                    mOriginalLastName = currentUser.getLastName();
-                    mOriginalPosition = currentUser.getPosition();
-                    mOriginalCompany = currentUser.getCompany();
-                    mOriginalIndustry = currentUser.getIndustry();
-
-                    mProfileImageUri = Uri.parse(mOriginalProfileImageUri);
-                    mFirstName.setText(mOriginalFirstName);
-                    mLastName.setText(mOriginalLastName);
-                    mPosition.setText(mOriginalPosition);
-                    mCompany.setText(mOriginalCompany);
-                    mIndustry.setText(mOriginalIndustry);
-
-                    mCurrentUser = FirebaseAuth.getInstance().getCurrentUser();
                 }
             }
 
@@ -167,11 +165,12 @@ public class EditProfileFragment extends Fragment {
             }
         });
 
-        mCommitButton.setOnClickListener(new View.OnClickListener() {
+        commitButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 mProfileChanged = false;
 
+                // Retrieve the inputted data
                 String inputtedFirstName = mFirstName.getText().toString().trim();
                 String inputtedLastName = mLastName.getText().toString().trim();
                 String inputtedPosition = mPosition.getText().toString().trim();
@@ -184,59 +183,67 @@ public class EditProfileFragment extends Fragment {
                 // Check if the user's profile image has been changed
                 if (mProfileImageUri != null && !mOriginalProfileImageUri.equals(mProfileImageUri.toString())) {
                     mProfileChanged = true;
-                    // Delete the user's old image from the database
-                    mDatabaseManager.deleteImage(mOriginalProfileImageUri).addOnCompleteListener(new OnCompleteListener<Void>() {
-                        @Override
-                        public void onComplete(@NonNull Task<Void> task) {
-                            if (task.isSuccessful()) {
-                                // Upload the user's new image to the database
-                                mDatabaseManager.uploadPersonImage(mProfileImageUri).addOnCompleteListener(new OnCompleteListener<UploadTask.TaskSnapshot>() {
-                                    @Override
-                                    public void onComplete(@NonNull Task<UploadTask.TaskSnapshot> task) {
-                                        if (task.isSuccessful()) {
-                                            // Get a URL to the uploaded content
-                                            mProfileImageUri = task.getResult().getDownloadUrl();
-                                            mDatabaseManager.getUserPeopleDatabaseReference().child(Constants.userImgChildName).setValue(mProfileImageUri.toString());
-                                            mOriginalProfileImageUri = mProfileImageUri.toString();
-                                        } else {
-                                            Log.e(TAG, getString(R.string.upload_image_error));
+                    // Delete the user's old image from the database first if the user has not created an account via linkedin.
+                    // LinkedIn photos are not saved in Firebase Storage
+                    if (!mIsLinkedInConnected) {
+                        mDatabaseManager.deleteImage(mOriginalProfileImageUri).addOnCompleteListener(new OnCompleteListener<Void>() {
+                            @Override
+                            public void onComplete(@NonNull Task<Void> task) {
+                                if (task.isSuccessful()) {
+                                    // Upload the user's new image to the database
+                                    mDatabaseManager.uploadPersonImage(mProfileImageUri).addOnCompleteListener(new OnCompleteListener<UploadTask.TaskSnapshot>() {
+                                        @Override
+                                        public void onComplete(@NonNull Task<UploadTask.TaskSnapshot> task) {
+                                            if (task.isSuccessful()) {
+                                                // Get a URL to the uploaded content
+                                                mProfileImageUri = task.getResult().getDownloadUrl();
+                                                if (mProfileImageUri != null) {
+                                                    mDatabaseManager.updateUserProfileInformation(Constants.userImgChildName, mProfileImageUri.toString());
+                                                    mOriginalProfileImageUri = mProfileImageUri.toString();
+                                                }
+                                            } else {
+                                                Log.e(TAG, getString(R.string.upload_image_error));
+                                            }
                                         }
-                                    }
-                                });
-                            } else {
-                                Log.e(TAG, getString(R.string.delete_image_error));
+                                    });
+                                } else {
+                                    Log.e(TAG, getString(R.string.delete_image_error));
+                                }
                             }
-                        }
-                    });
+                        });
 
+                    } else{
+                        mDatabaseManager.updateUserProfileInformation(Constants.userImgChildName, mProfileImageUri.toString());
+                        mOriginalProfileImageUri = mProfileImageUri.toString();
+                    }
                 }
                 // Update the database if the users first name has changed
                 if (mFirstName != null && !mOriginalFirstName.equals(inputtedFirstName)) {
-                    mDatabaseManager.getUserPeopleDatabaseReference().child(Constants.userFirstNameChildName).setValue(inputtedFirstName);
+                    mDatabaseManager.updateUserProfileInformation(Constants.userFirstNameChildName, inputtedFirstName);
                     mOriginalFirstName = inputtedFirstName;
                     mProfileChanged = true;
                 }
                 // Update the database if the users last name has changed
                 if (mLastName != null && !mOriginalLastName.equals(inputtedLastName)) {
-                    mDatabaseManager.getUserPeopleDatabaseReference().child(Constants.userLastNameChildName).setValue(inputtedLastName);
+                    mDatabaseManager.updateUserProfileInformation(Constants.userLastNameChildName, inputtedLastName);
                     mOriginalLastName = inputtedLastName;
                     mProfileChanged = true;
                 }
                 // Update the database if the users position has changed
                 if (mPosition != null && !mOriginalPosition.equals(inputtedPosition)) {
-                    mDatabaseManager.getUserPeopleDatabaseReference().child(Constants.userPositionChildName).setValue(inputtedPosition);
+                    mDatabaseManager.updateUserProfileInformation(Constants.userPositionChildName, inputtedPosition);
                     mOriginalPosition = inputtedPosition;
                     mProfileChanged = true;
                 }
                 // Update the database if the users company has changed
                 if (mCompany != null && !mOriginalCompany.equals(inputtedCompany)) {
-                    mDatabaseManager.getUserPeopleDatabaseReference().child(Constants.userCompanyChildName).setValue(inputtedCompany);
+                    mDatabaseManager.updateUserProfileInformation(Constants.userCompanyChildName, inputtedCompany);
                     mOriginalCompany = inputtedCompany;
                     mProfileChanged = true;
                 }
                 // Update the database if the users industry has changed
                 if (mIndustry != null && !mOriginalIndustry.equals(inputtedIndustry)) {
-                    mDatabaseManager.getUserPeopleDatabaseReference().child(Constants.userIndustryChildName).setValue(inputtedIndustry);
+                    mDatabaseManager.updateUserProfileInformation(Constants.userIndustryChildName, inputtedIndustry);
                     mOriginalIndustry = inputtedIndustry;
                     mProfileChanged = true;
                 }
@@ -244,25 +251,25 @@ public class EditProfileFragment extends Fragment {
                 // Update the account authentication if the users email and password has changed
                 if (!inputtedPassword.equals("") && !inputtedReenteredPassword.equals("")) {
                     // Check that the password and verify password match
-                    if(inputtedPassword.equals(inputtedReenteredPassword)) {
+                    if (inputtedPassword.equals(inputtedReenteredPassword)) {
                         if (!inputtedEmail.equals("") && isEmailValid(inputtedEmail)) {
-                            editAccountDetailsPopupCreation(0, inputtedEmail, inputtedPassword);
+                            editAccountDetailsPopupCreation(EMAIL_AND_PASSWORD_UPDATED, inputtedEmail, inputtedPassword);
                             mAccountDetailsChanged = true;
                         }
-                    } else{
+                    } else {
                         mReenteredNewPassword.setError(getString(R.string.error_invalid_verify_password));
                     }
                 } // Update the account authentication if the users email has changed
                 else if (!inputtedEmail.equals("") && isEmailValid(inputtedEmail)) {
-                    editAccountDetailsPopupCreation(1, inputtedEmail, null);
+                    editAccountDetailsPopupCreation(EMAIL_UPDATED, inputtedEmail, null);
                     mAccountDetailsChanged = true;
                 } // Update the account authentication if the users password has changed
                 else if (!inputtedPassword.equals("") && !inputtedReenteredPassword.equals("") && isPasswordValid(inputtedPassword)) {
                     // Check that the password and verify password match
-                    if(inputtedPassword.equals(inputtedReenteredPassword)) {
-                        editAccountDetailsPopupCreation(2, inputtedPassword, null);
+                    if (inputtedPassword.equals(inputtedReenteredPassword)) {
+                        editAccountDetailsPopupCreation(PASSWORD_UPDATED, inputtedPassword, null);
                         mAccountDetailsChanged = true;
-                    } else{
+                    } else {
                         mReenteredNewPassword.setError(getString(R.string.error_invalid_verify_password));
                     }
                 }
@@ -280,10 +287,8 @@ public class EditProfileFragment extends Fragment {
     }
 
     private void editAccountDetailsPopupCreation(final int editedField, final String editedContent, final String editedContent2) {
-        mDialogBuilder = new AlertDialog.Builder(getContext());
+        AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(getContext());
         final View view = LayoutInflater.from(getContext()).inflate(R.layout.account_details_popup, null);
-        // Get person data who viewed the current users profile
-
 
         // Set up the UI
         Button dismissPopupButton = (Button) view.findViewById(R.id.dismiss_popup_button);
@@ -291,18 +296,15 @@ public class EditProfileFragment extends Fragment {
         final EditText password = (EditText) view.findViewById(R.id.edit_original_password_text);
         Button verifyButton = (Button) view.findViewById(R.id.verify_button);
 
-
         verifyButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
 
-                if (email.getText() == null || email.getText().toString().equals("")){
+                if (email.getText() == null || email.getText().toString().equals("")) {
                     email.setError(getString(R.string.error_field_required));
-                }
-                else if (password.getText() == null || password.getText().toString().equals("")){
+                } else if (password.getText() == null || password.getText().toString().equals("")) {
                     password.setError(getString(R.string.error_field_required));
-                }
-                else {
+                } else {
                     // Get auth credentials from the user for re-authentication.
                     AuthCredential credential = EmailAuthProvider
                             .getCredential(email.getText().toString().trim(), password.getText().toString().trim());
@@ -314,7 +316,8 @@ public class EditProfileFragment extends Fragment {
                                 @Override
                                 public void onComplete(@NonNull Task<Void> task) {
                                     if (task.isSuccessful()) {
-                                        if (editedField == 0) {
+                                        // Update the user's email and password
+                                        if (editedField == EMAIL_AND_PASSWORD_UPDATED) {
                                             mCurrentUser.updateEmail(editedContent).addOnCompleteListener(new OnCompleteListener<Void>() {
                                                 @Override
                                                 public void onComplete(@NonNull Task<Void> task) {
@@ -338,7 +341,8 @@ public class EditProfileFragment extends Fragment {
                                                 }
                                             });
                                         }
-                                        if (editedField == 1) {
+                                        // Update the user's email
+                                        if (editedField == EMAIL_UPDATED) {
                                             mCurrentUser.updateEmail(editedContent).addOnCompleteListener(new OnCompleteListener<Void>() {
                                                 @Override
                                                 public void onComplete(@NonNull Task<Void> task) {
@@ -353,7 +357,8 @@ public class EditProfileFragment extends Fragment {
                                                 }
                                             });
                                         }
-                                        if (editedField == 2) {
+                                        // Update the user's password
+                                        if (editedField == PASSWORD_UPDATED) {
                                             mCurrentUser.updatePassword(editedContent).addOnCompleteListener(new OnCompleteListener<Void>() {
                                                 @Override
                                                 public void onComplete(@NonNull Task<Void> task) {
@@ -385,8 +390,8 @@ public class EditProfileFragment extends Fragment {
         });
 
 
-        mDialogBuilder.setView(view);
-        mDialog = mDialogBuilder.create();
+        dialogBuilder.setView(view);
+        mDialog = dialogBuilder.create();
         mDialog.show();
 
     }

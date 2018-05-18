@@ -26,8 +26,6 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.ValueEventListener;
 import com.squareup.picasso.Picasso;
 
-import org.w3c.dom.Text;
-
 import java.util.List;
 
 /**
@@ -44,7 +42,6 @@ public class MyEventRecyclerViewAdapter extends RecyclerView.Adapter<MyEventRecy
 
     private DatabaseManager mDatabaseManager;
     private AccountManager mAccountManager;
-    private AlertDialog.Builder mDialogBuilder;
     private AlertDialog mDialog;
 
     public MyEventRecyclerViewAdapter(Context context, List<Event> items, OnListFragmentInteractionListener listener) {
@@ -82,7 +79,7 @@ public class MyEventRecyclerViewAdapter extends RecyclerView.Adapter<MyEventRecy
     }
 
     private void eventPopupCreation(final ViewHolder holder) {
-        mDialogBuilder = new AlertDialog.Builder(mContext);
+        AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(mContext);
         View view = LayoutInflater.from(mContext).inflate(R.layout.event_popup, null);
         final Event event = holder.mItem;
 
@@ -99,6 +96,7 @@ public class MyEventRecyclerViewAdapter extends RecyclerView.Adapter<MyEventRecy
         Button eventButton2 = (Button) view.findViewById(R.id.popup_event_button2);
         Button eventButton3 = (Button) view.findViewById(R.id.popup_event_button3);
 
+        // Load event image into event display
         if (event != null) {
             Picasso.with(mContext).load(event.getImageId()).into(eventImage);
         }
@@ -114,8 +112,8 @@ public class MyEventRecyclerViewAdapter extends RecyclerView.Adapter<MyEventRecy
         eventDescription.setText(event.getDescription());
 
         // The user is both hosting and attending the event
-        if(UserEvents.EVENTS_HOSTING_MAP.containsKey(event.getUid()) &&
-                UserEvents.EVENTS_ATTENDING_MAP.containsKey(event.getUid())){
+        if (UserEvents.EVENTS_HOSTING_MAP.containsKey(event.getUid()) &&
+                UserEvents.EVENTS_ATTENDING_MAP.containsKey(event.getUid())) {
             eventButton.setText(R.string.stop_attending_button_text);
             eventButton2.setText(R.string.delete_event_button_text);
             eventButton3.setText(R.string.edit_event_button_text);
@@ -152,7 +150,7 @@ public class MyEventRecyclerViewAdapter extends RecyclerView.Adapter<MyEventRecy
             });
 
         } // The user is hosting, but not attending the event
-        else if (UserEvents.EVENTS_HOSTING_MAP.containsKey(event.getUid()) && !UserEvents.EVENTS_ATTENDING_MAP.containsKey(event.getUid())){
+        else if (UserEvents.EVENTS_HOSTING_MAP.containsKey(event.getUid()) && !UserEvents.EVENTS_ATTENDING_MAP.containsKey(event.getUid())) {
             eventButton2.setText(R.string.delete_event_button_text);
             eventButton3.setText(R.string.edit_event_button_text);
             eventButton2.setVisibility(View.VISIBLE);
@@ -216,12 +214,12 @@ public class MyEventRecyclerViewAdapter extends RecyclerView.Adapter<MyEventRecy
             }
         });
 
-        mDialogBuilder.setView(view);
-        mDialog = mDialogBuilder.create();
+        dialogBuilder.setView(view);
+        mDialog = dialogBuilder.create();
         mDialog.show();
     }
 
-    private void attendEvent(final Event event){
+    private void attendEvent(final Event event) {
         // Add user to event's attendee database
         mDatabaseManager.addUserAttendingEvent(event.getUid()).addOnCompleteListener(new OnCompleteListener<Void>() {
             @Override
@@ -249,17 +247,17 @@ public class MyEventRecyclerViewAdapter extends RecyclerView.Adapter<MyEventRecy
         });
     }
 
-    private void stopAttendingEvent(final Event event, final String userId, final ViewHolder holder){
+    private void stopAttendingEvent(final Event event, final String userId, final ViewHolder holder) {
         // Delete attendee from users event attending database
         mDatabaseManager.deleteUserAttendingEvent(event.getUid()).addOnCompleteListener(new OnCompleteListener<Void>() {
             @Override
             public void onComplete(@NonNull Task<Void> task) {
-                if(task.isSuccessful()){
+                if (task.isSuccessful()) {
                     // Delete attendee from event attendee databases
                     mDatabaseManager.deleteEventAttending(event.getUid(), userId).addOnCompleteListener(new OnCompleteListener<Void>() {
                         @Override
                         public void onComplete(@NonNull Task<Void> task) {
-                            if(task.isSuccessful()){
+                            if (task.isSuccessful()) {
                                 // Remove event from the UI
                                 removeEvent(holder.getAdapterPosition());
                                 Toast.makeText(mContext, "You're no longer attending " + event.getTitle() + "!", Toast.LENGTH_SHORT).show();
@@ -271,7 +269,7 @@ public class MyEventRecyclerViewAdapter extends RecyclerView.Adapter<MyEventRecy
                             }
                         }
                     });
-                } else{
+                } else {
                     Toast.makeText(mContext, R.string.event_attendence_deletion_unsuccessful, Toast.LENGTH_SHORT).show();
                     Log.e(TAG, mContext.getString(R.string.stop_attending_event_error));
                 }
@@ -279,12 +277,12 @@ public class MyEventRecyclerViewAdapter extends RecyclerView.Adapter<MyEventRecy
         });
     }
 
-    private void deleteEvent(final Event event, final ViewHolder holder){
+    private void deleteEvent(final Event event, final ViewHolder holder) {
         // Delete event references in all user attending database
         mDatabaseManager.getUsersAttendingEvent(event.getUid()).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                for(DataSnapshot snapshot : dataSnapshot.getChildren()){
+                for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
                     String attendeeId = snapshot.getKey();
                     mDatabaseManager.deleteEventAttending(event.getUid(), attendeeId);
                 }
@@ -292,12 +290,12 @@ public class MyEventRecyclerViewAdapter extends RecyclerView.Adapter<MyEventRecy
                 mDatabaseManager.deleteEventHosting(event.getUid()).addOnCompleteListener(new OnCompleteListener<Void>() {
                     @Override
                     public void onComplete(@NonNull Task<Void> task) {
-                        if(task.isSuccessful()){
+                        if (task.isSuccessful()) {
                             // Delete event in event database
                             mDatabaseManager.deleteEvent(event.getUid()).addOnCompleteListener(new OnCompleteListener<Void>() {
                                 @Override
                                 public void onComplete(@NonNull Task<Void> task) {
-                                    if(task.isSuccessful()){
+                                    if (task.isSuccessful()) {
                                         // Remove event from UI
                                         removeEvent(holder.getAdapterPosition());
                                         Toast.makeText(mContext, R.string.delete_event_successful, Toast.LENGTH_SHORT).show();
@@ -316,6 +314,7 @@ public class MyEventRecyclerViewAdapter extends RecyclerView.Adapter<MyEventRecy
                     }
                 });
             }
+
             @Override
             public void onCancelled(DatabaseError databaseError) {
                 Log.e(TAG, databaseError.toString());

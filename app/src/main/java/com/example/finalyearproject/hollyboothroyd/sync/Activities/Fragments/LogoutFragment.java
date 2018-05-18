@@ -17,12 +17,8 @@ import com.example.finalyearproject.hollyboothroyd.sync.Services.AccountManager;
  * Activities that contain this fragment must implement the
  * {@link LogoutFragment.OnFragmentInteractionListener} interface
  * to handle interaction events.
- * Use the {@link LogoutFragment#newInstance} factory method to
- * create an instance of this fragment.
  */
 public class LogoutFragment extends Fragment {
-
-    private AccountManager mAccountManager;
 
     private OnFragmentInteractionListener mListener;
 
@@ -38,8 +34,6 @@ public class LogoutFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        mAccountManager = new AccountManager();
-
         // Set up UI
         getActivity().setTitle(R.string.logout_action_bar_title);
 
@@ -50,18 +44,13 @@ public class LogoutFragment extends Fragment {
             @Override
             public void onClick(View v) {
                 if (mListener != null) {
+                    // Inform the CoreActivity to handle logout steps
                     mListener.onLogoutInteraction();
                 }
             }
         });
         // Inflate the layout for this fragment
         return view;
-    }
-
-    public void onButtonPressed() {
-        if (mListener != null) {
-            mListener.onLogoutInteraction();
-        }
     }
 
     @Override

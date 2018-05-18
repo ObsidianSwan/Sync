@@ -8,27 +8,16 @@ import android.content.pm.PackageManager;
 import android.nfc.NdefMessage;
 import android.nfc.NdefRecord;
 import android.nfc.NfcAdapter;
-import android.nfc.NfcEvent;
 import android.os.Bundle;
 import android.os.Parcelable;
 import android.support.annotation.NonNull;
-import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
-import android.support.v4.app.FragmentManager;
 import android.support.v4.content.ContextCompat;
-import android.support.v4.view.GravityCompat;
-import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
-import android.view.View;
-import android.widget.TextView;
 import android.widget.Toast;
 
-import com.example.finalyearproject.hollyboothroyd.sync.Activities.Fragments.GMapFragment;
-import com.example.finalyearproject.hollyboothroyd.sync.Model.NotificationBase;
-import com.example.finalyearproject.hollyboothroyd.sync.Model.Person;
 import com.example.finalyearproject.hollyboothroyd.sync.R;
 import com.example.finalyearproject.hollyboothroyd.sync.Services.AccountManager;
 import com.example.finalyearproject.hollyboothroyd.sync.Services.DatabaseManager;
@@ -36,7 +25,6 @@ import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
-import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.ValueEventListener;
 
 import static android.nfc.NdefRecord.createMime;
@@ -144,10 +132,11 @@ public class NFCActivity extends AppCompatActivity {
         // Parse the intent
         NdefMessage[] msgs = null;
         String action = intent.getAction();
-        if (NfcAdapter.ACTION_TAG_DISCOVERED.equals(action)
-                || NfcAdapter.ACTION_NDEF_DISCOVERED.equals(action)) {
-            Parcelable[] rawMsgs =
-                    intent.getParcelableArrayExtra(NfcAdapter.EXTRA_NDEF_MESSAGES);
+        // Check what type of intent the NDEF message has
+        if (NfcAdapter.ACTION_TAG_DISCOVERED.equals(action) || NfcAdapter.ACTION_NDEF_DISCOVERED.equals(action)) {
+            // Retrieve NDEF messages
+            Parcelable[] rawMsgs = intent.getParcelableArrayExtra(NfcAdapter.EXTRA_NDEF_MESSAGES);
+
             if (rawMsgs != null) {
                 msgs = new NdefMessage[rawMsgs.length];
                 for (int i = 0; i < rawMsgs.length; i++) {
@@ -156,14 +145,9 @@ public class NFCActivity extends AppCompatActivity {
             } else {
                 // Unknown tag type
                 byte[] empty = new byte[]{};
-                NdefRecord record =
-                        new NdefRecord(NdefRecord.TNF_UNKNOWN, empty, empty, empty);
-                NdefMessage msg = new NdefMessage(new NdefRecord[]{
-                        record
-                });
-                msgs = new NdefMessage[]{
-                        msg
-                };
+                NdefRecord record = new NdefRecord(NdefRecord.TNF_UNKNOWN, empty, empty, empty);
+                NdefMessage msg = new NdefMessage(new NdefRecord[]{record});
+                msgs = new NdefMessage[]{msg};
             }
         } else {
             Log.d(TAG, getString(R.string.NFC_unknown_intent_error));
@@ -188,41 +172,33 @@ public class NFCActivity extends AppCompatActivity {
     }
 
     private void addConnection(final String otherUserId) {
-        mDatabaseManager.getUserPeopleDatabaseReference().addListenerForSingleValueEvent(new ValueEventListener() {
+        // Retrieve the current users ID
+        final String currentUserId = mAccountManager.getCurrentUser().getUid();
+        // Add connection to current users database
+        mDatabaseManager.addConnection(otherUserId, currentUserId).addOnCompleteListener(new OnCompleteListener<Void>() {
             @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                final String currentUserId = mAccountManager.getCurrentUser().getUid();
-                // Add connection to current users database
-                mDatabaseManager.addConnection(otherUserId, currentUserId).addOnCompleteListener(new OnCompleteListener<Void>() {
-                    @Override
-                    public void onComplete(@NonNull Task<Void> task) {
-                        if (task.isSuccessful()) {
-                            // Add connection to other users database
-                            mDatabaseManager.addConnection(currentUserId, otherUserId).addOnCompleteListener(new OnCompleteListener<Void>() {
-                                @Override
-                                public void onComplete(@NonNull Task<Void> task) {
-                                    if (task.isSuccessful()) {
-                                        if (task.isSuccessful()) {
-                                            Toast.makeText(NFCActivity.this, R.string.connection_accepted_toast_text, Toast.LENGTH_SHORT).show();
-                                        } else {
-                                            Toast.makeText(NFCActivity.this, R.string.syncup_connection_error, Toast.LENGTH_SHORT).show();
-                                        }
-                                    } else {
-                                        Log.e(TAG, getString(R.string.add_connection_other_user_error));
-                                    }
+            public void onComplete(@NonNull Task<Void> task) {
+                if (task.isSuccessful()) {
+                    // Add connection to other users database
+                    mDatabaseManager.addConnection(currentUserId, otherUserId).addOnCompleteListener(new OnCompleteListener<Void>() {
+                        @Override
+                        public void onComplete(@NonNull Task<Void> task) {
+                            if (task.isSuccessful()) {
+                                if (task.isSuccessful()) {
+                                    Toast.makeText(NFCActivity.this, R.string.connection_accepted_toast_text, Toast.LENGTH_SHORT).show();
+                                } else {
+                                    Toast.makeText(NFCActivity.this, R.string.syncup_connection_error, Toast.LENGTH_SHORT).show();
                                 }
-                            });
-                        } else {
-                            Log.e(TAG, getString(R.string.add_connection_current_user_error));
+                            } else {
+                                Log.e(TAG, getString(R.string.add_connection_other_user_error));
+                            }
                         }
-                    }
-                });
-            }
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-                Log.e(TAG, databaseError.toString());
+                    });
+                } else {
+                    Log.e(TAG, getString(R.string.add_connection_current_user_error));
+                }
             }
         });
     }
+
 }

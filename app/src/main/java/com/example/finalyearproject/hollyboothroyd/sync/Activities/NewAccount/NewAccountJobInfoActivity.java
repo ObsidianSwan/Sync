@@ -10,12 +10,12 @@ import android.widget.Button;
 import android.widget.EditText;
 
 import com.example.finalyearproject.hollyboothroyd.sync.R;
+import com.example.finalyearproject.hollyboothroyd.sync.Utils.Constants;
 import com.linkedin.platform.APIHelper;
 import com.linkedin.platform.errors.LIApiError;
 import com.linkedin.platform.listeners.ApiListener;
 import com.linkedin.platform.listeners.ApiResponse;
 
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -27,7 +27,7 @@ public class NewAccountJobInfoActivity extends AppCompatActivity {
     private EditText mCompanyText;
     private EditText mIndustryText;
 
-    private final String jobInfoUrl = "https://api.linkedin.com/v1/people/~:(positions,industry)?format=json";
+    private static final String JOB_INFO_URL = "https://api.linkedin.com/v1/people/~:(positions,industry)?format=json";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -39,9 +39,10 @@ public class NewAccountJobInfoActivity extends AppCompatActivity {
         mIndustryText = (EditText)findViewById(R.id.industry_text);
         Button nextButton = (Button) findViewById(R.id.job_info_next_button);
 
-        if(getIntent().getBooleanExtra("isLinkedInConnected", false)){
+        // Retrieve the users LinkedIn job information if their LinkedIn account is integrated
+        if(getIntent().getBooleanExtra(Constants.userLinkedInChildName, false)){
             APIHelper apiHelper = APIHelper.getInstance(getApplicationContext());
-            apiHelper.getRequest(NewAccountJobInfoActivity.this, jobInfoUrl, new ApiListener() {
+            apiHelper.getRequest(NewAccountJobInfoActivity.this, JOB_INFO_URL, new ApiListener() {
                 @Override
                 public void onApiSuccess(ApiResponse s) {
                     JSONObject result = s.getResponseDataAsJson();
@@ -77,14 +78,14 @@ public class NewAccountJobInfoActivity extends AppCompatActivity {
                 {
                     // Save the inputted data to be sent to the next account creation activity
                     Intent intent = new Intent(NewAccountJobInfoActivity.this, NewAccountPhotoActivity.class);
-                    intent.putExtra("firstName", getIntent().getStringExtra("firstName"));
-                    intent.putExtra("lastName", getIntent().getStringExtra("lastName"));
+                    intent.putExtra(Constants.userFirstNameChildName, getIntent().getStringExtra("firstName"));
+                    intent.putExtra(Constants.userLastNameChildName, getIntent().getStringExtra("lastName"));
                     intent.putExtra("email", getIntent().getStringExtra("email"));
                     intent.putExtra("password", getIntent().getStringExtra("password"));
-                    intent.putExtra("isLinkedInConnected", getIntent().getBooleanExtra("isLinkedInConnected", false));
-                    intent.putExtra("position", position);
-                    intent.putExtra("company", company);
-                    intent.putExtra("industry", industry);
+                    intent.putExtra(Constants.userLinkedInChildName, getIntent().getBooleanExtra(Constants.userLinkedInChildName, false));
+                    intent.putExtra(Constants.userPositionChildName, position);
+                    intent.putExtra(Constants.userCompanyChildName, company);
+                    intent.putExtra(Constants.userIndustryChildName, industry);
 
                     startActivity(intent);
                 }

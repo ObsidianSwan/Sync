@@ -1,7 +1,8 @@
 package com.example.finalyearproject.hollyboothroyd.sync.Model;
 
-/**
- * Created by hollyboothroyd on 2/25/2018.
+/*
+ * Created by hollyboothroyd
+ * 2/25/2018.
  */
 
 import android.content.Context;
@@ -30,8 +31,8 @@ public class UserNotifications {
 
     private DatabaseManager mDatabaseManager;
 
-    public static final List<NotificationBase> ITEMS = new ArrayList<NotificationBase>();
-    public static final Map<String, NotificationBase> CONNECTION_REQUEST_ITEMS_MAP = new HashMap<String, NotificationBase>();
+    public static final List<NotificationBase> ITEMS = new ArrayList<>();
+    public static final Map<String, NotificationBase> CONNECTION_REQUEST_ITEMS_MAP = new HashMap<>();
 
     private ValueEventListener mUserNotificationsListener;
 

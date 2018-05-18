@@ -1,7 +1,6 @@
 package com.example.finalyearproject.hollyboothroyd.sync.Utils;
 
 import android.annotation.SuppressLint;
-import android.app.AlertDialog;
 import android.content.Context;
 import android.location.Address;
 import android.location.Geocoder;
@@ -15,6 +14,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
@@ -24,8 +24,6 @@ import java.util.regex.Pattern;
  */
 
 public class Util {
-
-    private static AlertDialog mDialog;
 
     private static final Pattern sDatePattern =
             Pattern.compile("^(0[1-9]|[12][0-9]|3[01])[- /.](0[1-9]|1[012])[- /.](19|20)\\d\\d$");
@@ -61,12 +59,12 @@ public class Util {
 
         if(diffInMinutes > 60){
             if(diffInHours > 24){
-                return String.format ("%dd", diffInDays);
+                return String.format (Locale.getDefault(),"%dd", diffInDays);
             } else {
-                return String.format ("%dh", diffInHours);
+                return String.format (Locale.getDefault(),"%dh", diffInHours);
             }
         }
-        return String.format ("%dm", diffInMinutes);
+        return String.format (Locale.getDefault(),"%dm", diffInMinutes);
     }
 
     // Permissions check is done in the calling activity or fragment
@@ -123,7 +121,7 @@ public class Util {
         if(!sDatePattern.matcher(date).matches()){
             return false;
         }
-        SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy");
+        SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy", Locale.getDefault());
         dateFormat.setLenient(false);
         try {
             dateFormat.parse(date);

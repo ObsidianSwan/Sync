@@ -1,12 +1,8 @@
 package com.example.finalyearproject.hollyboothroyd.sync.Activities.Fragments.NewEvent;
 
-import android.animation.Animator;
-import android.animation.AnimatorListenerAdapter;
-import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.text.TextUtils;
@@ -87,7 +83,7 @@ public class NewEventBasicInfoFragment extends Fragment {
                 String eventDescription = mDescription.getText().toString().trim();
 
                 // Perform basic input validation
-                if(areEntriesValid(eventTitle, eventIndustry, eventDescription)) {
+                if (areEntriesValid(eventTitle, eventIndustry, eventDescription)) {
                     if (mListener != null) {
                         // Pass data to the CoreActivity to pass it to the next fragment
                         mListener.onNewEventInfoNextButtonPressed(eventTitle, eventIndustry, eventDescription, mImageUri.toString());
@@ -122,7 +118,7 @@ public class NewEventBasicInfoFragment extends Fragment {
             focusView = mDescription;
         }
         // Check for a valid event image
-        if(mImageUri == null){
+        if (mImageUri == null) {
             Toast.makeText(getContext(), R.string.event_image_required_toast, Toast.LENGTH_SHORT).show();
             return false;
         }
