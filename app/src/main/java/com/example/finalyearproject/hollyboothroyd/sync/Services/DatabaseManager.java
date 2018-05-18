@@ -19,32 +19,31 @@ import com.google.firebase.storage.UploadTask;
 import java.util.HashMap;
 
 /**
- * Created by hollyboothroyd on 11/11/2017.
+ * Created by hollyboothroyd
+ * 11/11/2017.
  */
 
 public class DatabaseManager {
 
     private static final String TAG = "DatabaseManager";
 
-    private FirebaseDatabase mDatabase;
     private StorageReference mStorage;
     private DatabaseReference mPeopleDatabaseReference;
     private DatabaseReference mLocationDatabaseReference;
     private DatabaseReference mEventDatabaseReference;
-    private AccountManager mAccountManager;
 
     private String mCurrentUserId;
 
     public DatabaseManager() {
-        mDatabase = FirebaseDatabase.getInstance();
+        FirebaseDatabase database = FirebaseDatabase.getInstance();
         mStorage = FirebaseStorage.getInstance().getReference();
-        mPeopleDatabaseReference = mDatabase.getReference().child(Constants.peopleDatabaseRefName);
-        mLocationDatabaseReference = mDatabase.getReference().child(Constants.locationDatabaseRefName);
-        mEventDatabaseReference = mDatabase.getReference().child(Constants.eventDatabaseRefName);
+        mPeopleDatabaseReference = database.getReference().child(Constants.peopleDatabaseRefName);
+        mLocationDatabaseReference = database.getReference().child(Constants.locationDatabaseRefName);
+        mEventDatabaseReference = database.getReference().child(Constants.eventDatabaseRefName);
 
-        mAccountManager = new AccountManager();
-        if(mAccountManager.getCurrentUser() != null) {
-            mCurrentUserId = mAccountManager.getCurrentUser().getUid();
+        AccountManager accountManager = new AccountManager();
+        if(accountManager.getCurrentUser() != null) {
+            mCurrentUserId = accountManager.getCurrentUser().getUid();
         }
     }
 
@@ -106,6 +105,10 @@ public class DatabaseManager {
         return mPeopleDatabaseReference.child(mCurrentUserId);
     }
 
+    public Task<Void> updateUserProfileInformation(String field, String value){
+        return mPeopleDatabaseReference.child(mCurrentUserId).child(field).setValue(value);
+    }
+
     // Connections
 
     public DatabaseReference getUserConnectionsDatabaseReference() {
@@ -158,6 +161,10 @@ public class DatabaseManager {
 
     public DatabaseReference getAllEventsDatabaseReference() {
         return mEventDatabaseReference;
+    }
+
+    public Task<Void> updateEventDetails(String eventId, String field, String value){
+        return mEventDatabaseReference.child(eventId).child(field).setValue(value);
     }
 
     public DatabaseReference getEventsAttendingDatabaseReference() {

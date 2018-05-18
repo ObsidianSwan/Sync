@@ -9,7 +9,6 @@ import com.example.finalyearproject.hollyboothroyd.sync.Activities.Fragments.New
 import com.example.finalyearproject.hollyboothroyd.sync.Activities.Fragments.NotificationFragment;
 import com.example.finalyearproject.hollyboothroyd.sync.Activities.Fragments.SettingsFragment;
 import com.example.finalyearproject.hollyboothroyd.sync.Activities.Fragments.ViewEventsFragment;
-import com.example.finalyearproject.hollyboothroyd.sync.Activities.NewAccount.NewAccountPhotoActivity;
 import com.example.finalyearproject.hollyboothroyd.sync.Model.Event;
 import com.example.finalyearproject.hollyboothroyd.sync.Model.NotificationBase;
 import com.example.finalyearproject.hollyboothroyd.sync.Model.UserConnections;

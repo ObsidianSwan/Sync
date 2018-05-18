@@ -33,7 +33,6 @@ public class ViewEventsFragment extends Fragment {
     private RecyclerView mEventsAttending;
     private RecyclerView mEventsHosting;
 
-
     /**
      * Mandatory empty constructor for the fragment manager to instantiate the
      * fragment (e.g. upon screen orientation changes).
@@ -122,8 +121,6 @@ public class ViewEventsFragment extends Fragment {
 
         return view;
     }
-
-
 
 
     @Override

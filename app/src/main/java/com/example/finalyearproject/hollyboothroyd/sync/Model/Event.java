@@ -4,7 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Created by hollyboothroyd on 1/28/2018.
+ * Created by hollyboothroyd
+ * 1/28/2018.
  */
 
 public class Event {
@@ -51,9 +52,10 @@ public class Event {
         this.mImageId = imageId;
         this.mDescription = description;
         this.mCreator = creator;
-        this.mAttendees = new ArrayList<String>();
+        this.mAttendees = new ArrayList<>();
     }
 
+    // Used when creating a new event with attendees
     public Event(String uid, String title, String industry, String date, String time,
                  String street, String city, String state, String zipCode, String country,
                  Double longitude, Double latitude, String description, String imageId, String creator, List<String> attendees) {

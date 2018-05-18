@@ -41,7 +41,6 @@ public class MyConnectionRecyclerViewAdapter extends RecyclerView.Adapter<MyConn
 
     private DatabaseManager mDatabaseManager;
     private AccountManager mAccountManager;
-    private AlertDialog.Builder mDialogBuilder;
     private AlertDialog mDialog;
 
 
@@ -86,7 +85,7 @@ public class MyConnectionRecyclerViewAdapter extends RecyclerView.Adapter<MyConn
     }
 
     private void connectionPopupCreation(final ViewHolder holder) {
-        mDialogBuilder = new AlertDialog.Builder(mContext);
+        AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(mContext);
         View view = LayoutInflater.from(mContext).inflate(R.layout.person_popup, null);
         final Person person = holder.mItem;
 
@@ -100,6 +99,7 @@ public class MyConnectionRecyclerViewAdapter extends RecyclerView.Adapter<MyConn
         final Button disconnectButton = (Button) view.findViewById(R.id.popup_button);
         disconnectButton.setText(R.string.disconnect_button);
 
+        // Load person image into connection display
         if (person != null) {
             Picasso.with(mContext).load(person.getImageId()).into(personImage);
         }
@@ -137,8 +137,8 @@ public class MyConnectionRecyclerViewAdapter extends RecyclerView.Adapter<MyConn
             }
         });
 
-        mDialogBuilder.setView(view);
-        mDialog = mDialogBuilder.create();
+        dialogBuilder.setView(view);
+        mDialog = dialogBuilder.create();
         mDialog.show();
     }
 

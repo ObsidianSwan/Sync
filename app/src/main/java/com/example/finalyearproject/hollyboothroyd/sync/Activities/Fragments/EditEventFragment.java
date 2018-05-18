@@ -1,14 +1,10 @@
 package com.example.finalyearproject.hollyboothroyd.sync.Activities.Fragments;
 
-import android.animation.Animator;
-import android.animation.AnimatorListenerAdapter;
-import android.annotation.TargetApi;
 import android.app.DatePickerDialog;
 import android.app.TimePickerDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
@@ -39,9 +35,7 @@ import com.squareup.picasso.Picasso;
 import com.theartofdev.edmodo.cropper.CropImage;
 import com.theartofdev.edmodo.cropper.CropImageView;
 
-import java.net.URI;
 import java.util.Calendar;
-import java.util.regex.Pattern;
 
 import static android.app.Activity.RESULT_OK;
 
@@ -74,12 +68,8 @@ public class EditEventFragment extends Fragment {
     private EditText mState;
     private EditText mZipCode;
     private EditText mCountry;
-    private Button mDoneButton;
 
     private Uri mImageUri;
-
-    private View mProgressView;
-    private View mEventInfoView;
 
     private boolean mProfileChanged = false;
 
@@ -102,9 +92,6 @@ public class EditEventFragment extends Fragment {
         // Set up UI
         getActivity().setTitle(getString(R.string.edit_event_title));
 
-        mEventInfoView = view.findViewById(R.id.edit_event_content);
-        mProgressView = view.findViewById(R.id.edit_event_description_progress);
-
         mEventTitleText = (EditText) view.findViewById(R.id.edit_event_title_text);
         mEventIndustryText = (EditText) view.findViewById(R.id.edit_event_industry_text);
 
@@ -123,7 +110,7 @@ public class EditEventFragment extends Fragment {
         mDescription = (EditText) view.findViewById(R.id.edit_event_description_text);
         mEventImage = (ImageButton) view.findViewById(R.id.edit_event_image_button);
 
-        mDoneButton = (Button) view.findViewById(R.id.edit_event_done_button);
+        Button doneButton = (Button) view.findViewById(R.id.edit_event_done_button);
 
         setUpDatePicker();
         setUpTimePicker();
@@ -140,7 +127,7 @@ public class EditEventFragment extends Fragment {
             }
         });
 
-        mDoneButton.setOnClickListener(new View.OnClickListener() {
+        doneButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 String inputtedEventTitle = mEventTitleText.getText().toString().trim();
@@ -171,7 +158,7 @@ public class EditEventFragment extends Fragment {
                                             if (task.isSuccessful()) {
                                                 // Get a URL to the uploaded content
                                                 mImageUri = task.getResult().getDownloadUrl();
-                                                mDatabaseManager.getAllEventsDatabaseReference().child(mEvent.getUid()).child(Constants.eventImgChildName).setValue(mImageUri.toString());
+                                                mDatabaseManager.updateEventDetails(mEvent.getUid(), Constants.eventImgChildName, mImageUri.toString());
                                                 mEvent.setImageId(mImageUri.toString());
                                             } else {
                                                 Log.e(TAG, getString(R.string.upload_image_error));
@@ -187,66 +174,66 @@ public class EditEventFragment extends Fragment {
 
                 // Update the database if the users first name has changed
                 if (mEvent.getTitle() != null && !mEvent.getTitle().equals(inputtedEventTitle)) {
-                    mDatabaseManager.getAllEventsDatabaseReference().child(mEvent.getUid()).child(Constants.eventTitleChildName).setValue(inputtedEventTitle);
+                    mDatabaseManager.updateEventDetails(mEvent.getUid(), Constants.eventTitleChildName, inputtedEventTitle);
                     mEvent.setTitle(inputtedEventTitle);
                     mProfileChanged = true;
                 }
                 // Update the database if the users last name has changed
                 if (mEvent.getIndustry() != null && !mEvent.getIndustry().equals(inputtedEventIndustry)) {
-                    mDatabaseManager.getAllEventsDatabaseReference().child(mEvent.getUid()).child(Constants.eventIndustryChildName).setValue(inputtedEventIndustry);
+                    mDatabaseManager.updateEventDetails(mEvent.getUid(), Constants.eventIndustryChildName, inputtedEventIndustry);
                     mEvent.setIndustry(inputtedEventIndustry);
                     mProfileChanged = true;
                 }
                 // Update the database if the users position has changed
                 if (mEvent.getDate() != null && !mEvent.getDate().equals(inputtedDate)) {
-                    mDatabaseManager.getAllEventsDatabaseReference().child(mEvent.getUid()).child(Constants.eventDateChildName).setValue(inputtedDate);
+                    mDatabaseManager.updateEventDetails(mEvent.getUid(), Constants.eventDateChildName, inputtedDate);
                     mEvent.setDate(inputtedDate);
                     mProfileChanged = true;
                 }
                 // Update the database if the users company has changed
                 if (mEvent.getTime() != null && !mEvent.getTime().equals(inputtedTime)) {
-                    mDatabaseManager.getAllEventsDatabaseReference().child(mEvent.getUid()).child(Constants.eventTimeChildName).setValue(inputtedTime);
+                    mDatabaseManager.updateEventDetails(mEvent.getUid(), Constants.eventTimeChildName, inputtedTime);
                     mEvent.setTime(inputtedTime);
                     mProfileChanged = true;
                 }
                 // Update the database if the users industry has changed
                 if (mEvent.getStreet() != null && !mEvent.getStreet().equals(inputtedStreet)) {
-                    mDatabaseManager.getAllEventsDatabaseReference().child(mEvent.getUid()).child(Constants.eventStreetChildName).setValue(inputtedStreet);
+                    mDatabaseManager.updateEventDetails(mEvent.getUid(), Constants.eventStreetChildName, inputtedStreet);
                     mEvent.setStreet(inputtedStreet);
                     updateLocation();
                     mProfileChanged = true;
                 }
                 // Update the database if the users first name has changed
                 if (mEvent.getCity() != null && !mEvent.getCity().equals(inputtedCity)) {
-                    mDatabaseManager.getAllEventsDatabaseReference().child(mEvent.getUid()).child(Constants.eventCityChildName).setValue(inputtedCity);
+                    mDatabaseManager.updateEventDetails(mEvent.getUid(), Constants.eventCityChildName, inputtedCity);
                     mEvent.setCity(inputtedCity);
                     updateLocation();
                     mProfileChanged = true;
                 }
                 // Update the database if the users last name has changed
                 if (mEvent.getState() != null && !mEvent.getState().equals(inputtedState)) {
-                    mDatabaseManager.getAllEventsDatabaseReference().child(mEvent.getUid()).child(Constants.eventStateChildName).setValue(inputtedState);
+                    mDatabaseManager.updateEventDetails(mEvent.getUid(), Constants.eventStateChildName, inputtedState);
                     mEvent.setState(inputtedState);
                     updateLocation();
                     mProfileChanged = true;
                 }
                 // Update the database if the users position has changed
                 if (mEvent.getZipCode() != null && !mEvent.getZipCode().equals(inputtedZipCode)) {
-                    mDatabaseManager.getAllEventsDatabaseReference().child(mEvent.getUid()).child(Constants.eventZipCodeChildName).setValue(inputtedZipCode);
+                    mDatabaseManager.updateEventDetails(mEvent.getUid(), Constants.eventZipCodeChildName, inputtedZipCode);
                     mEvent.setZipCode(inputtedZipCode);
                     updateLocation();
                     mProfileChanged = true;
                 }
                 // Update the database if the users company has changed
                 if (mEvent.getCountry() != null && !mEvent.getCountry().equals(inputtedCountry)) {
-                    mDatabaseManager.getAllEventsDatabaseReference().child(mEvent.getUid()).child(Constants.eventCountryChildName).setValue(inputtedCountry);
+                    mDatabaseManager.updateEventDetails(mEvent.getUid(), Constants.eventCountryChildName, inputtedCountry);
                     mEvent.setCountry(inputtedCountry);
                     updateLocation();
                     mProfileChanged = true;
                 }
                 // Update the database if the users company has changed
                 if (mEvent.getDescription() != null && !mEvent.getDescription().equals(inputtedDescription)) {
-                    mDatabaseManager.getAllEventsDatabaseReference().child(mEvent.getUid()).child(Constants.eventDescriptionChildName).setValue(inputtedDescription);
+                    mDatabaseManager.updateEventDetails(mEvent.getUid(), Constants.eventDescriptionChildName, inputtedDescription);
                     mEvent.setDescription(inputtedDescription);
                     mProfileChanged = true;
                 }
@@ -267,8 +254,8 @@ public class EditEventFragment extends Fragment {
         String completeAddress = mEvent.getStreet() + ", " + mEvent.getCity() + ", " + mEvent.getState() + ", " + mEvent.getZipCode() + ", " + mEvent.getCountry();
         LatLng position = Util.getLocationFromAddress(getContext(), completeAddress);
         if (position != null) {
-            mDatabaseManager.getAllEventsDatabaseReference().child(mEvent.getUid()).child(Constants.eventLongitudeChildName).setValue(position.longitude);
-            mDatabaseManager.getAllEventsDatabaseReference().child(mEvent.getUid()).child(Constants.eventLatitudeChildName).setValue(position.latitude);
+            mDatabaseManager.updateEventDetails(mEvent.getUid(), Constants.eventLongitudeChildName, String.valueOf(position.longitude));
+            mDatabaseManager.updateEventDetails(mEvent.getUid(), Constants.eventLatitudeChildName, String.valueOf(position.latitude));
         }
     }
 
@@ -544,42 +531,5 @@ public class EditEventFragment extends Fragment {
      */
     public interface OnFragmentInteractionListener {
         void onFragmentInteraction(Uri uri);
-    }
-
-
-    @TargetApi(Build.VERSION_CODES.HONEYCOMB_MR2)
-    private void showProgress(final boolean show) {
-        // On Honeycomb MR2 we have the ViewPropertyAnimator APIs, which allow
-        // for very easy animations. If available, use these APIs to fade-in
-        // the progress spinner.
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB_MR2) {
-            int shortAnimTime = getResources().getInteger(android.R.integer.config_shortAnimTime);
-            //Shows the progress UI and hides the event creation form.
-            mDoneButton.setVisibility(show ? View.GONE : View.VISIBLE);
-            mEventInfoView.setVisibility(show ? View.GONE : View.VISIBLE);
-            mEventInfoView.animate().setDuration(shortAnimTime).alpha(
-                    show ? 0 : 1).setListener(new AnimatorListenerAdapter() {
-                @Override
-                public void onAnimationEnd(Animator animation) {
-                    mDoneButton.setVisibility(show ? View.GONE : View.VISIBLE);
-                    mEventInfoView.setVisibility(show ? View.GONE : View.VISIBLE);
-                }
-            });
-
-            mProgressView.setVisibility(show ? View.VISIBLE : View.GONE);
-            mProgressView.animate().setDuration(shortAnimTime).alpha(
-                    show ? 1 : 0).setListener(new AnimatorListenerAdapter() {
-                @Override
-                public void onAnimationEnd(Animator animation) {
-                    mProgressView.setVisibility(show ? View.VISIBLE : View.GONE);
-                }
-            });
-        } else {
-            // The ViewPropertyAnimator APIs are not available, so simply show
-            // and hide the relevant UI components.
-            mProgressView.setVisibility(show ? View.VISIBLE : View.GONE);
-            mDoneButton.setVisibility(show ? View.GONE : View.VISIBLE);
-            mEventInfoView.setVisibility(show ? View.GONE : View.VISIBLE);
-        }
     }
 }

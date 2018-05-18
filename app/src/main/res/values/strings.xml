@@ -312,4 +312,8 @@
     <string name="password_update_failed_log">Error password not updated</string>
     <string name="password_updated_log">Password updated</string>
     <string name="email_updated_log">Email updated</string>
+    <string name="geofence_exit_trigger">geofenceExitTriggered</string>
+    <string name="info_window_image_download_error">Error loading thumbnail!</string>
+    <string name="not_logged_in_initiation">User is not already signed in</string>
+    <string name="logged_in_intitation">User is already signed in</string>
 </resources>

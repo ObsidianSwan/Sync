@@ -1,10 +1,11 @@
 package com.example.finalyearproject.hollyboothroyd.sync.Model;
 
-import android.app.Activity;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.location.Location;
+import android.location.LocationListener;
 import android.location.LocationManager;
+import android.os.Bundle;
 import android.support.v4.app.ActivityCompat;
 import android.util.Log;
 import android.widget.Toast;
@@ -21,13 +22,15 @@ import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
 import static android.content.Context.LOCATION_SERVICE;
 
 /**
- * Created by hollyboothroyd on 1/28/2018.
+ * Created by hollyboothroyd
+ * 1/28/2018.
  */
 
 public class UserEvents {
@@ -37,6 +40,7 @@ public class UserEvents {
 
     private DatabaseManager mDatabaseManager;
     private LocationManager mLocationManager;
+    private LocationListener mLocationListener;
 
     public static final List<Event> ALL_EVENTS = new ArrayList<>();
     public static final Map<String, Event> ALL_EVENTS_MAP = new HashMap<>();
@@ -51,6 +55,9 @@ public class UserEvents {
     private ValueEventListener mEventsAttendingListener;
     private ValueEventListener mEventsHostingListener;
 
+    private int mLocationTimeUpdateInterval = Constants.locationTimeUpdateIntervalDefault;
+    private int mLocationDistanceUpdateIntervalName = Constants.locationDistanceUpdateIntervalDefault;
+
 
     private boolean mAllEventsUpdated = false;
     private boolean mEventsAttendingUpdated = false;
@@ -63,6 +70,46 @@ public class UserEvents {
 
         mDatabaseManager = new DatabaseManager();
         mLocationManager = (LocationManager) context.getSystemService(LOCATION_SERVICE);
+
+        // Set the location time update interval value to the users choice found in the settings database
+        mDatabaseManager.getUserSettings(Constants.locationTimeUpdateIntervalName).addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                // Set the location time update interval to the default in case the value cannot be set to the database value
+                int value = Constants.locationTimeUpdateIntervalDefault;
+                if (dataSnapshot.getValue(Integer.class) != null) {
+                    // Set the location time update interval to the saved settings
+                    value = dataSnapshot.getValue(Integer.class);
+                }
+
+                mLocationTimeUpdateInterval = value;
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                Log.e(TAG, databaseError.toString());
+            }
+        });
+
+        // Set the location distance update interval value to the users choice found in the settings database
+        mDatabaseManager.getUserSettings(Constants.locationDistanceUpdateIntervalName).addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                // Set the location distance update interval to the default in case the value cannot be set to the database value
+                int value = Constants.locationDistanceUpdateIntervalDefault;
+                if (dataSnapshot.getValue(Integer.class) != null) {
+                    // Set the location distance update interval to the saved settings
+                    value = dataSnapshot.getValue(Integer.class);
+                }
+
+                mLocationDistanceUpdateIntervalName = value;
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                Log.e(TAG, databaseError.toString());
+            }
+        });
 
         // Check if location permissions have been granted
         if (ActivityCompat.checkSelfPermission(context, android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(context, android.Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
@@ -77,6 +124,87 @@ public class UserEvents {
                     }
 
                     // Listen for changes in the events database
+                    // Listen for any changes to the current users location
+                    mLocationListener = new LocationListener() {
+                        @Override
+                        public void onLocationChanged(final Location location) {
+                            // Check to remove existing events first
+                            // This is quicker than waiting to pull down all events
+                            mAllEventsUpdated = false;
+                            Iterator<Event> listIterator = ALL_EVENTS.iterator();
+                            while (listIterator.hasNext()) {
+                                Event event = listIterator.next();
+                                LatLng eventPosition = new LatLng(event.getLatitude(), event.getLongitude());
+                                if (!LocationFilter.eventWithinRange(new LatLng(location.getLatitude(), location.getLongitude()), eventPosition, mSearchRadius)) {
+                                    listIterator.remove();
+                                    ALL_EVENTS_MAP.remove(event.getUid());
+                                    mAllEventsUpdated = true;
+                                }
+                            }
+                            if (mAllEventsUpdated) {
+                                for (UserEventsListener listener : mListeners) {
+                                    listener.userEventsUpdated();
+                                }
+                            }
+
+                            // Add new events that should appear as the user moves
+                            mAllEventsListener = mDatabaseManager.getAllEventsDatabaseReference().addValueEventListener(new ValueEventListener() {
+                                @Override
+                                public void onDataChange(DataSnapshot dataSnapshot) {
+                                    mAllEventsUpdated = false;
+                                    ALL_EVENTS.clear();
+                                    ALL_EVENTS_MAP.clear();
+                                    for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
+                                        Event event = snapshot.getValue(Event.class);
+                                        if (event != null) {
+                                            LatLng eventPosition = new LatLng(event.getLatitude(), event.getLongitude());
+                                            // If the users last location can be found, populate the map with local events
+                                            if (location != null) {
+                                                LatLng userPosition = new LatLng(location.getLatitude(), location.getLongitude());
+                                                // Check that the event is within the search radius of the current user
+                                                if (LocationFilter.eventWithinRange(userPosition, eventPosition, mSearchRadius)) {
+                                                    ALL_EVENTS.add(event);
+                                                    ALL_EVENTS_MAP.put(event.getUid(), event);
+                                                    mAllEventsUpdated = true;
+                                                }
+                                            } else {
+                                                Log.e(TAG, context.getString(R.string.location_not_found_error));
+                                                Toast.makeText(context, R.string.could_not_find_location, Toast.LENGTH_SHORT).show();
+                                            }
+                                        }
+                                    }
+                                    if (mAllEventsUpdated) {
+                                        for (UserEventsListener listener : mListeners) {
+                                            listener.userEventsUpdated();
+                                        }
+                                    }
+                                }
+
+                                @Override
+                                public void onCancelled(DatabaseError databaseError) {
+                                    Log.e(TAG, databaseError.toString());
+                                }
+                            });
+                        }
+
+                        @Override
+                        public void onStatusChanged(String provider, int status, Bundle extras) {
+
+                        }
+
+                        @Override
+                        public void onProviderEnabled(String provider) {
+
+                        }
+
+                        @Override
+                        public void onProviderDisabled(String provider) {
+
+                        }
+                    };
+
+                    requestLocationUpdates();
+
                     mAllEventsListener = mDatabaseManager.getAllEventsDatabaseReference().addValueEventListener(new ValueEventListener() {
                         @Override
                         public void onDataChange(DataSnapshot dataSnapshot) {
@@ -203,6 +331,18 @@ public class UserEvents {
                     Log.e(TAG, databaseError.toString());
                 }
             });
+        }
+    }
+
+    private void requestLocationUpdates() {
+        // Create location update request with the users settings values or default values.
+        try {
+            mLocationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,
+                    mLocationTimeUpdateInterval,
+                    mLocationDistanceUpdateIntervalName,
+                    mLocationListener);
+        } catch (SecurityException ex) {
+            Log.e(TAG, ex.toString());
         }
     }
 

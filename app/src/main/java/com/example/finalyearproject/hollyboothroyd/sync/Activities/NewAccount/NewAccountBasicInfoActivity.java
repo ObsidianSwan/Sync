@@ -9,10 +9,9 @@ import android.util.Patterns;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.TextView;
 
 import com.example.finalyearproject.hollyboothroyd.sync.R;
-import com.example.finalyearproject.hollyboothroyd.sync.Services.AccountManager;
+import com.example.finalyearproject.hollyboothroyd.sync.Utils.Constants;
 import com.linkedin.platform.APIHelper;
 import com.linkedin.platform.errors.LIApiError;
 import com.linkedin.platform.listeners.ApiListener;
@@ -33,7 +32,7 @@ public class NewAccountBasicInfoActivity extends AppCompatActivity {
     private EditText mPasswordText;
     private EditText mVerifyPasswordText;
 
-    private final String basicInfoUrl = "https://api.linkedin.com/v1/people/~:(first-name,last-name,email-address)?format=json";
+    private static final String BASIC_INFO_URL = "https://api.linkedin.com/v1/people/~:(first-name,last-name,email-address)?format=json";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,9 +47,10 @@ public class NewAccountBasicInfoActivity extends AppCompatActivity {
         mVerifyPasswordText = (EditText) findViewById(R.id.verify_password_text);
         Button nextButton = (Button) findViewById(R.id.basic_info_next_button);
 
-        if(getIntent().getBooleanExtra("isLinkedInConnected", false)){
+        // Retrieve the users LinkedIn basic info if their LinkedIn account is integrated
+        if (getIntent().getBooleanExtra(Constants.userLinkedInChildName, false)) {
             APIHelper apiHelper = APIHelper.getInstance(getApplicationContext());
-            apiHelper.getRequest(NewAccountBasicInfoActivity.this, basicInfoUrl, new ApiListener() {
+            apiHelper.getRequest(NewAccountBasicInfoActivity.this, BASIC_INFO_URL, new ApiListener() {
                 @Override
                 public void onApiSuccess(ApiResponse s) {
                     JSONObject result = s.getResponseDataAsJson();
@@ -82,14 +82,14 @@ public class NewAccountBasicInfoActivity extends AppCompatActivity {
                 String verifyPassword = mVerifyPasswordText.getText().toString().trim();
 
                 // Check if the user inputs pass basic validations
-                if(areCredentialsValid(firstName, lastName, email, password, verifyPassword)) {
+                if (areCredentialsValid(firstName, lastName, email, password, verifyPassword)) {
                     // Save the inputted data to be sent to the next account creation activity
                     Intent intent = new Intent(NewAccountBasicInfoActivity.this, NewAccountJobInfoActivity.class);
-                    intent.putExtra("firstName", firstName);
-                    intent.putExtra("lastName", lastName);
+                    intent.putExtra(Constants.userFirstNameChildName, firstName);
+                    intent.putExtra(Constants.userLastNameChildName, lastName);
                     intent.putExtra("email", email);
                     intent.putExtra("password", password);
-                    intent.putExtra("isLinkedInConnected", getIntent().getBooleanExtra("isLinkedInConnected", false));
+                    intent.putExtra(Constants.userLinkedInChildName, getIntent().getBooleanExtra(Constants.userLinkedInChildName, false));
 
                     startActivity(intent);
                 }
@@ -140,7 +140,7 @@ public class NewAccountBasicInfoActivity extends AppCompatActivity {
         } else if (!isPasswordValid(verifyPassword)) {
             mVerifyPasswordText.setError(getString(R.string.error_invalid_password));
             focusView = mVerifyPasswordText;
-        } else if (!verifyPassword.equals(password)){
+        } else if (!verifyPassword.equals(password)) {
             mVerifyPasswordText.setError(getString(R.string.error_invalid_verify_password));
             focusView = mVerifyPasswordText;
         }

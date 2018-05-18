@@ -86,7 +86,7 @@ public class Constants {
     public static final String userPositionChildName = "position";
     public static final String userIndustryChildName = "industry";
     public static final String userCompanyChildName = "company";
-    public static final String userLinkedInChildName = "linkedin";
+    public static final String userLinkedInChildName = "isLinkedInConnected";
 
     public static final String eventTitleChildName = "title";
     public static final String eventIndustryChildName = "industry";

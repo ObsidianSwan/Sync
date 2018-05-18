@@ -21,11 +21,11 @@ public class UserConnections {
 
     private DatabaseManager mDatabaseManager;
 
-    public static final List<Person> CONNECTION_ITEMS = new ArrayList<Person>();
-    public static final Map<String, Person> CONNECTION_ITEM_MAP = new HashMap<String, Person>();
+    public static final List<Person> CONNECTION_ITEMS = new ArrayList<>();
+    public static final Map<String, Person> CONNECTION_ITEM_MAP = new HashMap<>();
 
-    public static final List<Person> CONNECTION_REQUEST_ITEMS = new ArrayList<Person>();
-    public static final Map<String, Person> CONNECTION_REQUEST_ITEM_MAP = new HashMap<String, Person>();
+    public static final List<Person> CONNECTION_REQUEST_ITEMS = new ArrayList<>();
+    public static final Map<String, Person> CONNECTION_REQUEST_ITEM_MAP = new HashMap<>();
 
     private ValueEventListener mUserConnectionsListener;
     private ValueEventListener mUserConnectionRequestListener;
@@ -49,9 +49,11 @@ public class UserConnections {
                             @Override
                             public void onDataChange(DataSnapshot dataSnapshot) {
                                 Person person = dataSnapshot.getValue(Person.class);
-                                // Add person to connection item and map
-                                CONNECTION_ITEMS.add(person);
-                                CONNECTION_ITEM_MAP.put(person.getUserId(), person);
+                                if (person != null) {
+                                    // Add person to connection item and map
+                                    CONNECTION_ITEMS.add(person);
+                                    CONNECTION_ITEM_MAP.put(person.getUserId(), person);
+                                }
                             }
 
                             @Override
@@ -84,9 +86,11 @@ public class UserConnections {
                             @Override
                             public void onDataChange(DataSnapshot dataSnapshot) {
                                 Person person = dataSnapshot.getValue(Person.class);
-                                // Add person to connection request item and map
-                                CONNECTION_REQUEST_ITEMS.add(person);
-                                CONNECTION_REQUEST_ITEM_MAP.put(person.getUserId(), person);
+                                if (person != null) {
+                                    // Add person to connection request item and map
+                                    CONNECTION_REQUEST_ITEMS.add(person);
+                                    CONNECTION_REQUEST_ITEM_MAP.put(person.getUserId(), person);
+                                }
                             }
 
                             @Override

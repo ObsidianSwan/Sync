@@ -6,12 +6,9 @@ import android.annotation.TargetApi;
 import android.app.DatePickerDialog;
 import android.app.TimePickerDialog;
 import android.content.Context;
-import android.location.Address;
-import android.location.Geocoder;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.SystemClock;
 import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
 import android.text.Editable;
@@ -31,7 +28,6 @@ import com.example.finalyearproject.hollyboothroyd.sync.Model.Event;
 import com.example.finalyearproject.hollyboothroyd.sync.R;
 import com.example.finalyearproject.hollyboothroyd.sync.Services.AccountManager;
 import com.example.finalyearproject.hollyboothroyd.sync.Services.DatabaseManager;
-import com.example.finalyearproject.hollyboothroyd.sync.Utils.Constants;
 import com.example.finalyearproject.hollyboothroyd.sync.Utils.Util;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.tasks.OnCompleteListener;
@@ -41,14 +37,7 @@ import com.google.android.gms.tasks.Task;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.storage.UploadTask;
 
-import java.io.IOException;
-import java.sql.Time;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.Calendar;
-import java.util.Date;
-import java.util.List;
-import java.util.regex.Pattern;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -80,12 +69,10 @@ public class NewEventLogisticsFragment extends Fragment {
     private EditText mZipCode;
     private EditText mCountry;
 
-    private Button mDoneButton;
-
     private View mProgressView;
     private View mEventLogisticsView;
     private View mFrameLayoutView;
-    private View mDoneButtonView;
+    private Button mDoneButton;
 
     private AccountManager mAccountManager;
     private DatabaseManager mDatabaseManager;
@@ -123,7 +110,7 @@ public class NewEventLogisticsFragment extends Fragment {
         mProgressView = view.findViewById(R.id.event_logistics_progress);
         mEventLogisticsView = view.findViewById(R.id.event_logistics_form);
         mFrameLayoutView = view.findViewById(R.id.new_event_logistics_frame_layout);
-        mDoneButtonView = view.findViewById(R.id.event_logistics_done_button);
+        mDoneButton = (Button) view.findViewById(R.id.event_logistics_done_button);
 
         Button datePicker = (Button) view.findViewById(R.id.new_event_date_button);
         Button timePicker = (Button) view.findViewById(R.id.new_event_time_button);
@@ -136,8 +123,6 @@ public class NewEventLogisticsFragment extends Fragment {
         mState = (EditText) view.findViewById(R.id.new_event_location_state);
         mZipCode = (EditText) view.findViewById(R.id.new_event_location_zipcode);
         mCountry = (EditText) view.findViewById(R.id.new_event_location_country);
-
-        mDoneButton = (Button) view.findViewById(R.id.event_logistics_done_button);
 
         datePicker.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -452,14 +437,14 @@ public class NewEventLogisticsFragment extends Fragment {
             int shortAnimTime = getResources().getInteger(android.R.integer.config_shortAnimTime);
             //Shows the progress UI and hides the event creation form.
             mFrameLayoutView.setVisibility(show ? View.GONE : View.VISIBLE);
-            mDoneButtonView.setVisibility(show ? View.GONE : View.VISIBLE);
+            mDoneButton.setVisibility(show ? View.GONE : View.VISIBLE);
             mEventLogisticsView.setVisibility(show ? View.GONE : View.VISIBLE);
             mEventLogisticsView.animate().setDuration(shortAnimTime).alpha(
                     show ? 0 : 1).setListener(new AnimatorListenerAdapter() {
                 @Override
                 public void onAnimationEnd(Animator animation) {
                     mFrameLayoutView.setVisibility(show ? View.GONE : View.VISIBLE);
-                    mDoneButtonView.setVisibility(show ? View.GONE : View.VISIBLE);
+                    mDoneButton.setVisibility(show ? View.GONE : View.VISIBLE);
                     mEventLogisticsView.setVisibility(show ? View.GONE : View.VISIBLE);
                 }
             });
@@ -476,7 +461,7 @@ public class NewEventLogisticsFragment extends Fragment {
             // The ViewPropertyAnimator APIs are not available, so simply show
             // and hide the relevant UI components.
             mProgressView.setVisibility(show ? View.VISIBLE : View.GONE);
-            mDoneButtonView.setVisibility(show ? View.GONE : View.VISIBLE);
+            mDoneButton.setVisibility(show ? View.GONE : View.VISIBLE);
             mFrameLayoutView.setVisibility(show ? View.GONE : View.VISIBLE);
             mEventLogisticsView.setVisibility(show ? View.GONE : View.VISIBLE);
         }

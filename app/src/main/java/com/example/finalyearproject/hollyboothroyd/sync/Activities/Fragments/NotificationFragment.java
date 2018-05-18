@@ -14,8 +14,6 @@ import com.example.finalyearproject.hollyboothroyd.sync.Model.NotificationBase;
 import com.example.finalyearproject.hollyboothroyd.sync.Model.UserNotifications;
 import com.example.finalyearproject.hollyboothroyd.sync.R;
 
-import java.util.List;
-
 /**
  * A fragment representing a list of Items.
  * <p/>
