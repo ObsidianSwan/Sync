@@ -12,7 +12,6 @@ import android.graphics.Color;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
-import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -1611,7 +1610,7 @@ public class GMapFragment extends Fragment implements OnMapReadyCallback,
             }
             if (isAdded()) {
                 Intent intent = new Intent(getActivity(), GeofenceTransitionsIntentService.class);
-                // We use FLAG_UPDATE_CURRENT so that we get the same pending intent back when
+                // FLAG_UPDATE_CURRENT is used to get the same pending intent back when
                 // calling addGeofences() and removeGeofences().
                 mGeofencePendingIntent = PendingIntent.getService(getActivity(), 0, intent, PendingIntent.
                         FLAG_UPDATE_CURRENT);

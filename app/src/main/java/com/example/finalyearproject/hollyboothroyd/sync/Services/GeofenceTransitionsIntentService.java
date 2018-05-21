@@ -1,7 +1,6 @@
 package com.example.finalyearproject.hollyboothroyd.sync.Services;
 
 import android.app.IntentService;
-import android.content.Context;
 import android.content.Intent;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
@@ -37,8 +36,7 @@ public class GeofenceTransitionsIntentService extends IntentService {
     protected void onHandleIntent(Intent intent) {
         GeofencingEvent geofencingEvent = GeofencingEvent.fromIntent(intent);
         if (geofencingEvent.hasError()) {
-            String errorMessage = GeofenceErrorMessages.getErrorString(this,
-                    geofencingEvent.getErrorCode());
+            String errorMessage = getErrorString(geofencingEvent.getErrorCode());
             Log.e(TAG, errorMessage);
             return;
         }
@@ -53,35 +51,27 @@ public class GeofenceTransitionsIntentService extends IntentService {
         // Get the transition details as a String.
         List<String> geofenceEnterTransitionDetails = getGeofenceTransitionDetails(triggeringGeofences);
 
-        // Check if the other user is now local (enter or dwell triggers) or no longer local (exit trigger)
-        if (geofenceTransition == Geofence.GEOFENCE_TRANSITION_ENTER ||
-                geofenceTransition == Geofence.GEOFENCE_TRANSITION_DWELL) {
-            // Send details to GMapFragment to display local user
-            geofenceAddTriggeredMessageToMaps(geofenceEnterTransitionDetails);
-        } else if (geofenceTransition == Geofence.GEOFENCE_TRANSITION_EXIT) {
-            // Send details to GMapFragment to remove user
-            geofenceRemoveTriggeredMessageToMaps(geofenceEnterTransitionDetails);
-        }
+        geofenceTriggeredMessageToMaps(geofenceEnterTransitionDetails, geofenceTransition);
 
         Log.i(TAG, String.valueOf(geofenceTransition));
 
     }
 
-    // Create an intent that informs the map to add the user's pin to the map
-    private void geofenceAddTriggeredMessageToMaps(List<String> geofenceEnterTransitionDetails) {
+    // Create an intent that informs the map to either add or remove the user's pin to the map
+    private void geofenceTriggeredMessageToMaps(List<String> geofenceEnterTransitionDetails, int geofenceTransition) {
         // Send the geofence trigger message to the GMaps fragment
         for (String id : geofenceEnterTransitionDetails) {
-            Intent intent = new Intent(getString(R.string.geofence_enter_trigger));
-            intent.putExtra(Constants.geofenceUserId, id);
-            LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
-        }
-    }
-
-    // Create an intent that informs the map to remove the user's pin from the map
-    private void geofenceRemoveTriggeredMessageToMaps(List<String> geofenceEnterTransitionDetails) {
-        // Send the geofence trigger message to the GMaps fragment
-        for (String id : geofenceEnterTransitionDetails) {
-            Intent intent = new Intent(getString(R.string.geofence_exit_trigger));
+            Intent intent;
+            // Check if the other user is now local (enter or dwell triggers) or no longer local (exit trigger)
+            if(geofenceTransition == Geofence.GEOFENCE_TRANSITION_ENTER ||
+                    geofenceTransition == Geofence.GEOFENCE_TRANSITION_DWELL) {
+                // Send details to GMapFragment to display local user
+                intent = new Intent(getString(R.string.geofence_enter_trigger));
+            }
+            else {
+                // Send details to GMapFragment to remove user
+                intent = new Intent(getString(R.string.geofence_exit_trigger));
+            }
             intent.putExtra(Constants.geofenceUserId, id);
             LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
         }
@@ -96,23 +86,17 @@ public class GeofenceTransitionsIntentService extends IntentService {
         }
         return geofenceRequestIds;
     }
-}
 
-
-class GeofenceErrorMessages {
-    private GeofenceErrorMessages() {
-    }
-
-    public static String getErrorString(Context context, int errorCode) {
+    private String getErrorString(int errorCode) {
         switch (errorCode) {
             case GeofenceStatusCodes.GEOFENCE_NOT_AVAILABLE:
-                return context.getString(R.string.geofence_service_unavailable_error);
+                return getString(R.string.geofence_service_unavailable_error);
             case GeofenceStatusCodes.GEOFENCE_TOO_MANY_GEOFENCES:
-                return context.getString(R.string.geofence_max_error);
+                return getString(R.string.geofence_max_error);
             case GeofenceStatusCodes.GEOFENCE_TOO_MANY_PENDING_INTENTS:
-                return context.getString(R.string.max_pending_intents_error);
+                return getString(R.string.max_pending_intents_error);
             default:
-                return context.getString(R.string.generic_error_text);
+                return getString(R.string.generic_error_text);
         }
     }
 }
