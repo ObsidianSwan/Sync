@@ -232,6 +232,7 @@ public class UserEvents {
                                     }
                                 }
                             }
+                            // If the local events have been updated, inform the map to update the pins shown
                             if (mAllEventsUpdated) {
                                 for (UserEventsListener listener : mListeners) {
                                     listener.userEventsUpdated();
@@ -254,6 +255,7 @@ public class UserEvents {
                             EVENTS_ATTENDING.clear();
                             EVENTS_ATTENDING_MAP.clear();
                             for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
+                                // Retrieve the event from the event key stored in the user's event attending database
                                 mDatabaseManager.getEvent(snapshot.getKey()).addListenerForSingleValueEvent(new ValueEventListener() {
                                     @Override
                                     public void onDataChange(DataSnapshot dataSnapshot) {
@@ -272,6 +274,7 @@ public class UserEvents {
                                     }
                                 });
                             }
+                            // If the local events have been updated, inform the map to update the pins shown
                             if (mEventsAttendingUpdated) {
                                 for (UserEventsListener listener : mListeners) {
                                     listener.userEventsUpdated();
@@ -304,6 +307,7 @@ public class UserEvents {
                         mDatabaseManager.getEvent(snapshot.getKey()).addListenerForSingleValueEvent(new ValueEventListener() {
                             @Override
                             public void onDataChange(DataSnapshot dataSnapshot) {
+                                // Retrieve the event from the event key stored in the user's event hosting database
                                 Event event = dataSnapshot.getValue(Event.class);
                                 // Add the event to the event hosting map and list
                                 if (event != null) {
@@ -319,6 +323,7 @@ public class UserEvents {
                             }
                         });
                     }
+                    // If the local events have been updated, inform the map to update the pins shown
                     if (mEventsHostingUpdated) {
                         for (UserEventsListener listener : mListeners) {
                             listener.userEventsUpdated();
